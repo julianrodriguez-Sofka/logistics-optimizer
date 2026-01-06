@@ -10,11 +10,11 @@ export class LocalAdapter implements IShippingProvider {
   async calculateShipping(weight: number, destination: string): Promise<Quote> {
     // Validate weight
     if (weight < 0.1) {
-      throw new Error('Weight must be at least 0.1 kg');
+      throw new Error('Weight must be greater than 0.1 kg');
     }
 
     if (weight > 1000) {
-      throw new Error('Weight cannot exceed 1000 kg');
+      throw new Error('Weight must be less than or equal to 1000 kg');
     }
 
     // Validate destination

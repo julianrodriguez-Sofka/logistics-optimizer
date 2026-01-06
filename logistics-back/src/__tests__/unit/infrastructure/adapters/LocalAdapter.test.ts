@@ -1,3 +1,4 @@
+
 import { LocalAdapter } from '../../../../infrastructure/adapters/LocalAdapter';
 
 describe('LocalAdapter', () => {

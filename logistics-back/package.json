@@ -10,12 +10,16 @@
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js"
   },
-  "keywords": ["logistics", "shipping", "tdd"],
+  "keywords": [
+    "logistics",
+    "shipping",
+    "tdd"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/express": "^4.17.21",
-    "@types/jest": "^29.5.0",
+    "@types/jest": "^29.5.14",
     "@types/mocha": "^9.1.1",
     "@types/node": "^20.0.0",
     "@types/supertest": "^6.0.2",
