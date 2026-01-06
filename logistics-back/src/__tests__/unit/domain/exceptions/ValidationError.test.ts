@@ -1,4 +1,4 @@
-import { ValidationError } from '../ValidationError';
+import { ValidationError } from '../../../../domain/exceptions/ValidationError';
 
 describe('ValidationError', () => {
   test('should create ValidationError with message, field, and value', () => {
