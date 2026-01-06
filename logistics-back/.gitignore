@@ -4,17 +4,16 @@ package-lock.json
 
 # Build output
 dist/
-dist-ssr/
 build/
 
 # Test coverage
 coverage/
+.nyc_output/
 
 # Environment variables
 .env
 .env.local
-.env.production.local
-.env.development.local
+.env.*.local
 
 # IDE
 .vscode/
@@ -28,22 +27,12 @@ coverage/
 Thumbs.db
 
 # Logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-# Vite
-.vite/
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Temporary files
+tmp/
+temp/
