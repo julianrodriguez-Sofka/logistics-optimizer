@@ -115,6 +115,48 @@ shipping-optimizer/
 
 ---
 
+## Data Contracts (TypeScript Interfaces)
+
+### IQuote - Standardized Quote Response
+
+Every adapter must normalize its provider's raw response to this structure:
+
+```typescript
+interface IQuote {
+  providerId: string;      // e.g., 'fedex-ground'
+  providerName: string;    // e.g., 'FedEx Ground'
+  price: number;           // e.g., 32.80
+  currency: string;        // e.g., 'USD'
+  minDays: number;         // e.g., 3
+  maxDays: number;         // e.g., 4
+  transportMode: string;   // e.g., 'Truck', 'Air Freight'
+  isCheapest: boolean;     // Computed by Service
+  isFastest: boolean;      // Computed by Service
+}
+```
+
+### IShippingProvider - Adapter Interface
+
+```typescript
+interface IShippingProvider {
+  calculateShipping(weight: number, destination: string): Promise<IQuote>;
+  trackShipment(trackingId: string): Promise<TrackingInfo>;
+  validateAddress(address: string): Promise<boolean>;
+}
+```
+
+### Edge Cases & Validation Rules
+
+| Case | Input Condition | Expected Behavior |
+|:---|:---|:---|
+| **Invalid Weight** | `weight <= 0` | Throw `ValidationError`: "Weight must be > 0.1 kg" |
+| **Past Date** | `pickupDate < current_date` | Throw `ValidationError`: "Date cannot be in the past" |
+| **Provider Timeout** | One adapter fails (e.g., FedEx) | Return quotes from DHL/Local + Log error |
+| **Extreme Weight** | `weight > 1000kg` | Throw `ValidationError`: "Weight must be ≤ 1000 kg" |
+| **Empty Address** | `originAddress == ""` | Throw `ValidationError`: "Origin/Destination required" |
+
+---
+
 ## Key Principles
 
 - **Single Responsibility:** Each adapter handles one provider only

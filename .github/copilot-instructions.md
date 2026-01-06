@@ -5,7 +5,47 @@ Multi-provider shipping quote aggregator using Express (TypeScript) backend + Re
 
 **Requirements:** SOLID principles, CI/CD pipeline, and 70%+ test coverage.
 
-**Key Files:** [ARCHITECTURE.md](ARCHITECTURE.md), [PRODUCT.md](PRODUCT.md), [REQUIREMENTS.md](REQUIREMENTS.md)
+---
+
+## 📚 Key Documentation (Reference with #file: when needed)
+
+**IMPORTANT:** When working on this project, reference these files for context:
+
+- **#file:ARCHITECTURE.md** - System design, SOLID principles, TypeScript interfaces, validation rules
+- **#file:USER_STORIES.md** - User stories (HU-01 to HU-10) with Gherkin acceptance criteria
+- **#file:IMPLEMENTATION_PLAN.md** - 4-week sprint breakdown with 40+ tasks
+- **#file:TDD_GUIDE.md** - Test examples (unit, integration, E2E) and best practices
+- **#file:PRODUCT.md** - API contracts, input validation, response formats, performance targets
+
+**Workspace Resources:**
+- **#file:../../../.github/templates/plan-template.md** - Template for creating HU implementation plans
+- **#file:../../../.github/agents/tdd.agent.md** - TDD agent for test-driven development workflow
+
+---
+
+## 🎯 Quick Reference for Common Tasks
+
+### Implementing a New User Story
+1. Read user story: Reference #file:USER_STORIES.md (find HU-XX)
+2. Check implementation plan: Reference #file:IMPLEMENTATION_PLAN.md (find corresponding task)
+3. Write tests first: Use examples from #file:TDD_GUIDE.md
+4. Follow architecture: Reference #file:ARCHITECTURE.md (SOLID principles, patterns)
+
+### Creating a New Adapter
+1. Interface: Implement `IShippingProvider` from #file:ARCHITECTURE.md
+2. Validation: Use rules from #file:ARCHITECTURE.md (Data Contracts section)
+3. Tests: Follow adapter test patterns in #file:TDD_GUIDE.md
+4. Structure: Match folder structure in #file:ARCHITECTURE.md
+
+### Writing Tests
+1. Test checklist: Use #file:TDD_GUIDE.md (find HU-specific section)
+2. Edge cases: Check #file:ARCHITECTURE.md (Data Contracts - Validation Rules)
+3. Acceptance criteria: Convert Gherkin from #file:USER_STORIES.md to tests
+
+### API Endpoints
+1. Input validation: See #file:PRODUCT.md (Section 1)
+2. Output format: See #file:PRODUCT.md (Section 2)
+3. Error handling: See #file:PRODUCT.md (Section 4)
 
 ---
 
@@ -156,7 +196,7 @@ npm run test:integration  # Test POST /quotes, GET /adapters/status, DB operatio
    - Pass to `ShippingService` via constructor
    - Return standardized JSON (PRODUCT.md §2)
 
-**Reference:** [ARCHITECTURE.md - Adapter Pattern](ARCHITECTURE.md#adapter-pattern-implementation), [REQUIREMENTS.md §3](REQUIREMENTS.md#3-functional-specifications-gherkin--acceptance-criteria)
+**Reference:** [ARCHITECTURE.md - Adapter Pattern](ARCHITECTURE.md#adapter-pattern-implementation), [USER_STORIES.md](USER_STORIES.md) for acceptance criteria
 
 ---
 
@@ -165,7 +205,7 @@ npm run test:integration  # Test POST /quotes, GET /adapters/status, DB operatio
 ### Testing Requirements
 - **Unit Tests:** `__tests__/` folder structure (Jest for backend, Vitest for frontend)
 - **Coverage Target:** 70%+ for business logic (`QuoteService`, adapters, badge assignment)
-- **Edge Cases:** Use REQUIREMENTS.md §4 table (invalid weight, past date, provider timeout, empty address)
+- **Edge Cases:** See [ARCHITECTURE.md - Data Contracts](ARCHITECTURE.md#data-contracts-typescript-interfaces) for validation rules (invalid weight, past date, provider timeout, empty address)
 - **Integration Tests:** Minimum 3 API tests:
   1. POST `/api/quotes` → Happy path (3 providers online)
   2. POST `/api/quotes` → Single adapter timeout (graceful degradation)
@@ -204,7 +244,7 @@ npm run test:integration  # Test POST /quotes, GET /adapters/status, DB operatio
 | Add MongoDB model | Create schema in `infrastructure/database/models/`, implement repository in `infrastructure/database/repositories/` |
 | Add API endpoint | Create controller in `infrastructure/controllers/`, route in `infrastructure/routes/`, wire in `main.ts` |
 | Update badge logic | Edit `application/services/QuoteService.ts` (cheapest/fastest calculation) |
-| Generate edge case tests | Use Copilot with prompt: "Generate Jest tests for edge cases in REQUIREMENTS.md §4" |
+| Generate edge case tests | Use Copilot with prompt: "Generate Jest tests for validation rules in ARCHITECTURE.md" |
 | Create React form | Use Copilot: "Create React component for quote form with validation from PRODUCT.md §1" |
 | Setup GitHub Actions | Create `.github/workflows/ci.yml` with build + test steps |
 | Create feature branch | `git checkout -b feature/fedex-adapter` → PR to `develop` |

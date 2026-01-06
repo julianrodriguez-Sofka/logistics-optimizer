@@ -1,5 +1,6 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
 import quotesRouter from './infrastructure/routes/quotes.routes';
+import healthRouter from './infrastructure/routes/health.routes';
 
 const app: Application = express();
 
@@ -22,6 +23,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // API Routes
 app.use('/api', quotesRouter);
+app.use('/api', healthRouter);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {

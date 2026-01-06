@@ -6,5 +6,6 @@ app.listen(PORT, () => {
   console.log(`🚀 Logistics Backend running on http://localhost:${PORT}`);
   console.log(`📦 API endpoint: http://localhost:${PORT}/api/quotes`);
   console.log(`❤️  Health check: http://localhost:${PORT}/health`);
+  console.log(`🔧 Adapter status: http://localhost:${PORT}/api/adapters/status`);
 });
 
