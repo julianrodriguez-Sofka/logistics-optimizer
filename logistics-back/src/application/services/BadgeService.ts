@@ -3,8 +3,9 @@ import { Quote } from '../../domain/entities/Quote';
 export class BadgeService {
   /**
    * Assign isCheapest and isFastest badges to quotes
+   * Returns new Quote instances without mutating the input
    * @param quotes - Array of quotes to process
-   * @returns Array of quotes with badges assigned
+   * @returns Array of new quotes with badges assigned
    */
   assignBadges(quotes: Quote[]): Quote[] {
     if (quotes.length === 0) {
@@ -33,10 +34,19 @@ export class BadgeService {
       }
     }
 
-    // Assign badges
-    quotes[cheapestIndex].isCheapest = true;
-    quotes[fastestIndex].isFastest = true;
-
-    return quotes;
+    // Create new Quote instances with badges assigned
+    return quotes.map((quote, index) => {
+      return new Quote({
+        providerId: quote.providerId,
+        providerName: quote.providerName,
+        price: quote.price,
+        currency: quote.currency,
+        minDays: quote.minDays,
+        maxDays: quote.maxDays,
+        transportMode: quote.transportMode,
+        isCheapest: index === cheapestIndex,
+        isFastest: index === fastestIndex,
+      });
+    });
   }
 }
