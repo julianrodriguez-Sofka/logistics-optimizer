@@ -8,7 +8,7 @@ describe('QuoteRequestForm', () => {
   it('should disable submit button when form is invalid', () => {
     render(<QuoteRequestForm onSubmit={() => {}} />);
     
-    const submitButton = screen.getByRole('button', { name: /obtener cotizaciones/i });
+    const submitButton = screen.getByRole('button', { name: /calculate rates/i });
     expect(submitButton).toBeDisabled();
   });
 
@@ -16,7 +16,7 @@ describe('QuoteRequestForm', () => {
     const user = userEvent.setup();
     render(<QuoteRequestForm onSubmit={() => {}} />);
     
-    const weightInput = screen.getByLabelText(/peso/i);
+    const weightInput = screen.getByLabelText(/weight/i);
     await user.type(weightInput, '0');
     await user.tab(); // Blur to trigger validation
     
@@ -27,7 +27,7 @@ describe('QuoteRequestForm', () => {
     const user = userEvent.setup();
     render(<QuoteRequestForm onSubmit={() => {}} />);
     
-    const weightInput = screen.getByLabelText(/peso/i);
+    const weightInput = screen.getByLabelText(/weight/i);
     await user.clear(weightInput);
     await user.type(weightInput, '1001');
     await user.tab();
@@ -39,7 +39,7 @@ describe('QuoteRequestForm', () => {
     const user = userEvent.setup();
     render(<QuoteRequestForm onSubmit={() => {}} />);
     
-    const originInput = screen.getByLabelText(/origen/i);
+    const originInput = screen.getByLabelText(/origin address/i);
     await user.click(originInput);
     await user.tab(); // Blur without entering data
     
@@ -50,7 +50,7 @@ describe('QuoteRequestForm', () => {
     const user = userEvent.setup();
     render(<QuoteRequestForm onSubmit={() => {}} />);
     
-    const destinationInput = screen.getByLabelText(/destino/i);
+    const destinationInput = screen.getByLabelText(/destination address/i);
     await user.click(destinationInput);
     await user.tab();
     
@@ -65,7 +65,7 @@ describe('QuoteRequestForm', () => {
     yesterday.setDate(yesterday.getDate() - 1);
     const dateString = yesterday.toISOString().split('T')[0];
     
-    const dateInput = screen.getByLabelText(/fecha de recolección/i);
+    const dateInput = screen.getByLabelText(/pickup date/i);
     await user.type(dateInput, dateString);
     await user.tab();
     
@@ -80,7 +80,7 @@ describe('QuoteRequestForm', () => {
     farFuture.setDate(farFuture.getDate() + 31);
     const dateString = farFuture.toISOString().split('T')[0];
     
-    const dateInput = screen.getByLabelText(/fecha de recolección/i);
+    const dateInput = screen.getByLabelText(/pickup date/i);
     await user.type(dateInput, dateString);
     await user.tab();
     
@@ -96,12 +96,12 @@ describe('QuoteRequestForm', () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dateString = tomorrow.toISOString().split('T')[0];
     
-    await user.type(screen.getByLabelText(/origen/i), 'New York, NY');
-    await user.type(screen.getByLabelText(/destino/i), 'Los Angeles, CA');
-    await user.type(screen.getByLabelText(/peso/i), '5.5');
-    await user.type(screen.getByLabelText(/fecha de recolección/i), dateString);
+    await user.type(screen.getByLabelText(/origin address/i), 'New York, NY');
+    await user.type(screen.getByLabelText(/destination address/i), 'Los Angeles, CA');
+    await user.type(screen.getByLabelText(/weight/i), '5.5');
+    await user.type(screen.getByLabelText(/pickup date/i), dateString);
     
-    const submitButton = screen.getByRole('button', { name: /obtener cotizaciones/i });
+    const submitButton = screen.getByRole('button', { name: /calculate rates/i });
     expect(submitButton).toBeEnabled();
   });
 
@@ -115,12 +115,12 @@ describe('QuoteRequestForm', () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dateString = tomorrow.toISOString().split('T')[0];
     
-    await user.type(screen.getByLabelText(/origen/i), 'New York, NY');
-    await user.type(screen.getByLabelText(/destino/i), 'Los Angeles, CA');
-    await user.type(screen.getByLabelText(/peso/i), '10');
-    await user.type(screen.getByLabelText(/fecha de recolección/i), dateString);
+    await user.type(screen.getByLabelText(/origin address/i), 'New York, NY');
+    await user.type(screen.getByLabelText(/destination address/i), 'Los Angeles, CA');
+    await user.type(screen.getByLabelText(/weight/i), '10');
+    await user.type(screen.getByLabelText(/pickup date/i), dateString);
     
-    const submitButton = screen.getByRole('button', { name: /obtener cotizaciones/i });
+    const submitButton = screen.getByRole('button', { name: /calculate rates/i });
     await user.click(submitButton);
     
     expect(mockSubmit).toHaveBeenCalledWith({

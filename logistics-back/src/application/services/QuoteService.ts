@@ -2,6 +2,7 @@ import { IShippingProvider } from '../../domain/interfaces/IShippingProvider';
 import { Quote } from '../../domain/entities/Quote';
 import { QuoteRequest } from '../../domain/entities/QuoteRequest';
 import { withTimeout } from '../utils/timeout';
+import { BadgeService } from './BadgeService';
 
 export interface IProviderMessage {
   provider: string;
@@ -17,8 +18,11 @@ export interface IQuoteResponse {
 export class QuoteService {
   private readonly FRAGILE_SURCHARGE = 1.15; // 15% surcharge
   private readonly TIMEOUT_MS = 5000; // 5 seconds timeout
+  private readonly badgeService: BadgeService;
 
-  constructor(private readonly providers: IShippingProvider[]) {}
+  constructor(private readonly providers: IShippingProvider[]) {
+    this.badgeService = new BadgeService();
+  }
 
   /**
    * Get quotes from all available providers with error messages
@@ -69,7 +73,10 @@ export class QuoteService {
       }
     }
 
-    return { quotes, messages };
+    // Assign badges to quotes before returning
+    const quotesWithBadges = this.badgeService.assignBadges(quotes);
+
+    return { quotes: quotesWithBadges, messages };
   }
 
   /**
