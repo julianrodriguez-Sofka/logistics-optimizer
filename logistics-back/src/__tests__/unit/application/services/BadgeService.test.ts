@@ -206,5 +206,94 @@ describe('BadgeService', () => {
       expect(result[1].isCheapest).toBe(false);
       expect(result[1].isFastest).toBe(false);
     });
+
+    it('should handle all providers with same price and days - first wins both', () => {
+      const quotes = [
+        new Quote({
+          providerId: 'fedex',
+          providerName: 'FedEx',
+          price: 100,
+          currency: 'USD',
+          minDays: 3,
+          maxDays: 4,
+          transportMode: 'Air',
+        }),
+        new Quote({
+          providerId: 'dhl',
+          providerName: 'DHL',
+          price: 100, // Same price
+          currency: 'USD',
+          minDays: 3,
+          maxDays: 4, // Same estimatedDays
+          transportMode: 'Air',
+        }),
+        new Quote({
+          providerId: 'local',
+          providerName: 'Local',
+          price: 100, // Same price
+          currency: 'USD',
+          minDays: 3,
+          maxDays: 4, // Same estimatedDays
+          transportMode: 'Truck',
+        }),
+      ];
+
+      const result = badgeService.assignBadges(quotes);
+
+      // First provider should win both badges
+      expect(result[0].isCheapest).toBe(true);
+      expect(result[0].isFastest).toBe(true);
+      expect(result[1].isCheapest).toBe(false);
+      expect(result[1].isFastest).toBe(false);
+      expect(result[2].isCheapest).toBe(false);
+      expect(result[2].isFastest).toBe(false);
+    });
+
+    it('should not mutate the input array (immutability)', () => {
+      const quotes = [
+        new Quote({
+          providerId: 'fedex',
+          providerName: 'FedEx',
+          price: 100,
+          currency: 'USD',
+          minDays: 3,
+          maxDays: 4,
+          transportMode: 'Truck',
+        }),
+        new Quote({
+          providerId: 'dhl',
+          providerName: 'DHL',
+          price: 85,
+          currency: 'USD',
+          minDays: 5,
+          maxDays: 5,
+          transportMode: 'Air',
+        }),
+      ];
+
+      // Store original states
+      const originalCheapestFedex = quotes[0].isCheapest;
+      const originalFastestFedex = quotes[0].isFastest;
+      const originalCheapestDHL = quotes[1].isCheapest;
+      const originalFastestDHL = quotes[1].isFastest;
+
+      const result = badgeService.assignBadges(quotes);
+
+      // Original quotes should not be modified
+      expect(quotes[0].isCheapest).toBe(originalCheapestFedex);
+      expect(quotes[0].isFastest).toBe(originalFastestFedex);
+      expect(quotes[1].isCheapest).toBe(originalCheapestDHL);
+      expect(quotes[1].isFastest).toBe(originalFastestDHL);
+
+      // Result should have badges assigned
+      expect(result[0].isCheapest).toBe(false);
+      expect(result[0].isFastest).toBe(true);
+      expect(result[1].isCheapest).toBe(true);
+      expect(result[1].isFastest).toBe(false);
+
+      // Result should be different instances
+      expect(result[0]).not.toBe(quotes[0]);
+      expect(result[1]).not.toBe(quotes[1]);
+    });
   });
 });
