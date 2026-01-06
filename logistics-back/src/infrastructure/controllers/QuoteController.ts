@@ -23,13 +23,15 @@ export class QuoteController {
         fragile: req.body.fragile,
       });
 
-      // Get quotes from all providers
-      const quotes = await this.quoteService.getAllQuotes(quoteRequest);
+      // Get quotes from all providers with error messages
+      const { quotes, messages } = await this.quoteService.getAllQuotesWithMessages(quoteRequest);
 
       // Check if any providers responded
       if (quotes.length === 0) {
         res.status(503).json({
           error: 'Service unavailable. No providers are currently available. Please try again later.',
+          retryAfter: 30,
+          messages,
         });
         return;
       }
@@ -37,7 +39,7 @@ export class QuoteController {
       // Assign badges (cheapest, fastest)
       const quotesWithBadges = this.badgeService.assignBadges(quotes);
 
-      // Return standardized response
+      // Return standardized response with messages
       res.status(200).json({
         quotes: quotesWithBadges.map(quote => ({
           providerId: quote.providerId,
@@ -51,6 +53,7 @@ export class QuoteController {
           isCheapest: quote.isCheapest,
           isFastest: quote.isFastest,
         })),
+        messages: messages.length > 0 ? messages : undefined,
       });
     } catch (error) {
       // Handle validation errors

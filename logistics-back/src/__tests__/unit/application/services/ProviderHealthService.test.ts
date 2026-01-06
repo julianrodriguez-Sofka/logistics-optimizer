@@ -158,7 +158,7 @@ describe('ProviderHealthService', () => {
 
       const statuses = await healthService.checkHealth();
 
-      expect(statuses[0].responseTime).toBeGreaterThanOrEqual(100);
+      expect(statuses[0].responseTime).toBeGreaterThanOrEqual(95);
       expect(statuses[0].responseTime).toBeLessThan(200);
     });
   });

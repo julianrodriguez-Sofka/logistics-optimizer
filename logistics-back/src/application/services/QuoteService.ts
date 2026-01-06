@@ -1,6 +1,18 @@
 import { IShippingProvider } from '../../domain/interfaces/IShippingProvider';
 import { Quote } from '../../domain/entities/Quote';
 import { QuoteRequest } from '../../domain/entities/QuoteRequest';
+import { withTimeout } from '../utils/timeout';
+
+export interface IProviderMessage {
+  provider: string;
+  message: string;
+  error?: string;
+}
+
+export interface IQuoteResponse {
+  quotes: Quote[];
+  messages: IProviderMessage[];
+}
 
 export class QuoteService {
   private readonly FRAGILE_SURCHARGE = 1.15; // 15% surcharge
@@ -9,32 +21,73 @@ export class QuoteService {
   constructor(private readonly providers: IShippingProvider[]) {}
 
   /**
-   * Get quotes from all available providers
+   * Get quotes from all available providers with error messages
    * Uses Promise.allSettled to handle partial failures gracefully
    * @param request - Quote request with shipping details
-   * @returns Array of quotes from available providers
+   * @returns Object with quotes array and messages array for failed providers
    */
-  async getAllQuotes(request: QuoteRequest): Promise<Quote[]> {
-    // Create timeout wrapper for each provider call
-    const providerPromises = this.providers.map((provider) =>
+  async getAllQuotesWithMessages(request: QuoteRequest): Promise<IQuoteResponse> {
+    // Create timeout wrapper for each provider call with provider metadata
+    const providerPromises = this.providers.map((provider, index) =>
       this.callProviderWithTimeout(provider, request)
+        .then(quote => ({ 
+          status: 'fulfilled' as const, 
+          value: quote, 
+          providerIndex: index,
+          providerName: quote.providerName 
+        }))
+        .catch(error => ({ 
+          status: 'rejected' as const, 
+          reason: error, 
+          providerIndex: index,
+          providerName: this.getProviderName(index)
+        }))
     );
 
-    // Use Promise.allSettled to handle failures gracefully
-    const results = await Promise.allSettled(providerPromises);
+    // Use Promise.all since we wrapped the promises
+    const results = await Promise.all(providerPromises);
 
-    // Extract successful quotes
+    // Extract successful quotes and failed providers
     const quotes: Quote[] = [];
+    const messages: IProviderMessage[] = [];
+
     for (const result of results) {
       if (result.status === 'fulfilled' && result.value) {
         quotes.push(result.value);
       } else if (result.status === 'rejected') {
+        const providerName = result.providerName || `Provider ${result.providerIndex + 1}`;
+        const errorMessage = result.reason?.message || 'Provider unavailable';
+        
+        messages.push({
+          provider: providerName,
+          message: `${providerName} is not available at this time`,
+          error: errorMessage,
+        });
+
         // Log error for monitoring (in production, use proper logging)
         console.error('Provider failed:', result.reason);
       }
     }
 
+    return { quotes, messages };
+  }
+
+  /**
+   * Get quotes from all available providers (backwards compatibility)
+   * @param request - Quote request with shipping details
+   * @returns Array of quotes from available providers
+   */
+  async getAllQuotes(request: QuoteRequest): Promise<Quote[]> {
+    const { quotes } = await this.getAllQuotesWithMessages(request);
     return quotes;
+  }
+
+  /**
+   * Get provider name by index (helper method)
+   */
+  private getProviderName(index: number): string {
+    // Use generic provider name since we can't reliably get the name when adapter fails
+    return `Provider ${index + 1}`;
   }
 
   /**
@@ -44,18 +97,13 @@ export class QuoteService {
     provider: IShippingProvider,
     request: QuoteRequest
   ): Promise<Quote> {
-    // Create timeout promise
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Provider timeout')), this.TIMEOUT_MS);
-    });
-
-    // Race between provider call and timeout
+    // Use withTimeout utility for consistent timeout handling
     const quotePromise = provider.calculateShipping(
       request.weight,
       request.destination
     );
 
-    const quote = await Promise.race([quotePromise, timeoutPromise]);
+    const quote = await withTimeout(quotePromise, this.TIMEOUT_MS);
 
     // Apply fragile surcharge if needed
     if (request.fragile) {
