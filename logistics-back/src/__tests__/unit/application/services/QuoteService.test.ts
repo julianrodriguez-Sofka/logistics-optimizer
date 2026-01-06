@@ -242,5 +242,82 @@ describe('QuoteService', () => {
       // Should timeout the slow adapter and complete within reasonable time
       expect(endTime - startTime).toBeLessThan(6000);
     }, 10000); // Increase test timeout to 10 seconds
+
+    it('should timeout adapter call after 5 seconds', async () => {
+      const mockSlowAdapter: IShippingProvider = {
+        calculateShipping: jest.fn().mockImplementation(() => 
+          new Promise(resolve => setTimeout(() => resolve({
+            providerId: 'slow',
+            providerName: 'Slow Provider',
+            price: 100,
+            currency: 'USD',
+            minDays: 3,
+            maxDays: 5,
+            transportMode: 'Truck',
+          }), 6000))
+        ),
+        trackShipment: jest.fn(),
+        validateAddress: jest.fn(),
+      };
+
+      const serviceWithTimeout = new QuoteService([mockSlowAdapter]);
+
+      const request = new QuoteRequest({
+        origin: 'New York, NY',
+        destination: 'Los Angeles, CA',
+        weight: 10,
+        pickupDate: new Date(Date.now() + 86400000),
+        fragile: false,
+      });
+
+      const startTime = Date.now();
+      const quotes = await serviceWithTimeout.getAllQuotes(request);
+      const duration = Date.now() - startTime;
+
+      // Adapter should timeout and return no quotes
+      expect(quotes).toHaveLength(0);
+      // Should complete around 5 seconds, not 6
+      expect(duration).toBeGreaterThanOrEqual(4900);
+      expect(duration).toBeLessThan(5500);
+    }, 10000);
+
+    it('should return quotes from fast adapters when one times out', async () => {
+      const mockSlowAdapter: IShippingProvider = {
+        calculateShipping: jest.fn().mockImplementation(() => 
+          new Promise(resolve => setTimeout(() => resolve({
+            providerId: 'slow',
+            providerName: 'Slow Provider',
+            price: 100,
+            currency: 'USD',
+            minDays: 3,
+            maxDays: 5,
+            transportMode: 'Truck',
+          }), 6000))
+        ),
+        trackShipment: jest.fn(),
+        validateAddress: jest.fn(),
+      };
+
+      const serviceWithMixed = new QuoteService([
+        fedexAdapter,
+        mockSlowAdapter,
+        dhlAdapter,
+      ]);
+
+      const request = new QuoteRequest({
+        origin: 'New York, NY',
+        destination: 'Los Angeles, CA',
+        weight: 10,
+        pickupDate: new Date(Date.now() + 86400000),
+        fragile: false,
+      });
+
+      const quotes = await serviceWithMixed.getAllQuotes(request);
+
+      // Should return 2 quotes (FedEx and DHL)
+      expect(quotes).toHaveLength(2);
+      expect(quotes[0].providerName).toBe('FedEx Ground');
+      expect(quotes[1].providerName).toBe('DHL Express');
+    }, 10000);
   });
 });
