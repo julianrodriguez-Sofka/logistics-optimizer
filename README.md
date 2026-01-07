@@ -319,34 +319,6 @@ class DatabaseService {
 
 ---
 
-### 5. **Strategy Pattern** (Indirecto - Backend)
-
-**¿Por qué?** Selección dinámica de algoritmos de pricing.
-
-```typescript
-class WeightPricingCalculator {
-  calculate(weight: number, zone: string): number {
-    // Estrategia basada en peso y zona
-    if (weight < 1) return basePrice;
-    if (weight < 5) return basePrice * 1.5;
-    // ...
-  }
-}
-```
-
-**Ubicación:** `logistics-back/src/application/services/WeightPricingCalculator.ts`
-
----
-
-
-**Beneficios:**
--  Lógica reutilizable sin componentes de orden superior
--  Testing independiente de componentes
--  Composición flexible
-
-**Ubicación:** `logistics-front/src/hooks/`
-
----
 
 ## 🚀 Instalación y Ejecución
 
