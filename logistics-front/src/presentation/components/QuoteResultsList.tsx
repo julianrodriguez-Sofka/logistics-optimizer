@@ -95,26 +95,6 @@ export const QuoteResultsList = ({ quotes, messages }: QuoteResultsListProps) =>
             {/* Left Border Accent */}
             <div className={`absolute top-0 left-0 w-1 h-full ${getProviderColor(quote.providerId)}`}></div>
             
-            {/* Badges */}
-            {quote.isCheapest && (
-              <div 
-                className="absolute top-4 right-4 bg-accent-success/10 text-accent-success text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-accent-success/20"
-                data-testid="cheapest-badge"
-                aria-label="Opción más barata"
-              >
-                Cheapest Option
-              </div>
-            )}
-            {quote.isFastest && (
-              <div 
-                className="absolute top-4 right-4 bg-accent-info/10 text-accent-info text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide flex items-center gap-1 shadow-lg shadow-accent-info/20 border border-accent-info/20"
-                data-testid="fastest-badge"
-                aria-label="Opción más rápida"
-              >
-                <span className="material-symbols-outlined text-sm fill-1">bolt</span> Fastest
-              </div>
-            )}
-
             <div className="flex flex-col sm:flex-row gap-6 items-center">
               {/* Provider Logo */}
               {getProviderLogo(quote.providerId)}
@@ -136,12 +116,34 @@ export const QuoteResultsList = ({ quotes, messages }: QuoteResultsListProps) =>
                 </div>
               </div>
 
-              {/* Price & Action */}
-              <div className="flex flex-col items-center sm:items-end gap-1">
+              {/* Price & Badges */}
+              <div className="flex flex-col items-center sm:items-end gap-2">
+                {/* Badges - Positioned to the left of price */}
+                <div className="flex gap-2 justify-center sm:justify-end">
+                  {quote.isCheapest && (
+                    <div 
+                      className="bg-accent-success/10 text-accent-success text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-accent-success/20"
+                      data-testid="cheapest-badge"
+                      aria-label="Opción más barata"
+                    >
+                      Cheapest Option
+                    </div>
+                  )}
+                  {quote.isFastest && (
+                    <div 
+                      className="bg-accent-info/10 text-accent-info text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide flex items-center gap-1 shadow-lg shadow-accent-info/20 border border-accent-info/20"
+                      data-testid="fastest-badge"
+                      aria-label="Opción más rápida"
+                    >
+                      <span className="material-symbols-outlined text-sm fill-1">bolt</span> Fastest
+                    </div>
+                  )}
+                </div>
+                
                 <p className="text-text-dark text-3xl font-black tracking-tight">
-                  ${quote.price.toFixed(2)}
+                  ${quote.price.toLocaleString('es-CO')}
                 </p>
-                <button 
+                {/* <button 
                   className={`${
                     quote.isFastest 
                       ? 'bg-accent-info hover:bg-blue-700 text-white shadow-lg shadow-accent-info/25' 
@@ -149,7 +151,7 @@ export const QuoteResultsList = ({ quotes, messages }: QuoteResultsListProps) =>
                   } text-sm font-bold px-6 py-2 rounded-lg transition-colors w-full sm:w-auto`}
                 >
                   {quote.isFastest ? 'Book Now' : 'Select Provider'}
-                </button>
+                </button> */}
               </div>
             </div>
           </div>

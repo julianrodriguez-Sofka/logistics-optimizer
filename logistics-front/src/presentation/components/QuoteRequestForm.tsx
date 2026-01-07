@@ -214,7 +214,7 @@ export const QuoteRequestForm = ({ onSubmit, loading = false }: QuoteRequestForm
 
         {/* Destination */}
         <label className="flex flex-col gap-2">
-          <span className="text-text-muted text-sm font-medium">Destination Address</span>
+          <span className="text-text-muted text-sm font-medium">City</span>
           <div className="relative group">
             <span className="material-symbols-outlined absolute left-4 top-4 text-primary">pin_drop</span>
             <input
