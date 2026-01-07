@@ -21,7 +21,7 @@ export default {
     '!src/app.ts',
   ],
   coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
+   coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
   testMatch: ['**/__tests__/**/*.test.ts', '**/*.test.ts'],
   coverageThreshold: {
     global: {

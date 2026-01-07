@@ -57,29 +57,47 @@ jobs:
       - name: 🧪 Run unit tests with coverage
         run: npm run test:coverage || npm test -- --coverage
 
-      - name: 📊 Upload coverage to Codecov
+      - name: 📊 Upload coverage to Codecov (Optional)
+        continue-on-error: true
         uses: codecov/codecov-action@v4
         with:
           files: ./logistics-back/coverage/lcov.info
           flags: backend
           name: backend-coverage
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
 
       - name: 📈 Check coverage threshold (70%+)
         run: |
-          # Extract coverage from coverage-summary.json
-          if [ -f coverage/coverage-summary.json ]; then
-            COVERAGE=$(node -e "console.log(require('./coverage/coverage-summary.json').total.lines.pct)")
-            echo "Backend Coverage: ${COVERAGE}%"
-            if (( $(echo "$COVERAGE < 70" | bc -l) )); then
-              echo "❌ Backend coverage is below 70%: ${COVERAGE}%"
-              exit 1
-            else
-              echo "✅ Backend coverage meets threshold: ${COVERAGE}%"
-            fi
-          else
-            echo "⚠️ No coverage report found"
+          # Install jq for JSON parsing
+          sudo apt-get update && sudo apt-get install -y jq bc
+          
+          # Check if coverage file exists
+          if [ ! -f coverage/coverage-final.json ]; then
+            echo "⚠️ No coverage report found at coverage/coverage-final.json"
+            echo "Looking for alternative coverage files..."
+            ls -la coverage/ || echo "No coverage directory found"
             exit 1
+          fi
+          
+          # Calculate total coverage from coverage-final.json
+          TOTAL_LINES=$(jq '[.[] | .l | to_entries | .[] | .value] | add' coverage/coverage-final.json)
+          COVERED_LINES=$(jq '[.[] | .l | to_entries | .[] | select(.value > 0) | .value] | length' coverage/coverage-final.json)
+          
+          if [ "$TOTAL_LINES" -eq 0 ]; then
+            echo "❌ No lines found in coverage report"
+            exit 1
+          fi
+          
+          COVERAGE=$(echo "scale=2; ($COVERED_LINES / $TOTAL_LINES) * 100" | bc)
+          echo "Backend Coverage: ${COVERAGE}%"
+          echo "Covered Lines: $COVERED_LINES / $TOTAL_LINES"
+          
+          if (( $(echo "$COVERAGE < 70" | bc -l) )); then
+            echo "❌ Backend coverage is below 70%: ${COVERAGE}%"
+            exit 1
+          else
+            echo "✅ Backend coverage meets threshold: ${COVERAGE}%"
           fi
 
   frontend:
@@ -129,31 +147,51 @@ jobs:
         run: npm run build
 
       - name: 🧪 Run unit tests with coverage
-        run: npm test -- --run --coverage
+        run: npm test -- --run --coverage --reporter=verbose
 
-      - name: 📊 Upload coverage to Codecov
+      - name: 📊 Upload coverage to Codecov (Optional)
+        continue-on-error: true
         uses: codecov/codecov-action@v4
         with:
           files: ./logistics-front/coverage/lcov.info
           flags: frontend
           name: frontend-coverage
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
 
       - name: 📈 Check coverage threshold (70%+)
         run: |
-          # Extract coverage from coverage-summary.json
+          # Install jq for JSON parsing
+          sudo apt-get update && sudo apt-get install -y jq bc
+          
+          # Check for coverage files
+          echo "Looking for coverage files..."
+          ls -la coverage/ || echo "No coverage directory found"
+          
+          # Try to find coverage data in different formats
           if [ -f coverage/coverage-summary.json ]; then
-            COVERAGE=$(node -e "console.log(require('./coverage/coverage-summary.json').total.lines.pct)")
-            echo "Frontend Coverage: ${COVERAGE}%"
-            if (( $(echo "$COVERAGE < 70" | bc -l) )); then
-              echo "❌ Frontend coverage is below 70%: ${COVERAGE}%"
-              exit 1
-            else
-              echo "✅ Frontend coverage meets threshold: ${COVERAGE}%"
-            fi
+            echo "Found coverage-summary.json"
+            COVERAGE=$(jq -r '.total.lines.pct' coverage/coverage-summary.json)
+          elif [ -f coverage/coverage-final.json ]; then
+            echo "Found coverage-final.json, calculating coverage..."
+            # Calculate coverage from coverage-final.json
+            TOTAL_LINES=$(jq '[.[] | .statementMap | length] | add' coverage/coverage-final.json)
+            COVERED_LINES=$(jq '[.[] | .s | to_entries | .[] | select(.value > 0)] | length' coverage/coverage-final.json)
+            COVERAGE=$(echo "scale=2; ($COVERED_LINES / $TOTAL_LINES) * 100" | bc)
           else
             echo "⚠️ No coverage report found"
+            echo "Available files in coverage directory:"
+            find coverage -type f 2>/dev/null || echo "No coverage directory"
             exit 1
+          fi
+          
+          echo "Frontend Coverage: ${COVERAGE}%"
+          
+          if (( $(echo "$COVERAGE < 70" | bc -l) )); then
+            echo "❌ Frontend coverage is below 70%: ${COVERAGE}%"
+            exit 1
+          else
+            echo "✅ Frontend coverage meets threshold: ${COVERAGE}%"
           fi
 
   ci-success:
