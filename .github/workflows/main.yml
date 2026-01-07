@@ -77,18 +77,18 @@ jobs:
           
           # Check for coverage-summary.json first (Jest generates this)
           if [ -f coverage/coverage-summary.json ]; then
-            echo "✅ Found coverage-summary.json"
+            echo " Found coverage-summary.json"
             COVERAGE=$(jq -r '.total.lines.pct' coverage/coverage-summary.json)
             echo "Backend Coverage: ${COVERAGE}%"
             
             if (( $(echo "$COVERAGE < 70" | bc -l) )); then
-              echo "❌ Backend coverage is below 70%: ${COVERAGE}%"
+              echo " Backend coverage is below 70%: ${COVERAGE}%"
               exit 1
             else
-              echo "✅ Backend coverage meets threshold: ${COVERAGE}%"
+              echo " Backend coverage meets threshold: ${COVERAGE}%"
             fi
           else
-            echo "❌ No coverage-summary.json found"
+            echo " No coverage-summary.json found"
             exit 1
           fi
 
@@ -161,24 +161,24 @@ jobs:
           
           # Check for coverage-summary.json (Vitest can generate this with json-summary reporter)
           if [ -f coverage/coverage-summary.json ]; then
-            echo "✅ Found coverage-summary.json"
+            echo " Found coverage-summary.json"
             COVERAGE=$(jq -r '.total.lines.pct' coverage/coverage-summary.json)
             echo "Frontend Coverage: ${COVERAGE}%"
             
             if (( $(echo "$COVERAGE < 70" | bc -l) )); then
-              echo "❌ Frontend coverage is below 70%: ${COVERAGE}%"
+              echo " Frontend coverage is below 70%: ${COVERAGE}%"
               exit 1
             else
-              echo "✅ Frontend coverage meets threshold: ${COVERAGE}%"
+              echo " Frontend coverage meets threshold: ${COVERAGE}%"
             fi
           else
-            echo "❌ No coverage-summary.json found"
+            echo " No coverage-summary.json found"
             echo "Please update vitest.config.ts to include 'json-summary' in coverage reporters"
             exit 1
           fi
 
   ci-success:
-    name: ✅ CI Pipeline Success
+    name:  CI Pipeline Success
     runs-on: ubuntu-latest
     needs: [backend, frontend]
     if: success()
@@ -186,14 +186,14 @@ jobs:
     steps:
       - name: 🎉 All checks passed
         run: |
-          echo "✅ Backend: Build & Tests passed"
-          echo "✅ Frontend: Build & Tests passed"
-          echo "✅ Backend: Coverage >= 70%"
-          echo "✅ Frontend: Coverage >= 70%"
+          echo " Backend: Build & Tests passed"
+          echo " Frontend: Build & Tests passed"
+          echo " Backend: Coverage >= 70%"
+          echo " Frontend: Coverage >= 70%"
           echo "🚀 Ready for deployment"
 
   ci-failure:
-    name: ❌ CI Pipeline Failed
+    name:  CI Pipeline Failed
     runs-on: ubuntu-latest
     needs: [backend, frontend]
     if: failure()
@@ -201,6 +201,6 @@ jobs:
     steps:
       - name: 💥 Pipeline failed
         run: |
-          echo "❌ One or more jobs failed"
+          echo " One or more jobs failed"
           echo "📝 Check logs above for details"
           exit 1

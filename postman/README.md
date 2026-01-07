@@ -95,7 +95,7 @@ newman run postman/postman_collection.json \
 ## Cobertura de Pruebas
 
 ### 1. Health Check (8 tests)
-- ✅ GET System Health - All Providers Online
+-  GET System Health - All Providers Online
   - Validar status code 200
   - Validar estructura de respuesta
   - Validar campos de cada provider
@@ -103,25 +103,25 @@ newman run postman/postman_collection.json \
   - Validar activeProviders en rango
 
 ### 2. Quote Requests - Success Cases (24 tests)
-- ✅ Quote Request - Valid Data
-- ✅ Quote Request - Fragile Package
-- ✅ Quote Request - Heavy Package (500kg)
+-  Quote Request - Valid Data
+-  Quote Request - Fragile Package
+-  Quote Request - Heavy Package (500kg)
 
 ### 3. Quote Requests - Validation Errors (32 tests)
-- ✅ Weight Below Minimum (0.05kg)
-- ✅ Weight Above Maximum (1001kg)
-- ✅ Negative Weight (-5kg)
-- ✅ Past Date
-- ✅ Future Date >30 Days
-- ✅ Missing Origin Field
-- ✅ Missing Destination Field
-- ✅ Invalid JSON Body
+-  Weight Below Minimum (0.05kg)
+-  Weight Above Maximum (1001kg)
+-  Negative Weight (-5kg)
+-  Past Date
+-  Future Date >30 Days
+-  Missing Origin Field
+-  Missing Destination Field
+-  Invalid JSON Body
 
 ### 4. Edge Cases (16 tests)
-- ✅ Minimum Weight (0.1kg)
-- ✅ Maximum Weight (1000kg)
-- ✅ Pickup Today
-- ✅ 30 Days Future
+-  Minimum Weight (0.1kg)
+-  Maximum Weight (1000kg)
+-  Pickup Today
+-  30 Days Future
 
 **Total: 80+ tests cubriendo todos los escenarios**
 
@@ -237,8 +237,8 @@ npm run test:api
 └─────────────────────────────┴────────┴────────┘
 ```
 
-- ✅ **passed = 80**: Todos los tests pasaron exitosamente
-- ❌ **failed > 0**: Revisar los tests fallidos para ver qué está mal
+-  **passed = 80**: Todos los tests pasaron exitosamente
+-  **failed > 0**: Revisar los tests fallidos para ver qué está mal
 
 ## Troubleshooting
 
@@ -344,12 +344,12 @@ Al agregar nuevos tests:
 
 ## Estado
 
-- ✅ Colección base implementada
-- ✅ Health Check tests
-- ✅ Quote success cases
-- ✅ Validation tests
-- ✅ Edge cases
-- ✅ README documentación
+-  Colección base implementada
+-  Health Check tests
+-  Quote success cases
+-  Validation tests
+-  Edge cases
+-  README documentación
 - ⏳ Error handling avanzado (próxima fase)
 
 ---
