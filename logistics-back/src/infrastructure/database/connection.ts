@@ -26,16 +26,16 @@ export class MongoDBConnection {
    */
   async connect(uri: string): Promise<void> {
     if (this.isConnected) {
-      console.log('✅ MongoDB already connected');
+      console.log(' MongoDB already connected');
       return;
     }
 
     try {
       await mongoose.connect(uri);
       this.isConnected = true;
-      console.log('✅ MongoDB connected successfully');
+      console.log(' MongoDB connected successfully');
     } catch (error) {
-      console.error('❌ MongoDB connection error:', error);
+      console.error(' MongoDB connection error:', error);
       // Don't throw - allow app to run without database (graceful degradation)
       this.isConnected = false;
     }

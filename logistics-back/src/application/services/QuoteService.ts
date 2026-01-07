@@ -119,10 +119,10 @@ export class QuoteService {
         });
         await this.quoteRepository.saveMany(quotesWithBadges, request);
         this.logger.info('Quotes saved to database');
-        console.log('✅ Quotes saved successfully to MongoDB');
+        console.log(' Quotes saved successfully to MongoDB');
       } catch (error) {
         this.logger.error('Error saving quotes to database', error);
-        console.error('❌ Error saving quotes to database:', error);
+        console.error(' Error saving quotes to database:', error);
         // Don't fail the request if database save fails (graceful degradation)
       }
     } else {

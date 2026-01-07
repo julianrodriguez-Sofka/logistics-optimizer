@@ -12,7 +12,7 @@ async function startServer() {
     // Attempt MongoDB connection with timeout
     console.log('🔌 Connecting to MongoDB...');
     await MongoDBConnection.getInstance().connect(mongoUri);
-    console.log('✅ MongoDB connected - quotes will be cached');
+    console.log(' MongoDB connected - quotes will be cached');
   } catch (error) {
     console.warn('⚠️  MongoDB connection failed - running without caching');
   }
