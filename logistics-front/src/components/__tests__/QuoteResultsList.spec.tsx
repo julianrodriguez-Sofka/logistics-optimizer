@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QuoteResultsList } from '../QuoteResultsList';
-import type { IQuote, IProviderMessage } from '../../../domain/models/Quote';
+import type { IQuote, IProviderMessage } from '../../models/Quote';
 
 describe('QuoteResultsList - Badge Display Integration', () => {
   const mockQuotes: IQuote[] = [

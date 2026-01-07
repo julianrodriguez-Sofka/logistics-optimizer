@@ -5,9 +5,9 @@
  */
 
 import type { FormEvent } from 'react';
-import type { IQuoteRequest } from '../../domain/models/QuoteRequest';
+import type { IQuoteRequest } from '../models/QuoteRequest';
 import { useQuoteFormState } from '../hooks/useQuoteFormState';
-import { FormField } from './FormField';import { VALIDATION, BUSINESS_RULES } from '../../domain/constants';
+import { FormField } from './FormField';import { VALIDATION, BUSINESS_RULES } from '../utils/constants';
 interface QuoteRequestFormProps {
   onSubmit: (data: IQuoteRequest) => void;
   loading?: boolean;

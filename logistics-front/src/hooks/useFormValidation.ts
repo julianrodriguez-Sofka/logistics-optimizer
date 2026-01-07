@@ -4,7 +4,7 @@
  * Kept for backward compatibility during migration
  */
 
-import { QuoteValidator } from '../../domain/validation/QuoteValidator';
+import { QuoteValidator } from '../utils/validation/QuoteValidator';
 
 /**
  * @deprecated Use QuoteValidator.validateField('weight', weight) instead

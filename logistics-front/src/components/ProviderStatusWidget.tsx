@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useProviderStatus } from '../hooks/useProviderStatus';
-import { ProviderStatusAdapter } from '../../infrastructure/adapters/ProviderStatusAdapter';
+import { ProviderStatusAdapter } from '../utils/adapters/ProviderStatusAdapter';
 import { StatusIndicator } from './StatusIndicator';
 
 export function ProviderStatusWidget() {

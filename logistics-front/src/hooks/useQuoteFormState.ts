@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { QuoteValidator, type FormErrors } from '../../domain/validation/QuoteValidator';
+import { QuoteValidator, type FormErrors } from '../utils/validation/QuoteValidator';
 
 /**
  * Form state interface

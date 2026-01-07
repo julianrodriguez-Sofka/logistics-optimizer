@@ -1,4 +1,4 @@
-import { defaultProviderHelper } from '../../infrastructure/config/ProviderConfigHelper';
+import { findProvider } from '../utils/providerConfig';
 
 interface ProviderLogoProps {
   providerId: string;
@@ -7,11 +7,11 @@ interface ProviderLogoProps {
 
 /**
  * Generic provider logo renderer
- * Uses ProviderRegistry configuration
- * Implements Open/Closed Principle - add new providers in registry, not here
+ * Uses providerConfig constants - simplified for academic project
+ * Add new providers in providerConfig.ts
  */
 export const ProviderLogo = ({ providerId, className = '' }: ProviderLogoProps) => {
-  const config = defaultProviderHelper.findProvider(providerId);
+  const config = findProvider(providerId);
 
   const defaultClassName = 'size-16 rounded-lg bg-white p-2 flex items-center justify-center flex-shrink-0 border border-border-light';
 

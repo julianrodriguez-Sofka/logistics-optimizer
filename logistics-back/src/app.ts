@@ -1,15 +1,6 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
-import quotesRouter from './infrastructure/routes/quotes.routes';
-import healthRouter from './infrastructure/routes/health.routes';
-import { MongoDBConnection } from './infrastructure/database/connection';
 
 const app: Application = express();
-
-// Initialize MongoDB connection (graceful degradation if fails)
-const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/logistics-optimizer';
-MongoDBConnection.getInstance().connect(mongoUri).catch(err => {
-  console.warn('⚠️  MongoDB connection failed - running without database', err.message);
-});
 
 // Middleware
 app.use(express.json());
@@ -28,19 +19,28 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-// API Routes
-app.use('/api', quotesRouter);
-app.use('/api', healthRouter);
-
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// 404 handler
-app.use((req: Request, res: Response, next: NextFunction) => {
-  res.status(404).json({ error: 'Not Found' });
-});
+// Function to initialize routes (called after MongoDB connection)
+export async function initializeRoutes() {
+  // Dynamic imports to ensure MongoDB is connected first
+  const quotesRouter = (await import('./infrastructure/routes/quotes.routes')).default;
+  const healthRouter = (await import('./infrastructure/routes/health.routes')).default;
+  
+  // API Routes
+  app.use('/api', quotesRouter);
+  app.use('/api', healthRouter);
+  
+  // 404 handler - MUST BE AFTER ALL ROUTES
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    res.status(404).json({ error: 'Not Found' });
+  });
+
+  console.log('✅ Routes initialized');
+}
 
 // Error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

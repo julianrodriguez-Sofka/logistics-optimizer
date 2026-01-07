@@ -8,5 +8,5 @@ export interface IShippingProvider {
    * @returns Promise resolving to Quote object
    */
   calculateShipping(weight: number, destination: string): Promise<Quote>;
-
+  
 }

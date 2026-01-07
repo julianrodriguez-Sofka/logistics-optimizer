@@ -40,12 +40,14 @@ classDiagram
     class DHLAdapter {
         -BASE_PRICE: number
         -MIN_DELIVERY_DAYS: number
+        -MAX_DELIVERY_DAYS: number
         +calculateShipping(weight, destination)
     }
 
     class LocalAdapter {
         -BASE_PRICE: number
-        -DELIVERY_DAYS: number
+        -MIN_DELIVERY_DAYS: number
+        -MAX_DELIVERY_DAYS: number
         +calculateShipping(weight, destination)
     }
 
@@ -114,15 +116,18 @@ shipping-optimizer/
 │   └── package.json
 └── logistics-front/
     ├── src/
-    │   ├── domain/
-    │   │   └── models/ (Type definitions)
-    │   ├── presentation/
-    │   │   ├── components/
-    │   │   ├── pages/
-    │   │   └── hooks/
-    │   ├── services/
-    │   │   └── api.client.ts
-    │   └── App.tsx
+    │   ├── components/         # React UI components (forms, widgets, alerts)
+    │   ├── hooks/              # Custom React hooks (form validation, provider status)
+    │   ├── models/             # TypeScript interfaces (Quote, QuoteRequest)
+    │   ├── services/           # API service layer (direct fetch calls)
+    │   │   └── quoteService.ts # Request quotes from backend
+    │   ├── utils/              # Utilities and configuration
+    │   │   ├── adapters/       # Data transformation adapters
+    │   │   ├── validation/     # Form validation logic
+    │   │   ├── constants.ts    # API URLs and configuration
+    │   │   └── providerConfig.ts # Provider metadata (colors, logos)
+    │   ├── App.tsx             # Main application component
+    │   └── main.tsx            # React entry point
     └── package.json
 ```
 
@@ -178,13 +183,14 @@ interface IShippingProvider {
 - **Dependency Injection:** `QuoteService` receives providers via constructor
 - **Abstraction:** Controllers depend on interfaces (`IShippingProvider`), not implementations
 - **Repository Pattern:** Data access abstraction with `IQuoteRepository`
-- **Separation of Concerns:** Domain ≠ Application ≠ Infrastructure
-- **Frontend Agnostic:** React consumes REST API via service layer
+- **Separation of Concerns (Backend):** Domain ≠ Application ≠ Infrastructure
+- **YAGNI Principle (Frontend):** Flat structure, no over-engineering for academic scope
+- **Frontend Simplicity:** Direct imports, no ServiceFactory, no Context for single function
 
 ---
 
 ## Data Flow
-- **Request:** React → API Client → Express Controller → Service → Adapter → Provider
+- **Request:** React → Direct fetch → Express Controller → Service → Adapter → Provider
 - **Response:** Provider → Adapter → Service → Controller → JSON → React UI
 
 ---

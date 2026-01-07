@@ -1,10 +1,10 @@
 //HUMAN COMMENT Start
-//REFACTORED: Uses ProviderRegistry for provider configuration
-//No longer hardcoded provider logic - add new providers in registry
+//REFACTORED: Uses providerConfig for provider configuration (simplified from ProviderRegistry)
+//Add new providers in utils/providerConfig.ts - no classes needed
 //HUMAN COMMENT End
 
-import type { IQuote, IProviderMessage } from '../../domain/models/Quote';
-import { defaultProviderHelper } from '../../infrastructure/config/ProviderConfigHelper';
+import type { IQuote, IProviderMessage } from '../models/Quote';
+import { getProviderColor } from '../utils/providerConfig';
 import { ProviderLogo } from './ProviderLogo';
 import { OfflineProviderMessage } from './OfflineProviderMessage';
 
@@ -14,6 +14,7 @@ interface QuoteResultsListProps {
 }
 
 export const QuoteResultsList = ({ quotes, messages }: QuoteResultsListProps) => {
+
   if (quotes.length === 0) {
     return (
       <div className="p-5 text-center">
@@ -30,7 +31,7 @@ export const QuoteResultsList = ({ quotes, messages }: QuoteResultsListProps) =>
 
       <div className="flex flex-col gap-4">
         {quotes.map((quote, index) => {
-          const providerColor = defaultProviderHelper.getProviderColor(quote.providerId);
+          const providerColor = getProviderColor(quote.providerId);
 
           return (
             <div
@@ -46,7 +47,7 @@ export const QuoteResultsList = ({ quotes, messages }: QuoteResultsListProps) =>
               <div className={`absolute top-0 left-0 w-1 h-full ${providerColor}`}></div>
 
               <div className="flex flex-col sm:flex-row gap-6 items-center">
-                {/* Provider Logo - uses ProviderRegistry */}
+                {/* Provider Logo - uses providerConfig */}
                 <ProviderLogo providerId={quote.providerId} />
 
                 {/* Provider Details */}

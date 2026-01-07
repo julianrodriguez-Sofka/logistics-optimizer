@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import './index.css';
-import { Sidebar } from './presentation/components/Sidebar';
-import { PageHeader } from './presentation/components/PageHeader';
-import { QuoteRequestForm } from './presentation/components/QuoteRequestForm';
-import { QuoteResultsList } from './presentation/components/QuoteResultsList';
-import { ErrorAlert } from './presentation/components/ErrorAlert';
-import { LoadingSpinner } from './presentation/components/LoadingSpinner';
-import { useQuoteService } from './presentation/context/QuoteServiceContext';
-import type { IQuoteRequest } from './domain/models/QuoteRequest';
-import type { IQuote, IProviderMessage } from './domain/models/Quote';
+import { Sidebar } from './components/Sidebar';
+import { PageHeader } from './components/PageHeader';
+import { QuoteRequestForm } from './components/QuoteRequestForm';
+import { QuoteResultsList } from './components/QuoteResultsList';
+import { ErrorAlert } from './components/ErrorAlert';
+import { LoadingSpinner } from './components/LoadingSpinner';
+import { requestQuotes } from './services/quoteService';
+import type { IQuoteRequest } from './models/QuoteRequest';
+import type { IQuote, IProviderMessage } from './models/Quote';
 
 function App() {
   const [quotes, setQuotes] = useState<IQuote[]>([]);
@@ -16,8 +16,6 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
-  
-  const quoteService = useQuoteService();
 
   const handleSubmit = async (data: IQuoteRequest) => {
     setLoading(true);
@@ -26,7 +24,7 @@ function App() {
     setMessages([]);
 
     try {
-      const response = await quoteService.requestQuotes(data);
+      const response = await requestQuotes(data);
       setQuotes(response.quotes);
       setMessages(response.messages || []);
       setCurrentStep(2);

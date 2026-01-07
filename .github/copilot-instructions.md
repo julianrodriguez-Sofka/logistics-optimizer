@@ -71,15 +71,21 @@ logistics-back/src/
 
 **Implementation Status:** ✅ Fully migrated to TypeScript with Clean Architecture + Template Method Pattern
 
-### Frontend Structure
+### Frontend Structure (Simplified - YAGNI Principle Applied)
 ```
 logistics-front/src/
-├── presentation/     # React components, pages
-├── services/         # API client (fetch calls to backend)
-├── domain/          # Type definitions (Quote, Shipment interfaces)
+├── components/      # React UI components (QuoteRequestForm, QuoteResultsList, etc.)
+├── hooks/           # Custom React hooks (useFormValidation, useProviderStatus)
+├── models/          # TypeScript interfaces (IQuote, IQuoteRequest)
+├── services/        # API layer (quoteService.ts with direct fetch calls)
+├── utils/           # Utilities (providerConfig, validation, adapters, constants)
+├── App.tsx          # Main application component
+└── main.tsx         # React entry point
 ```
 
-**Tech Stack:** React 19 + TypeScript 5.9 + Vite (dev server), ESLint configured.
+**Tech Stack:** React 19 + TypeScript 5.9 + Vite (dev server), Vitest for testing, Tailwind CSS, ESLint configured.
+
+**Architecture Note:** Flat folder structure chosen over hexagonal/layered architecture for academic project scope. No ServiceFactory, no Context API for single function - direct imports following YAGNI (You Aren't Gonna Need It) principle.
 
 ---
 
@@ -142,11 +148,17 @@ npm run lint              # ESLint with React/TypeScript rules
 npm test                  # Run Vitest unit tests
 ```
 
+**Key Files:**
+- `src/services/quoteService.ts` - Direct fetch to backend API with timeout handling
+- `src/utils/providerConfig.ts` - Provider metadata (colors, logos) replacing old Registry pattern
+- `src/components/QuoteRequestForm.tsx` - Main form with validation
+- `src/hooks/useFormValidation.ts` - Form validation logic
+
 ### Testing Strategy
 ```bash
 # Unit Tests (Jest/Vitest)
 npm test -- --coverage    # Backend: QuoteService, adapters logic, repositories
-                          # Frontend: API client, component logic
+                          # Frontend: quoteService, hooks, components, validation logic
 
 # Integration Tests with MongoDB Memory Server
 npm run test:integration  # Test POST /quotes, GET /adapters/status, DB operations

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import type { ISystemStatus } from '../../domain/models/ProviderStatus';
-import { ProviderStatusAdapter } from '../../infrastructure/adapters/ProviderStatusAdapter';
-import { API } from '../../domain/constants';
+import type { ISystemStatus } from '../models/ProviderStatus';
+import { ProviderStatusAdapter } from '../utils/adapters/ProviderStatusAdapter';
+import { API } from '../utils/constants';
 
 interface UseProviderStatusReturn {
   status: ISystemStatus | null;

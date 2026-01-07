@@ -113,12 +113,23 @@ export class QuoteService {
     // Save quotes to database (if repository is available)
     if (this.quoteRepository && quotesWithBadges.length > 0) {
       try {
+        console.log('💾 Attempting to save quotes to database...', {
+          quoteCount: quotesWithBadges.length,
+          hasRepository: !!this.quoteRepository
+        });
         await this.quoteRepository.saveMany(quotesWithBadges, request);
         this.logger.info('Quotes saved to database');
+        console.log('✅ Quotes saved successfully to MongoDB');
       } catch (error) {
         this.logger.error('Error saving quotes to database', error);
+        console.error('❌ Error saving quotes to database:', error);
         // Don't fail the request if database save fails (graceful degradation)
       }
+    } else {
+      console.log('⚠️  Skipping database save:', {
+        hasRepository: !!this.quoteRepository,
+        quoteCount: quotesWithBadges.length
+      });
     }
 
     return { quotes: quotesWithBadges, messages };
