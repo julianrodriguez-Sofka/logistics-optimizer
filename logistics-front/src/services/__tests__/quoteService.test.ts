@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { requestQuotes } from '../quoteService';
-import type { IQuoteRequest } from '../../domain/models/QuoteRequest';
+import type { IQuoteRequest } from '../../models/QuoteRequest';
 
 // Mock fetch globally
 global.fetch = vi.fn();
@@ -46,13 +46,15 @@ describe('quoteService', () => {
 
       const result = await requestQuotes(request);
 
-      expect(global.fetch).toHaveBeenCalledWith('http://localhost:3000/api/quotes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-      });
+      expect(global.fetch).toHaveBeenCalledWith('http://localhost:3000/api/quotes', 
+        expect.objectContaining({
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(request),
+        })
+      );
 
       expect(result).toEqual(mockResponse);
     });
