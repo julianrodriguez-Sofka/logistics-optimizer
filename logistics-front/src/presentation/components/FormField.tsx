@@ -48,7 +48,7 @@ export const FormField = ({
           id={name}
           name={name}
           type={type}
-          value={isCheckbox ? undefined : value}
+          value={isCheckbox ? undefined : typeof value === 'boolean' ? '' : value}
           checked={isCheckbox ? (value as boolean) : undefined}
           onChange={onChange}
           onBlur={onBlur}

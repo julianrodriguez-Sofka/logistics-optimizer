@@ -1,4 +1,4 @@
-import type { ISystemStatus, ISystemStatusMetrics } from '../../domain/models/ProviderStatus';
+import type { ISystemStatus, ISystemStatusMetrics, SystemStatusType, IProviderStatus } from '../../domain/models/ProviderStatus';
 
 /**
  * Adapter to convert API response to ISystemStatus
@@ -11,8 +11,9 @@ export class ProviderStatusAdapter {
    */
   static fromApiResponse(data: unknown): ISystemStatus {
     const apiData = data as Record<string, unknown>;
+    const status = (apiData.status as string) || 'offline';
     return {
-      status: (apiData.status as string) || 'offline',
+      status: status as SystemStatusType,
       providers: (apiData.providers as IProviderStatus[]) || [],
       timestamp: (apiData.timestamp as string) || new Date().toISOString(),
     };

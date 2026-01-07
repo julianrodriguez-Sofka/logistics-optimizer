@@ -4,8 +4,9 @@
  * Provides services throughout the component tree
  */
 
-import { createContext, useContext, ReactNode } from 'react';
-import type { IQuoteService } from '../infrastructure/services/QuoteServiceImpl';
+import { createContext, useContext } from 'react';
+import type { ReactNode } from 'react';
+import type { IQuoteService } from '../../infrastructure/services/QuoteServiceImpl';
 
 /**
  * Context value interface
