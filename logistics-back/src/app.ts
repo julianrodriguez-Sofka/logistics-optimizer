@@ -1,8 +1,15 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
 import quotesRouter from './infrastructure/routes/quotes.routes';
 import healthRouter from './infrastructure/routes/health.routes';
+import { MongoDBConnection } from './infrastructure/database/connection';
 
 const app: Application = express();
+
+// Initialize MongoDB connection (graceful degradation if fails)
+const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/logistics-optimizer';
+MongoDBConnection.getInstance().connect(mongoUri).catch(err => {
+  console.warn('⚠️  MongoDB connection failed - running without database', err.message);
+});
 
 // Middleware
 app.use(express.json());
