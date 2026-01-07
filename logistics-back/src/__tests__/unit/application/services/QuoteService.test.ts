@@ -39,8 +39,8 @@ describe('QuoteService', () => {
     it('should apply fragile surcharge (+15%) when fragile is true', async () => {
       const weight = 10;
       const request = new QuoteRequest({
-        origin: 'New York, NY',
-        destination: 'Los Angeles, CA',
+        origin: 'Bogotá',
+        destination: 'Bogotá',
         weight: weight,
         pickupDate: new Date(Date.now() + 86400000),
         fragile: true,
@@ -48,21 +48,21 @@ describe('QuoteService', () => {
 
       const quotes = await quoteService.getAllQuotes(request);
 
-      // FedEx: (50 + 10*3.5) = 85 * 1.15 = 97.75
-      expect(quotes[0].price).toBeCloseTo(97.75, 2);
+      // FedEx: (10000 + 10*6500*1.0) = 75000 * 1.15 = 86,250 COP
+      expect(quotes[0].price).toBeCloseTo(86250, 0);
       
-      // DHL: (45 + 10*4.0) = 85 * 1.15 = 97.75
-      expect(quotes[1].price).toBeCloseTo(97.75, 2);
+      // DHL: (8000 + 10*6000*1.0) = 68000 * 1.15 = 78,200 COP
+      expect(quotes[1].price).toBeCloseTo(78200, 0);
       
-      // Local: (60 + 10*2.5) = 85 * 1.15 = 97.75
-      expect(quotes[2].price).toBeCloseTo(97.75, 2);
+      // Local (Zone 1, 1.8x): (5000 + 10*4500*1.8) = 86000 * 1.15 = 98,900 COP
+      expect(quotes[2].price).toBeCloseTo(98900, 0);
     });
 
     it('should NOT apply fragile surcharge when fragile is false', async () => {
       const weight = 10;
       const request = new QuoteRequest({
-        origin: 'New York, NY',
-        destination: 'Los Angeles, CA',
+        origin: 'Bogotá',
+        destination: 'Bogotá',
         weight: weight,
         pickupDate: new Date(Date.now() + 86400000),
         fragile: false,
@@ -70,21 +70,19 @@ describe('QuoteService', () => {
 
       const quotes = await quoteService.getAllQuotes(request);
 
-      // FedEx: 50 + 10*3.5 = 85
-      expect(quotes[0].price).toBe(85);
+      // FedEx: 10000 + 10*6500*1.0 = 75,000 COP
+      expect(quotes[0].price).toBe(75000);
       
-      // DHL: 45 + 10*4.0 = 85
-      expect(quotes[1].price).toBe(85);
+      // DHL: 8000 + 10*6000*1.0 = 68,000 COP
+      expect(quotes[1].price).toBe(68000);
       
-      // Local: 60 + 10*2.5 = 85
-      expect(quotes[2].price).toBe(85);
+      // Local (Zone 1, 1.8x): 5000 + 10*4500*1.8 = 86,000 COP
+      expect(quotes[2].price).toBe(86000);
     });
 
     it('should return 2 quotes when one adapter fails', async () => {
       const mockFailingAdapter: IShippingProvider = {
         calculateShipping: jest.fn().mockRejectedValue(new Error('Provider timeout')),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const serviceWithFailure = new QuoteService([
@@ -111,14 +109,10 @@ describe('QuoteService', () => {
     it('should return empty array when all adapters fail', async () => {
       const mockFailingAdapter1: IShippingProvider = {
         calculateShipping: jest.fn().mockRejectedValue(new Error('Timeout')),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const mockFailingAdapter2: IShippingProvider = {
         calculateShipping: jest.fn().mockRejectedValue(new Error('Service down')),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const serviceWithAllFailures = new QuoteService([
@@ -180,8 +174,8 @@ describe('QuoteService', () => {
     it('should apply fragile surcharge with correct precision', async () => {
       const weight = 5.5;
       const request = new QuoteRequest({
-        origin: 'New York, NY',
-        destination: 'Los Angeles, CA',
+        origin: 'Bogotá',
+        destination: 'Bogotá',
         weight: weight,
         pickupDate: new Date(Date.now() + 86400000),
         fragile: true,
@@ -189,14 +183,14 @@ describe('QuoteService', () => {
 
       const quotes = await quoteService.getAllQuotes(request);
 
-      // FedEx: (50 + 5.5*3.5) = 69.25 * 1.15 = 79.6375
-      expect(quotes[0].price).toBeCloseTo(79.6375, 2);
+      // FedEx: (10000 + 5.5*6500*1.0) = 45,750 * 1.15 = 52,612.50 COP
+      expect(quotes[0].price).toBeCloseTo(52612.5, 0);
       
-      // DHL: (45 + 5.5*4.0) = 67 * 1.15 = 77.05
-      expect(quotes[1].price).toBeCloseTo(77.05, 2);
+      // DHL: (8000 + 5.5*6000*1.0) = 41,000 * 1.15 = 47,150 COP
+      expect(quotes[1].price).toBeCloseTo(47150, 0);
       
-      // Local: (60 + 5.5*2.5) = 73.75 * 1.15 = 84.8125
-      expect(quotes[2].price).toBeCloseTo(84.8125, 2);
+      // Local (Zone 1, 1.8x): (5000 + 5.5*4500*1.8) = 49,550 * 1.15 = 56,982.50 COP
+      expect(quotes[2].price).toBeCloseTo(56982.5, 0);
     });
 
     it('should handle adapter timeout gracefully (5 second timeout)', async () => {
@@ -214,8 +208,6 @@ describe('QuoteService', () => {
             }), 6000); // 6 seconds - exceeds 5 second timeout
           });
         }),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const serviceWithSlowAdapter = new QuoteService([
@@ -256,8 +248,6 @@ describe('QuoteService', () => {
             transportMode: 'Truck',
           }), 6000))
         ),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const serviceWithTimeout = new QuoteService([mockSlowAdapter]);
@@ -294,8 +284,6 @@ describe('QuoteService', () => {
             transportMode: 'Truck',
           }), 6000))
         ),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const serviceWithMixed = new QuoteService([

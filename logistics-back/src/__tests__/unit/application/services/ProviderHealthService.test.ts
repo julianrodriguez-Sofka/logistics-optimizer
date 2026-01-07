@@ -18,8 +18,6 @@ describe('ProviderHealthService', () => {
             transportMode: 'Air',
           })
         ),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const mockDHL: IShippingProvider = {
@@ -34,8 +32,6 @@ describe('ProviderHealthService', () => {
             transportMode: 'Air',
           })
         ),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const mockLocal: IShippingProvider = {
@@ -50,8 +46,6 @@ describe('ProviderHealthService', () => {
             transportMode: 'Truck',
           })
         ),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const adapters = [
@@ -86,8 +80,6 @@ describe('ProviderHealthService', () => {
             transportMode: 'Air',
           })
         ),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       // Mock adapter that times out (takes longer than timeout)
@@ -95,8 +87,6 @@ describe('ProviderHealthService', () => {
         calculateShipping: jest.fn().mockImplementation(() => 
           new Promise((resolve) => setTimeout(resolve, 6000))
         ),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const adapters = [
@@ -116,8 +106,6 @@ describe('ProviderHealthService', () => {
     it('should return "offline" status when adapter throws error', async () => {
       const mockFedEx: IShippingProvider = {
         calculateShipping: jest.fn().mockRejectedValue(new Error('Network error')),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const adapters = [{ provider: mockFedEx, name: 'FedEx' }];
@@ -149,8 +137,6 @@ describe('ProviderHealthService', () => {
             }, 100); // 100ms delay
           })
         ),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const adapters = [{ provider: mockFedEx, name: 'FedEx' }];
@@ -177,8 +163,6 @@ describe('ProviderHealthService', () => {
             transportMode: 'Air',
           })
         ),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const adapters = [
@@ -208,14 +192,10 @@ describe('ProviderHealthService', () => {
             transportMode: 'Air',
           })
         ),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const mockOffline: IShippingProvider = {
         calculateShipping: jest.fn().mockRejectedValue(new Error('Timeout')),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const adapters = [
@@ -235,8 +215,6 @@ describe('ProviderHealthService', () => {
     it('should return "OFFLINE" when all adapters are offline', async () => {
       const mockOffline: IShippingProvider = {
         calculateShipping: jest.fn().mockRejectedValue(new Error('Timeout')),
-        trackShipment: jest.fn(),
-        validateAddress: jest.fn(),
       };
 
       const adapters = [
