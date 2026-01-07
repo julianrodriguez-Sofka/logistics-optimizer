@@ -1,8 +1,10 @@
 import { IShippingProvider } from '../../domain/interfaces/IShippingProvider';
 import { Quote } from '../../domain/entities/Quote';
 import { QuoteRequest } from '../../domain/entities/QuoteRequest';
+import { IQuoteRepository } from '../../domain/interfaces/IQuoteRepository';
 import { withTimeout } from '../utils/timeout';
 import { BadgeService } from './BadgeService';
+import { logger } from '../../infrastructure/logging/Logger';
 
 export interface IProviderMessage {
   provider: string;
@@ -19,18 +21,45 @@ export class QuoteService {
   private readonly FRAGILE_SURCHARGE = 1.15; // 15% surcharge
   private readonly TIMEOUT_MS = 5000; // 5 seconds timeout
   private readonly badgeService: BadgeService;
+  private readonly logger = logger;
 
-  constructor(private readonly providers: IShippingProvider[]) {
+  constructor(
+    private readonly providers: IShippingProvider[],
+    private readonly quoteRepository?: IQuoteRepository // Optional for graceful degradation
+  ) {
     this.badgeService = new BadgeService();
   }
 
   /**
    * Get quotes from all available providers with error messages
    * Uses Promise.allSettled to handle partial failures gracefully
+   * Implements caching with 5-minute TTL if repository is available
    * @param request - Quote request with shipping details
    * @returns Object with quotes array and messages array for failed providers
    */
   async getAllQuotesWithMessages(request: QuoteRequest): Promise<IQuoteResponse> {
+    this.logger.info('Processing quote request', {
+      origin: request.origin,
+      destination: request.destination,
+      weight: request.weight,
+      fragile: request.fragile,
+    });
+
+    // Check cache first (if repository is available)
+    if (this.quoteRepository) {
+      try {
+        const cachedQuotes = await this.quoteRepository.findCached(request);
+        if (cachedQuotes && cachedQuotes.length > 0) {
+          this.logger.info('Cache hit - returning cached quotes', { count: cachedQuotes.length });
+          return { quotes: cachedQuotes, messages: [] };
+        }
+        this.logger.debug('Cache miss - fetching fresh quotes');
+      } catch (error) {
+        this.logger.error('Error checking cache', error);
+        // Continue without cache on error
+      }
+    }
+
     // Create timeout wrapper for each provider call with provider metadata
     const providerPromises = this.providers.map((provider, index) =>
       this.callProviderWithTimeout(provider, request)
@@ -68,13 +97,29 @@ export class QuoteService {
           error: errorMessage,
         });
 
-        // Log error for monitoring (in production, use proper logging)
-        console.error('Provider failed:', result.reason);
+        // Log error for monitoring
+        this.logger.error(`Provider ${providerName} failed`, result.reason);
       }
     }
 
     // Assign badges to quotes before returning
     const quotesWithBadges = this.badgeService.assignBadges(quotes);
+
+    this.logger.info('Quotes processed successfully', {
+      totalQuotes: quotesWithBadges.length,
+      failedProviders: messages.length,
+    });
+
+    // Save quotes to database (if repository is available)
+    if (this.quoteRepository && quotesWithBadges.length > 0) {
+      try {
+        await this.quoteRepository.saveMany(quotesWithBadges, request);
+        this.logger.info('Quotes saved to database');
+      } catch (error) {
+        this.logger.error('Error saving quotes to database', error);
+        // Don't fail the request if database save fails (graceful degradation)
+      }
+    }
 
     return { quotes: quotesWithBadges, messages };
   }
