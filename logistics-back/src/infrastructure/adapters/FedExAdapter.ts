@@ -1,36 +1,40 @@
-import { IShippingProvider } from '../../domain/interfaces/IShippingProvider';
+import { BaseShippingAdapter } from './BaseShippingAdapter';
 import { Quote } from '../../domain/entities/Quote';
+import { ZoneConfig } from '../../domain/entities/ZoneConfig';
+import { WeightPricingCalculator } from '../../application/services/WeightPricingCalculator';
 
-export class FedExAdapter implements IShippingProvider {
-  private readonly BASE_PRICE = 50;
-  private readonly PRICE_PER_KG = 3.5;
+export class FedExAdapter extends BaseShippingAdapter {
+  private readonly BASE_PRICE = 10000; // Base price in COP
   private readonly MIN_DELIVERY_DAYS = 3;
   private readonly MAX_DELIVERY_DAYS = 4;
+  private readonly CARRIER_NAME = 'FedEx';
 
   async calculateShipping(weight: number, destination: string): Promise<Quote> {
-    // Validate weight
-    if (weight < 0.1) {
-      throw new Error('Weight must be greater than 0.1 kg');
-    }
+    // Use base class validation (DRY principle)
+    this.validateShippingRequest(weight, destination);
 
-    if (weight > 1000) {
-      throw new Error('Weight must be less than or equal to 1000 kg');
-    }
+    // Step 1: Get zone for destination
+    const zone = ZoneConfig.getZoneByDestination(destination);
 
-    // Validate destination
-    if (!destination || destination.trim() === '') {
-      throw new Error('Destination is required');
-    }
+    // Step 2: Calculate weight-based cost using tiered pricing
+    const weightCost = WeightPricingCalculator.calculateCost(
+      weight,
+      WeightPricingCalculator.getFedExTiers()
+    );
 
-    // Calculate price using formula: basePrice + weight * pricePerKg
-    const price = this.BASE_PRICE + (weight * this.PRICE_PER_KG);
+    // Step 3: Apply zone multiplier
+    const zoneMultiplier = ZoneConfig.getMultiplier(this.CARRIER_NAME, zone);
+
+    // Step 4: Calculate final price
+    // Formula: basePrice + (weightCost × zoneMultiplier)
+    const price = this.BASE_PRICE + (weightCost * zoneMultiplier);
 
     // Create and return Quote
     return new Quote({
       providerId: 'fedex-ground',
       providerName: 'FedEx Ground',
       price: price,
-      currency: 'USD',
+      currency: 'COP', // Changed from USD to COP
       minDays: this.MIN_DELIVERY_DAYS,
       maxDays: this.MAX_DELIVERY_DAYS,
       transportMode: 'Truck',
@@ -39,13 +43,4 @@ export class FedExAdapter implements IShippingProvider {
     });
   }
 
-  async trackShipment(trackingId: string): Promise<any> {
-    // TODO: Implement tracking functionality
-    throw new Error('Method not implemented.');
-  }
-
-  async validateAddress(address: string): Promise<boolean> {
-    // TODO: Implement address validation
-    throw new Error('Method not implemented.');
-  }
 }

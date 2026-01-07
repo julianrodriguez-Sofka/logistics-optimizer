@@ -1,36 +1,35 @@
-import { IShippingProvider } from '../../domain/interfaces/IShippingProvider';
+import { BaseShippingAdapter } from './BaseShippingAdapter';
 import { Quote } from '../../domain/entities/Quote';
+import { ZoneConfig } from '../../domain/entities/ZoneConfig';
+import { WeightPricingCalculator } from '../../application/services/WeightPricingCalculator';
 
-export class DHLAdapter implements IShippingProvider {
-  private readonly BASE_PRICE = 45;
-  private readonly PRICE_PER_KG = 4.0;
+export class DHLAdapter extends BaseShippingAdapter {
+  private readonly BASE_PRICE = 8000; // Base price in COP
   private readonly MIN_DELIVERY_DAYS = 5;
   private readonly MAX_DELIVERY_DAYS = 5;
+  private readonly CARRIER_NAME = 'DHL';
 
   async calculateShipping(weight: number, destination: string): Promise<Quote> {
-    // Validate weight
-    if (weight < 0.1) {
-      throw new Error('Weight must be greater than 0.1 kg');
-    }
+  
+    this.validateShippingRequest(weight, destination);
 
-    if (weight > 1000) {
-      throw new Error('Weight must be less than or equal to 1000 kg');
-    }
+    const zone = ZoneConfig.getZoneByDestination(destination);
 
-    // Validate destination
-    if (!destination || destination.trim() === '') {
-      throw new Error('Destination is required');
-    }
+    const weightCost = WeightPricingCalculator.calculateCost(
+      weight,
+      WeightPricingCalculator.getDHLTiers()
+    );
 
-    // Calculate price using formula: basePrice + weight * pricePerKg
-    const price = this.BASE_PRICE + (weight * this.PRICE_PER_KG);
+    const zoneMultiplier = ZoneConfig.getMultiplier(this.CARRIER_NAME, zone);
+
+    const price = this.BASE_PRICE + (weightCost * zoneMultiplier);
 
     // Create and return Quote
     return new Quote({
       providerId: 'dhl-express',
       providerName: 'DHL Express',
       price: price,
-      currency: 'USD',
+      currency: 'COP', // Changed from USD to COP
       minDays: this.MIN_DELIVERY_DAYS,
       maxDays: this.MAX_DELIVERY_DAYS,
       transportMode: 'Air',
@@ -39,13 +38,5 @@ export class DHLAdapter implements IShippingProvider {
     });
   }
 
-  async trackShipment(trackingId: string): Promise<any> {
-    // TODO: Implement tracking functionality
-    throw new Error('Method not implemented.');
-  }
 
-  async validateAddress(address: string): Promise<boolean> {
-    // TODO: Implement address validation
-    throw new Error('Method not implemented.');
-  }
 }
