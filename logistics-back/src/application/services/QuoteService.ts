@@ -25,7 +25,7 @@ export class QuoteService {
 
   constructor(
     private readonly providers: IShippingProvider[],
-    private readonly quoteRepository?: IQuoteRepository // Optional for graceful degradation
+    private readonly quoteRepository?: IQuoteRepository 
   ) {
     this.badgeService = new BadgeService();
   }

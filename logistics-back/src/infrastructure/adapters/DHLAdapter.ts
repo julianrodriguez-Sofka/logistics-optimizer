@@ -6,7 +6,7 @@ import { WeightPricingCalculator } from '../../application/services/WeightPricin
 export class DHLAdapter extends BaseShippingAdapter {
   private readonly BASE_PRICE = 8000; // Base price in COP
   private readonly MIN_DELIVERY_DAYS = 5;
-  private readonly MAX_DELIVERY_DAYS = 5;
+  private readonly MAX_DELIVERY_DAYS = 8;
   private readonly CARRIER_NAME = 'DHL';
 
   async calculateShipping(weight: number, destination: string): Promise<Quote> {
