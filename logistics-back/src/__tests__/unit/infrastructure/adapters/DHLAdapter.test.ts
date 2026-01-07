@@ -21,7 +21,7 @@ describe('DHLAdapter', () => {
       expect(quote.transportMode).toBe('Air');
       expect(quote.price).toBeGreaterThan(0);
       expect(quote.minDays).toBe(5);
-      expect(quote.maxDays).toBe(5);
+      expect(quote.maxDays).toBe(8);
     });
 
     it('should calculate price using dynamic formula: basePrice(8000) + (weightCost × zoneMultiplier)', async () => {
@@ -51,13 +51,13 @@ describe('DHLAdapter', () => {
       }
     });
 
-    it('should set estimatedDays to 5 (minDays and maxDays both 5)', async () => {
+    it('should calculate estimatedDays as average of minDays (5) and maxDays (8)', async () => {
       const weight = 10;
       const destination = 'Bogotá';
 
       const quote = await adapter.calculateShipping(weight, destination);
 
-      expect(quote.estimatedDays).toBe(5);
+      expect(quote.estimatedDays).toBe(Math.round((5 + 8) / 2));
     });
 
     it('should set isCheapest and isFastest to false by default', async () => {

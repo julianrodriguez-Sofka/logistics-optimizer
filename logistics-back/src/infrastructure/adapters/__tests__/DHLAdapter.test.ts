@@ -118,7 +118,7 @@ describe('DHLAdapter - Dynamic Pricing (TDD RED Phase)', () => {
       expect(quote.currency).toBe('COP');
       expect(quote.transportMode).toBe('Air');
       expect(quote.minDays).toBe(5);
-      expect(quote.maxDays).toBe(5);
+      expect(quote.maxDays).toBe(8);
     });
   });
 });
