@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { QuoteRequestForm } from '../QuoteRequestForm';
@@ -69,7 +69,7 @@ describe('QuoteRequestForm', () => {
     await user.type(dateInput, dateString);
     await user.tab();
     
-    expect(await screen.findByText(/fecha no puede ser anterior a hoy/i)).toBeInTheDocument();
+    expect(await screen.findByText(/La fecha no puede ser anterior a hoy/i)).toBeInTheDocument();
   });
 
   it('should show error for date more than 30 days ahead', async () => {
