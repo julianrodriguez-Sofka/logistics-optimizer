@@ -50,7 +50,7 @@ describe('QuoteRequestForm', () => {
     const user = userEvent.setup();
     render(<QuoteRequestForm onSubmit={() => {}} />);
     
-    const destinationInput = screen.getByLabelText(/destination address/i);
+    const destinationInput = screen.getByLabelText(/city/i);
     await user.click(destinationInput);
     await user.tab();
     
@@ -97,7 +97,7 @@ describe('QuoteRequestForm', () => {
     const dateString = tomorrow.toISOString().split('T')[0];
     
     await user.type(screen.getByLabelText(/origin address/i), 'New York, NY');
-    await user.type(screen.getByLabelText(/destination address/i), 'Los Angeles, CA');
+    await user.type(screen.getByLabelText(/city/i), 'Los Angeles, CA');
     await user.type(screen.getByLabelText(/weight/i), '5.5');
     await user.type(screen.getByLabelText(/pickup date/i), dateString);
     
@@ -116,7 +116,7 @@ describe('QuoteRequestForm', () => {
     const dateString = tomorrow.toISOString().split('T')[0];
     
     await user.type(screen.getByLabelText(/origin address/i), 'New York, NY');
-    await user.type(screen.getByLabelText(/destination address/i), 'Los Angeles, CA');
+    await user.type(screen.getByLabelText(/city/i), 'Los Angeles, CA');
     await user.type(screen.getByLabelText(/weight/i), '10');
     await user.type(screen.getByLabelText(/pickup date/i), dateString);
     
