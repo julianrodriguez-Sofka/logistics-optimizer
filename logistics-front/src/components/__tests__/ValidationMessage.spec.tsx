@@ -5,7 +5,7 @@ import { ValidationMessage } from '../ValidationMessage';
 describe('ValidationMessage', () => {
   it('should render error message with red styling', () => {
     render(<ValidationMessage message="El peso es requerido" type="error" />);
-    
+
     const messageElement = screen.getByText('El peso es requerido');
     expect(messageElement).toBeInTheDocument();
     // Check parent div for the error class
@@ -15,7 +15,7 @@ describe('ValidationMessage', () => {
 
   it('should render warning message with yellow styling', () => {
     render(<ValidationMessage message="Advertencia: peso alto" type="warning" />);
-    
+
     const messageElement = screen.getByText('Advertencia: peso alto');
     expect(messageElement).toBeInTheDocument();
     // Check parent div for the warning class
@@ -25,7 +25,7 @@ describe('ValidationMessage', () => {
 
   it('should render info message with blue styling', () => {
     render(<ValidationMessage message="Información adicional" type="info" />);
-    
+
     const messageElement = screen.getByText('Información adicional');
     expect(messageElement).toBeInTheDocument();
     // Check parent div for the info class
@@ -44,8 +44,10 @@ describe('ValidationMessage', () => {
   });
 
   it('should render error icon for error type', () => {
-    render(<ValidationMessage message="Error" type="error" />);
-    expect(screen.getByText('❌')).toBeInTheDocument();
+    const { container } = render(<ValidationMessage message="Error" type="error" />);
+    const iconSpan = container.querySelector('span:first-child');
+    expect(iconSpan).toBeInTheDocument();
+    expect(iconSpan?.textContent).toBe('');
   });
 
   it('should render warning icon for warning type', () => {
@@ -60,7 +62,7 @@ describe('ValidationMessage', () => {
 
   it('should have proper ARIA attributes for accessibility', () => {
     render(<ValidationMessage message="Error message" type="error" />);
-    
+
     const messageElement = screen.getByRole('alert');
     expect(messageElement).toBeInTheDocument();
     expect(messageElement).toHaveAttribute('aria-live', 'polite');

@@ -6,7 +6,7 @@ interface ValidationMessageProps {
 }
 
 const iconMap = {
-  error: '❌',
+  error: '',
   warning: '⚠️',
   info: 'ℹ️',
 };

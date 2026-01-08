@@ -1,3 +1,14 @@
+//HUMAN REVIEW
+/**
+ * Coordina la solicitud de cotizaciones de multiples proveedores en paralelo,
+ * Ademas maneja time outs de 5 segundos para la Graceful Degradation (si un proveedor falla, no afecta la respuesta general)
+ * Ademas aplica un sobre cargo de 15% para paquetes fragiles, integra el Servicio de "badge" para marcar la cotizacion mas barata y mas rapida
+ * Y finalmente implementa cache con MongoDB de TTL (Time to live) de 5 minutos para optimizar el rendimiento.
+ */
+
+
+
+
 import { IShippingProvider } from '../../domain/interfaces/IShippingProvider';
 import { Quote } from '../../domain/entities/Quote';
 import { QuoteRequest } from '../../domain/entities/QuoteRequest';
@@ -119,10 +130,10 @@ export class QuoteService {
         });
         await this.quoteRepository.saveMany(quotesWithBadges, request);
         this.logger.info('Quotes saved to database');
-        console.log('✅ Quotes saved successfully to MongoDB');
+        console.log(' Quotes saved successfully to MongoDB');
       } catch (error) {
         this.logger.error('Error saving quotes to database', error);
-        console.error('❌ Error saving quotes to database:', error);
+        console.error(' Error saving quotes to database:', error);
         // Don't fail the request if database save fails (graceful degradation)
       }
     } else {

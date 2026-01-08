@@ -696,20 +696,20 @@ open coverage/index.html
 
 ## Common TDD Pitfalls to Avoid
 
-❌ **Writing tests after code** → Defeats TDD purpose, leads to confirmation bias
-✅ **Write test first**, see it fail (RED), then implement (GREEN)
+ **Writing tests after code** → Defeats TDD purpose, leads to confirmation bias
+ **Write test first**, see it fail (RED), then implement (GREEN)
 
-❌ **Testing implementation details** → Tests become brittle
-✅ **Test behavior and outcomes**, not internal logic
+ **Testing implementation details** → Tests become brittle
+ **Test behavior and outcomes**, not internal logic
 
-❌ **Large, complex tests** → Hard to debug failures
-✅ **One assertion per test** (or closely related assertions)
+ **Large, complex tests** → Hard to debug failures
+ **One assertion per test** (or closely related assertions)
 
-❌ **Mocking everything** → False confidence
-✅ **Mock external dependencies only** (APIs, DB), test real logic
+ **Mocking everything** → False confidence
+ **Mock external dependencies only** (APIs, DB), test real logic
 
-❌ **Ignoring slow tests** → Developers stop running them
-✅ **Keep unit tests < 100ms each**, use `test.only` for debugging
+ **Ignoring slow tests** → Developers stop running them
+ **Keep unit tests < 100ms each**, use `test.only` for debugging
 
 ---
 

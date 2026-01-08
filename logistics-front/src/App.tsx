@@ -54,7 +54,6 @@ function App() {
 
         <div className="flex-1 w-full px-6 md:px-12 pb-12">
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-            {/* Step 1: Form */}
             <div className="xl:col-span-5 flex flex-col gap-6">
               <QuoteRequestForm onSubmit={handleSubmit} loading={loading} />
               {error && <ErrorAlert message={error} />}

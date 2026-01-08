@@ -1,3 +1,12 @@
+//HUMAN REVIEW
+/**
+ * Esta clase abstracta implementa el Patron Template Method para compartir logica de validacion y
+ * ademas define el contrato que todos los adaptadores deben de seguir (FedEx, DHL, Local), ademas de esto
+ * valida el peso y destino antes de calcular el envio.
+ */
+
+
+
 import { IShippingProvider } from '../../domain/interfaces/IShippingProvider';
 import { Quote } from '../../domain/entities/Quote';
 

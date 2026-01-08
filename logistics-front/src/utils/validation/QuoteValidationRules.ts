@@ -58,26 +58,30 @@ export class QuoteValidationRules {
   }
 
   /**
-   * Validate pickup date - must be today or future, max days from now
+   * Validate pickup date - must be today or future, max 30 days from now
+   * Uses string comparison to avoid timezone issues with ISO dates
    */
   static validatePickupDate(date: string): string | undefined {
     if (typeof date !== 'string' || !date) {
       return 'La fecha es requerida';
     }
 
-    const selectedDate = new Date(date + 'T00:00:00');
+    // Get today's date in YYYY-MM-DD format
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
 
-    if (selectedDate < today) {
+    // Compare dates as strings (works for YYYY-MM-DD format)
+    if (date < todayStr) {
       return 'La fecha no puede ser anterior a hoy';
     }
 
+    // Calculate max date (30 days from now)
     const maxDate = new Date();
     maxDate.setDate(maxDate.getDate() + VALIDATION.DATE.MAX_DAYS_AHEAD);
-    maxDate.setHours(0, 0, 0, 0);
+    const maxDateStr = maxDate.toISOString().split('T')[0];
 
-    if (selectedDate > maxDate) {
+    // Allow up to and including the max date (30 days)
+    if (date > maxDateStr) {
       return `La fecha no puede ser mayor a ${VALIDATION.DATE.MAX_DAYS_AHEAD} días`;
     }
 

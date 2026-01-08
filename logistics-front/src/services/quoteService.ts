@@ -1,7 +1,9 @@
+// HUMAN REVIEW
+
 /**
- * @file quoteService.ts
- * @description Self-contained quote service with direct API calls
- * Simplified for academic project - no over-engineering with interfaces/factories
+ * Es la fuente de comunicacion de las cotizaciones entre el Frontend y el Backend.
+ * Implementa time outs con AbortController para evitar esperas largas en el Frontend.
+ * Ademas maneja los errores HTTP y de red, lanzando excepciones con mensajes claros.
  */
 
 import type { IQuoteRequest } from '../models/QuoteRequest';

@@ -1,3 +1,10 @@
+// HUMAN REVIEW
+/**
+ * Analiza las cotizaciones y marca las cotizaciones con "isCheapest" de que es el mas barato y "isFastest" 
+ * de que es el mas rapido.
+ * 
+ */
+
 import { Quote } from '../../domain/entities/Quote';
 
 export class BadgeService {

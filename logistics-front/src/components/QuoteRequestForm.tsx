@@ -1,7 +1,7 @@
 //HUMAN REVIEW
 /**
- * REFACTORED: Now uses centralized QuoteValidator and useQuoteFormState
- * Reduced from 244 to ~130 lines - Implements SRP
+ * Formulario principal donde los usuarios ingresan los datos de envios, cuenta con validaciones en tiempo real,
+ * ademas tiene un hook personaliado para centralizar la logica del estado del formulario y un Validator para validar 
  */
 
 import type { FormEvent } from 'react';

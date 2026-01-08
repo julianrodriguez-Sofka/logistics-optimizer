@@ -39,7 +39,7 @@ export async function initializeRoutes() {
     res.status(404).json({ error: 'Not Found' });
   });
 
-  console.log('✅ Routes initialized');
+  console.log(' Routes initialized');
 }
 
 // Error handler

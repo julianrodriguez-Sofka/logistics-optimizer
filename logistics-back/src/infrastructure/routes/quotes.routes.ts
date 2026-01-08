@@ -23,7 +23,7 @@ console.log('📊 MongoDB connection status at route init:', isConnected);
 
 if (isConnected) {
   quoteRepository = new QuoteRepository();
-  console.log('✅ Quote repository initialized with MongoDB');
+  console.log(' Quote repository initialized with MongoDB');
 } else {
   console.warn('⚠️  Running without quote repository (MongoDB not connected)');
 }

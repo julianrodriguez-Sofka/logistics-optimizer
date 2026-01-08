@@ -7,9 +7,7 @@ exports[`ValidationMessage > should match snapshot for error state 1`] = `
     class="flex items-center gap-2 text-sm mt-1 text-error"
     role="alert"
   >
-    <span>
-      ❌
-    </span>
+    <span />
     <span>
       Error
     </span>

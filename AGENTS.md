@@ -148,22 +148,22 @@ shipping-optimizer/
 ### Imports
 
 ```typescript
-// ✅ Good - Group imports by type
+//  Good - Group imports by type
 import { Express } from 'express';                    // External dependencies
 import { IShippingProvider } from '../../domain/interfaces/IShippingProvider';  // Domain
 import { Quote } from '../../domain/entities/Quote';   // Entities
 import { withTimeout } from '../utils/timeout';        // Utilities
 
-// ❌ Avoid - Mixed import order, no grouping
+//  Avoid - Mixed import order, no grouping
 import { withTimeout } from '../utils/timeout';
 import { Express } from 'express';
 import { Quote } from '../../domain/entities/Quote';
 
-// ✅ Use named exports (preferred)
+//  Use named exports (preferred)
 export class QuoteService { }
 export interface IQuoteResponse { }
 
-// ❌ Avoid default exports (harder to refactor)
+//  Avoid default exports (harder to refactor)
 export default class QuoteService { }
 ```
 
@@ -203,7 +203,7 @@ enum ProviderStatus {
 ### Formatting
 
 ```typescript
-// ✅ Use 2 spaces for indentation
+//  Use 2 spaces for indentation
 export class QuoteService {
   constructor(
     private readonly providers: IShippingProvider[],
@@ -211,7 +211,7 @@ export class QuoteService {
   ) { }
 }
 
-// ✅ Add blank lines between logical sections
+//  Add blank lines between logical sections
 async getAllQuotes(request: QuoteRequest): Promise<Quote[]> {
   // Validate input
   if (!request) {
@@ -225,14 +225,14 @@ async getAllQuotes(request: QuoteRequest): Promise<Quote[]> {
   return this.badgeService.assignBadges(quotes);
 }
 
-// ✅ Use trailing commas in arrays/objects
+//  Use trailing commas in arrays/objects
 const providers = [
   'FedEx',
   'DHL',
   'Local',  // ← trailing comma
 ];
 
-// ✅ Use single quotes for strings (except when avoiding escapes)
+//  Use single quotes for strings (except when avoiding escapes)
 const message = 'Provider not available';
 const html = "<div class='container'>";  // OK - avoids escaping
 ```
@@ -240,28 +240,28 @@ const html = "<div class='container'>";  // OK - avoids escaping
 ### Type Safety
 
 ```typescript
-// ✅ Always define return types for functions
+//  Always define return types for functions
 async getAllQuotes(request: QuoteRequest): Promise<Quote[]> {
   // ...
 }
 
-// ✅ Use strict null checks
+//  Use strict null checks
 function getProviderName(index: number): string | undefined {
   return this.providers[index]?.name;
 }
 
-// ✅ Avoid 'any' - use specific types or 'unknown'
-// ❌ Bad
+//  Avoid 'any' - use specific types or 'unknown'
+//  Bad
 function processData(data: any) { }
 
-// ✅ Good
+//  Good
 function processData(data: unknown) {
   if (typeof data === 'object' && data !== null) {
     // Type guard
   }
 }
 
-// ✅ Use type narrowing and guards
+//  Use type narrowing and guards
 function isQuote(value: unknown): value is Quote {
   return typeof value === 'object' && value !== null && 'providerId' in value;
 }
@@ -270,7 +270,7 @@ function isQuote(value: unknown): value is Quote {
 ### Error Handling
 
 ```typescript
-// ✅ Use custom error classes
+//  Use custom error classes
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
@@ -278,7 +278,7 @@ export class ValidationError extends Error {
   }
 }
 
-// ✅ Use try-catch for async operations
+//  Use try-catch for async operations
 async getAllQuotes(request: QuoteRequest): Promise<Quote[]> {
   try {
     const quotes = await this.fetchQuotes(request);
@@ -289,7 +289,7 @@ async getAllQuotes(request: QuoteRequest): Promise<Quote[]> {
   }
 }
 
-// ✅ Use Promise.allSettled for graceful degradation
+//  Use Promise.allSettled for graceful degradation
 const results = await Promise.allSettled(providerPromises);
 for (const result of results) {
   if (result.status === 'fulfilled') {
@@ -299,7 +299,7 @@ for (const result of results) {
   }
 }
 
-// ✅ Validate inputs early
+//  Validate inputs early
 protected validateShippingRequest(weight: number, destination: string): void {
   if (weight < this.MIN_WEIGHT) {
     throw new ValidationError(`Weight must be > ${this.MIN_WEIGHT} kg`);
@@ -313,7 +313,7 @@ protected validateShippingRequest(weight: number, destination: string): void {
 ### React Component Style
 
 ```typescript
-// ✅ Use functional components with TypeScript
+//  Use functional components with TypeScript
 interface QuoteRequestFormProps {
   onSubmit: (data: IQuoteRequest) => void;
   loading?: boolean;
@@ -338,7 +338,7 @@ export const QuoteRequestForm = ({ onSubmit, loading = false }: QuoteRequestForm
   );
 };
 
-// ✅ Extract reusable logic to custom hooks
+//  Extract reusable logic to custom hooks
 export const useQuoteFormState = () => {
   const [formData, setFormData] = useState<FormData>(initialState);
   // ... hook logic
@@ -413,7 +413,7 @@ export class FedExAdapter extends BaseShippingAdapter {
 ### Dependency Injection
 
 ```typescript
-// ✅ Inject dependencies via constructor
+//  Inject dependencies via constructor
 export class QuoteService {
   constructor(
     private readonly providers: IShippingProvider[],
@@ -421,7 +421,7 @@ export class QuoteService {
   ) { }
 }
 
-// ❌ Avoid direct instantiation inside classes
+//  Avoid direct instantiation inside classes
 export class QuoteService {
   private providers = [new FedExAdapter(), new DHLAdapter()]; // Hard to test
 }
