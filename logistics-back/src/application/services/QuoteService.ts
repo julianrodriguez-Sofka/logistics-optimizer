@@ -58,18 +58,9 @@ export class QuoteService {
     });
 
     // Check cache first (if repository is available)
-    if (this.quoteRepository) {
-      try {
-        const cachedQuotes = await this.quoteRepository.findCached(request);
-        if (cachedQuotes && cachedQuotes.length > 0) {
-          this.logger.info('Cache hit - returning cached quotes', { count: cachedQuotes.length });
-          return { quotes: cachedQuotes, messages: [] };
-        }
-        this.logger.debug('Cache miss - fetching fresh quotes');
-      } catch (error) {
-        this.logger.error('Error checking cache', error);
-        // Continue without cache on error
-      }
+    const cachedResponse = await this.getCachedQuotes(request);
+    if (cachedResponse) {
+      return cachedResponse;
     }
 
     // Create timeout wrapper for each provider call with provider metadata
@@ -93,6 +84,48 @@ export class QuoteService {
     const results = await Promise.all(providerPromises);
 
     // Extract successful quotes and failed providers
+    const { quotes, messages } = this.processProviderResults(results);
+
+    // Assign badges to quotes before returning
+    const quotesWithBadges = this.badgeService.assignBadges(quotes);
+
+    this.logger.info('Quotes processed successfully', {
+      totalQuotes: quotesWithBadges.length,
+      failedProviders: messages.length,
+    });
+
+    // Save quotes to database (if repository is available)
+    await this.saveQuotesToDatabase(quotesWithBadges, request);
+
+    return { quotes: quotesWithBadges, messages };
+  }
+
+  /**
+   * Check cache for existing quotes
+   */
+  private async getCachedQuotes(request: QuoteRequest): Promise<IQuoteResponse | null> {
+    if (!this.quoteRepository) {
+      return null;
+    }
+
+    try {
+      const cachedQuotes = await this.quoteRepository.findCached(request);
+      if (cachedQuotes && cachedQuotes.length > 0) {
+        this.logger.info('Cache hit - returning cached quotes', { count: cachedQuotes.length });
+        return { quotes: cachedQuotes, messages: [] };
+      }
+      this.logger.debug('Cache miss - fetching fresh quotes');
+    } catch (error) {
+      this.logger.error('Error checking cache', error);
+    }
+
+    return null;
+  }
+
+  /**
+   * Process provider results and extract quotes and error messages
+   */
+  private processProviderResults(results: any[]): { quotes: Quote[]; messages: IProviderMessage[] } {
     const quotes: Quote[] = [];
     const messages: IProviderMessage[] = [];
 
@@ -109,42 +142,37 @@ export class QuoteService {
           error: errorMessage,
         });
 
-        // Log error for monitoring
         this.logger.error(`Provider ${providerName} failed`, result.reason);
       }
     }
 
-    // Assign badges to quotes before returning
-    const quotesWithBadges = this.badgeService.assignBadges(quotes);
+    return { quotes, messages };
+  }
 
-    this.logger.info('Quotes processed successfully', {
-      totalQuotes: quotesWithBadges.length,
-      failedProviders: messages.length,
-    });
-
-    // Save quotes to database (if repository is available)
-    if (this.quoteRepository && quotesWithBadges.length > 0) {
-      try {
-        console.log('💾 Attempting to save quotes to database...', {
-          quoteCount: quotesWithBadges.length,
-          hasRepository: !!this.quoteRepository
-        });
-        await this.quoteRepository.saveMany(quotesWithBadges, request);
-        this.logger.info('Quotes saved to database');
-        console.log(' Quotes saved successfully to MongoDB');
-      } catch (error) {
-        this.logger.error('Error saving quotes to database', error);
-        console.error(' Error saving quotes to database:', error);
-        // Don't fail the request if database save fails (graceful degradation)
-      }
-    } else {
+  /**
+   * Save quotes to database with error handling
+   */
+  private async saveQuotesToDatabase(quotesWithBadges: Quote[], request: QuoteRequest): Promise<void> {
+    if (!this.quoteRepository || quotesWithBadges.length === 0) {
       console.log('⚠️  Skipping database save:', {
         hasRepository: !!this.quoteRepository,
         quoteCount: quotesWithBadges.length
       });
+      return;
     }
 
-    return { quotes: quotesWithBadges, messages };
+    try {
+      console.log('💾 Attempting to save quotes to database...', {
+        quoteCount: quotesWithBadges.length,
+        hasRepository: !!this.quoteRepository
+      });
+      await this.quoteRepository.saveMany(quotesWithBadges, request);
+      this.logger.info('Quotes saved to database');
+      console.log(' Quotes saved successfully to MongoDB');
+    } catch (error) {
+      this.logger.error('Error saving quotes to database', error);
+      console.error(' Error saving quotes to database:', error);
+    }
   }
 
   /**
