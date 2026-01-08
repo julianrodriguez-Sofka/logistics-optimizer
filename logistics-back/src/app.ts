@@ -5,7 +5,7 @@ const app: Application = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
+app.disable('x-powered-by');
 // CORS middleware (simple implementation)
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.header('Access-Control-Allow-Origin', '*');
