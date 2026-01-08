@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { useWeightValidation, useDateValidation, useRequiredValidation } from '../useFormValidation';
+import { useWeightValidation, useDateValidation, useRequiredValidation } from '../../../hooks/useFormValidation';
 import { renderHook } from '@testing-library/react';
 
 /**

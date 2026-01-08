@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { QuoteValidator } from '../QuoteValidator';
-import { QuoteValidationRules } from '../QuoteValidationRules';
+import { QuoteValidator } from '../../../../utils/validation/QuoteValidator';
+import { QuoteValidationRules } from '../../../../utils/validation/QuoteValidationRules';
 
 describe('QuoteValidator', () => {
   describe('validateField', () => {

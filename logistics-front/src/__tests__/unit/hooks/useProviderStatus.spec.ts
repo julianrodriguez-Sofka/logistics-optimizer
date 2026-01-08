@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useProviderStatus } from '../useProviderStatus';
+import { useProviderStatus } from '../../../hooks/useProviderStatus';
 
 describe('useProviderStatus', () => {
   beforeEach(() => {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { StatusIndicator } from '../StatusIndicator';
+import { StatusIndicator } from '../../../components/StatusIndicator';
 
 describe('StatusIndicator', () => {
   describe('Online status', () => {

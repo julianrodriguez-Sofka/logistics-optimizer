@@ -18,6 +18,8 @@ export interface FormErrors {
   [key: string]: string | undefined;
 }
 
+type FormFieldValue = string | number | boolean | undefined;
+
 /**
  * Centralized validator for quote requests
  * Validates individual fields and complete forms
@@ -28,7 +30,7 @@ export class QuoteValidator {
   /**
    * Map of field validators - add new fields here only
    */
-  private static readonly FIELD_VALIDATORS: Record<string, (value: any) => string | undefined> = {
+  private static readonly FIELD_VALIDATORS: Record<string, (value: FormFieldValue) => string | undefined> = {
     origin: QuoteValidationRules.validateOrigin,
     destination: QuoteValidationRules.validateDestination,
     weight: QuoteValidationRules.validateWeight,
@@ -40,7 +42,7 @@ export class QuoteValidator {
    * Validate a single field by name and value
    * Generic approach - no need to modify when adding new fields
    */
-  static validateField(fieldName: string, value: any): string | undefined {
+  static validateField(fieldName: string, value: FormFieldValue): string | undefined {
     const validator = this.FIELD_VALIDATORS[fieldName];
     return validator ? validator(value) : undefined;
   }
@@ -49,7 +51,7 @@ export class QuoteValidator {
    * Validate all fields in a form
    * Generic implementation - automatically validates all fields in formData
    */
-  static validateForm(formData: Record<string, any>): FormErrors {
+  static validateForm(formData: Record<string, FormFieldValue>): FormErrors {
     const errors: FormErrors = {};
 
     Object.entries(formData).forEach(([fieldName, value]) => {
