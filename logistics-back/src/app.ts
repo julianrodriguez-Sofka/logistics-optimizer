@@ -5,7 +5,17 @@ const app: Application = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Security: Hide framework fingerprints
 app.disable('x-powered-by');
+app.use((req: Request, res: Response, next: NextFunction) => {
+  // Remove server header to prevent version disclosure
+  res.removeHeader('Server');
+  // Set generic server header to mask technology stack
+  res.setHeader('Server', 'nginx');
+  next();
+});
+
 // CORS middleware (simple implementation)
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -49,9 +59,15 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     console.error(err);
   }
 
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal Server Error',
-  });
+  // In production, don't expose stack traces or sensitive error details
+  const errorResponse = process.env.NODE_ENV === 'production' 
+    ? { error: 'Internal Server Error' }
+    : { 
+        error: err.message || 'Internal Server Error',
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+      };
+
+  res.status(err.status || 500).json(errorResponse);
 });
 
 export default app;
