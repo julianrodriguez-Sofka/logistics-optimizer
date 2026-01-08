@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { ProviderStatusWidget } from '../ProviderStatusWidget';
+import { ProviderStatusWidget } from '../../../components/ProviderStatusWidget';
 
 // Mock the useProviderStatus hook
-vi.mock('../../hooks/useProviderStatus', () => ({
+vi.mock('../../../hooks/useProviderStatus', () => ({
   useProviderStatus: vi.fn(),
 }));
 
-import { useProviderStatus } from '../../hooks/useProviderStatus';
+import { useProviderStatus } from '../../../hooks/useProviderStatus';
 
 describe('ProviderStatusWidget', () => {
   it('should display "Sistema: EN LÍNEA" when all providers online', async () => {

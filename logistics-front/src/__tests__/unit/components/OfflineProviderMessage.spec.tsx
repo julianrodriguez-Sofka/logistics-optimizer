@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { OfflineProviderMessage } from '../OfflineProviderMessage';
+import { OfflineProviderMessage } from '../../../components/OfflineProviderMessage';
 
 describe('OfflineProviderMessage', () => {
   it('should render provider name in message', () => {

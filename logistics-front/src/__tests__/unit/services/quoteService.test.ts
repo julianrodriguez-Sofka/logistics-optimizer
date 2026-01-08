@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { requestQuotes } from '../quoteService';
-import type { IQuoteRequest } from '../../models/QuoteRequest';
+import { requestQuotes } from '../../../services/quoteService';
+import type { IQuoteRequest } from '../../../models/QuoteRequest';
 
 // Mock fetch globally
 global.fetch = vi.fn();

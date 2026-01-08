@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { ValidationMessage } from '../ValidationMessage';
+import { ValidationMessage } from '../../../components/ValidationMessage';
 
 describe('ValidationMessage', () => {
   it('should render error message with red styling', () => {

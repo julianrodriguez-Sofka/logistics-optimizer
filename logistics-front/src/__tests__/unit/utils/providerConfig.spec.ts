@@ -6,7 +6,7 @@ import {
   getProviderLogo, 
   getProviderName,
   getAllProviders 
-} from '../providerConfig';
+} from '../../../utils/providerConfig';
 
 describe('providerConfig', () => {
   describe('PROVIDERS constant', () => {

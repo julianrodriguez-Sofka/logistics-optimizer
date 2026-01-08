@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { QuoteBadge } from '../QuoteBadge';
+import { QuoteBadge } from '../../../components/QuoteBadge';
 
 describe('QuoteBadge', () => {
   describe('Cheapest badge', () => {

@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { QuoteResultsList } from '../QuoteResultsList';
-import type { IQuote, IProviderMessage } from '../../../domain/models/Quote';
+import { QuoteResultsList } from '../../../components/QuoteResultsList';
+import type { IQuote, IProviderMessage } from '../../../models/Quote';
 
 describe('QuoteResultsList', () => {
   const mockQuotes: IQuote[] = [
