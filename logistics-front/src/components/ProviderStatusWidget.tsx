@@ -53,7 +53,7 @@ export function ProviderStatusWidget() {
             <tr className="border-b border-border-light">
               <th className="text-left py-2 px-3 font-semibold text-text-dark">Proveedor</th>
               <th className="text-left py-2 px-3 font-semibold text-text-dark">Estado</th>
-              <th className="text-right py-2 px-3 font-semibold text-text-dark">Tiempo de Respuesta</th>
+              <th className="text-left py-2 px-3 font-semibold text-text-dark">Tiempo de Respuesta</th>
             </tr>
           </thead>
           <tbody>
@@ -63,8 +63,8 @@ export function ProviderStatusWidget() {
                 <td className="py-3 px-3">
                   <StatusIndicator status={provider.status === 'online' ? 'online' : 'offline'} />
                 </td>
-                <td className="py-3 px-3 text-right text-text-muted">
-                  {provider.responseTime ? `${provider.responseTime}ms` : '-'}
+                <td className="py-3 px-3 text-sm text-text-muted">
+                  {provider.responseTime ? `${provider.responseTime}ms` : 'N/A'}
                 </td>
               </tr>
             ))}

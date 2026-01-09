@@ -1,4 +1,4 @@
-import type { ISystemStatus, ISystemStatusMetrics, SystemStatusType, IProviderStatus } from '../../models/ProviderStatus';
+import type { ISystemStatus, ISystemStatusMetrics, SystemStatusType, ProviderStatusType } from '../../models/ProviderStatus';
 
 /**
  * Adapter to convert API response to ISystemStatus
@@ -12,9 +12,24 @@ export class ProviderStatusAdapter {
   static fromApiResponse(data: unknown): ISystemStatus {
     const apiData = data as Record<string, unknown>;
     const status = (apiData.status as string) || 'offline';
+    
+    // Convert uppercase status from backend to lowercase for frontend
+    const normalizedStatus = status.toLowerCase() as SystemStatusType;
+    
+    // Map providers from backend format to frontend format
+    const providers = ((apiData.providers as unknown[]) || []).map((p: unknown) => {
+      const provider = p as Record<string, unknown>;
+      return {
+        providerName: provider.providerName as string,
+        status: (provider.status as string).toLowerCase() as ProviderStatusType,
+        responseTime: provider.responseTime as number,
+        lastCheck: provider.lastCheck as string,
+      };
+    });
+    
     return {
-      status: status as SystemStatusType,
-      providers: (apiData.providers as IProviderStatus[]) || [],
+      status: normalizedStatus,
+      providers,
       timestamp: (apiData.timestamp as string) || new Date().toISOString(),
     };
   }

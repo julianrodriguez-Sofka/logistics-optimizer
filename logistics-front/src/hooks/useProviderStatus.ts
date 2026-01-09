@@ -20,7 +20,7 @@ export function useProviderStatus(): UseProviderStatusReturn {
 
   const fetchStatus = async () => {
     try {
-      const response = await fetch('/api/adapters/status');
+      const response = await fetch(`${API.DEFAULT_BASE_URL}/api/adapters/status`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

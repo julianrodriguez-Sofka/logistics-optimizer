@@ -143,7 +143,7 @@ export const QuoteRequestForm = ({ onSubmit, loading = false }: QuoteRequestForm
               </>
             ) : (
               <>
-                Calculate Rates
+                Calculate Rates{' '}
                 <span className="material-symbols-outlined">arrow_forward</span>
               </>
             )}

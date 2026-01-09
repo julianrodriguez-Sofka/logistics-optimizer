@@ -1,3 +1,5 @@
+import { ProviderStatusWidget } from './ProviderStatusWidget';
+
 interface SidebarProps {
   className?: string;
 }
@@ -47,6 +49,11 @@ export const Sidebar = ({ className = '' }: SidebarProps) => {
               <p className="text-text-muted group-hover:text-text-dark text-sm font-medium leading-normal">Invoices</p>
             </a>
           </nav>
+
+          {/* System Status Widget - HU-04 */}
+          <div className="mt-4">
+            <ProviderStatusWidget />
+          </div>
         </div>
 
         {/* Bottom Section */}
