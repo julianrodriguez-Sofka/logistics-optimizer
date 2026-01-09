@@ -31,8 +31,8 @@ export class QuoteRequest {
       data.weight === null ||
       data.weight === undefined ||
       typeof data.weight !== 'number' ||
-      isNaN(data.weight) ||
-      !isFinite(data.weight)
+      Number.isNaN(data.weight) ||
+      !Number.isFinite(data.weight)
     ) {
       throw new ValidationError('El peso debe ser un número válido', 'weight', data.weight);
     }
@@ -46,7 +46,7 @@ export class QuoteRequest {
     }
 
     // Validate pickup date
-    if (!data.pickupDate || !(data.pickupDate instanceof Date) || isNaN(data.pickupDate.getTime())) {
+    if (!data.pickupDate || !(data.pickupDate instanceof Date) || Number.isNaN(data.pickupDate.getTime())) {
       throw new ValidationError('La fecha de recolección debe ser una fecha válida', 'pickupDate', data.pickupDate);
     }
 
