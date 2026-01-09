@@ -1,206 +1,50 @@
-name: CI Pipeline - Logistics Shipping Optimizer
+name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
 
 jobs:
-  backend:
-    name: Backend - Build & Test
+  test-and-analyze:
     runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    defaults:
-      run:
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies - Backend
         working-directory: ./logistics-back
+        run: npm ci
 
-    strategy:
-      matrix:
-        node-version: [22.x]
-
-    steps:
-      - name: 📥 Checkout repository
-        uses: actions/checkout@v4
-
-      - name: 🟢 Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: 📦 Cache npm dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            ./logistics-back/node_modules
-          key: ${{ runner.os }}-node-${{ matrix.node-version }}-backend-${{ hashFiles('logistics-back/package-lock.json', 'logistics-back/package.json') }}    
-          restore-keys: |
-            ${{ runner.os }}-node-${{ matrix.node-version }}-backend-
-            ${{ runner.os }}-node-${{ matrix.node-version }}-
-
-      - name: 📦 Install dependencies
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-
-      - name: 🔨 Build TypeScript
-        run: npm run build
-
-      - name: 🧪 Run unit tests with coverage
-        run: npm run test:coverage || npm test -- --coverage
-
-      - name: 📊 Upload coverage to Codecov (Optional)
-        continue-on-error: true
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./logistics-back/coverage/lcov.info
-          flags: backend
-          name: backend-coverage
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
-
-      - name: 📈 Check coverage threshold (70%+)
-        run: |
-          # Install jq for JSON parsing
-          sudo apt-get update && sudo apt-get install -y jq bc
-          
-          echo "Looking for coverage files..."
-          ls -la coverage/
-          
-          # Check for coverage-summary.json first (Jest generates this)
-          if [ -f coverage/coverage-summary.json ]; then
-            echo " Found coverage-summary.json"
-            COVERAGE=$(jq -r '.total.lines.pct' coverage/coverage-summary.json)
-            echo "Backend Coverage: ${COVERAGE}%"
-            
-            if (( $(echo "$COVERAGE < 70" | bc -l) )); then
-              echo " Backend coverage is below 70%: ${COVERAGE}%"
-              exit 1
-            else
-              echo " Backend coverage meets threshold: ${COVERAGE}%"
-            fi
-          else
-            echo " No coverage-summary.json found"
-            exit 1
-          fi
-
-  frontend:
-    name: Frontend - Build & Test
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
+      - name: Install dependencies - Frontend
         working-directory: ./logistics-front
+        run: npm ci
 
-    strategy:
-      matrix:
-        node-version: [22.x]
+      - name: Run tests with coverage - Backend (Jest)
+        working-directory: ./logistics-back
+        run: npm run test:coverage
 
-    steps:
-      - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+      - name: Run tests with coverage - Frontend (Vitest)
+        working-directory: ./logistics-front
+        run: npm run test:coverage
 
-      - name: 🟢 Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-      - name: 📦 Cache npm dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            ./logistics-front/node_modules
-          key: ${{ runner.os }}-node-${{ matrix.node-version }}-frontend-${{ hashFiles('logistics-front/package-lock.json', 'logistics-front/package.json') }} 
-          restore-keys: |
-            ${{ runner.os }}-node-${{ matrix.node-version }}-frontend-
-            ${{ runner.os }}-node-${{ matrix.node-version }}-
-
-      - name: 📦 Install dependencies
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-
-      - name: 🔍 Run ESLint
-        run: npm run lint
-
-      - name: 🔨 Build Vite production bundle
-        run: npm run build
-
-      - name: 🧪 Run unit tests with coverage
-        run: npm test -- --run --coverage --reporter=verbose
-
-      - name: 📊 Upload coverage to Codecov (Optional)
-        continue-on-error: true
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./logistics-front/coverage/lcov.info
-          flags: frontend
-          name: frontend-coverage
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
-
-      - name: 📈 Check coverage threshold (70%+)
-        run: |
-          # Install jq for JSON parsing
-          sudo apt-get update && sudo apt-get install -y jq bc
-          
-          echo "Looking for coverage files..."
-          ls -la coverage/
-          
-          # Check for coverage-summary.json (Vitest can generate this with json-summary reporter)
-          if [ -f coverage/coverage-summary.json ]; then
-            echo " Found coverage-summary.json"
-            COVERAGE=$(jq -r '.total.lines.pct' coverage/coverage-summary.json)
-            echo "Frontend Coverage: ${COVERAGE}%"
-            
-            if (( $(echo "$COVERAGE < 70" | bc -l) )); then
-              echo " Frontend coverage is below 70%: ${COVERAGE}%"
-              exit 1
-            else
-              echo " Frontend coverage meets threshold: ${COVERAGE}%"
-            fi
-          else
-            echo " No coverage-summary.json found"
-            echo "Please update vitest.config.ts to include 'json-summary' in coverage reporters"
-            exit 1
-          fi
-
-  ci-success:
-    name:  CI Pipeline Success
-    runs-on: ubuntu-latest
-    needs: [backend, frontend]
-    if: success()
-
-    steps:
-      - name: 🎉 All checks passed
-        run: |
-          echo " Backend: Build & Tests passed"
-          echo " Frontend: Build & Tests passed"
-          echo " Backend: Coverage >= 70%"
-          echo " Frontend: Coverage >= 70%"
-          echo "🚀 Ready for deployment"
-
-  ci-failure:
-    name:  CI Pipeline Failed
-    runs-on: ubuntu-latest
-    needs: [backend, frontend]
-    if: failure()
-
-    steps:
-      - name: 💥 Pipeline failed
-        run: |
-          echo " One or more jobs failed"
-          echo "📝 Check logs above for details"
-          exit 1
+      - name: SonarQube Quality Gate check
+        uses: SonarSource/sonarqube-quality-gate-action@master
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
