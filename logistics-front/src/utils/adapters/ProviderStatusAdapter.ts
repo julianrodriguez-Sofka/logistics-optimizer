@@ -1,4 +1,4 @@
-import type { ISystemStatus, ISystemStatusMetrics, SystemStatusType } from '../../models/ProviderStatus';
+import type { ISystemStatus, ISystemStatusMetrics, SystemStatusType, ProviderStatusType } from '../../models/ProviderStatus';
 
 /**
  * Adapter to convert API response to ISystemStatus
