@@ -34,14 +34,14 @@ export class QuoteValidationRules {
     let weightNum: number;
 
     if (typeof weight === 'string') {
-      weightNum = parseFloat(weight);
+      weightNum = Number.parseFloat(weight);
     } else if (typeof weight === 'number') {
       weightNum = weight;
     } else {
       return `El peso debe ser mayor a ${VALIDATION.WEIGHT.MIN} kg`;
     }
 
-    if (isNaN(weightNum) || weightNum <= 0) {
+    if (Number.isNaN(weightNum) || weightNum <= 0) {
       return `El peso debe ser mayor a ${VALIDATION.WEIGHT.MIN} kg`;
     }
 
