@@ -32,7 +32,7 @@ export const QuoteRequestForm = ({ onSubmit, loading = false }: QuoteRequestForm
       const requestData: IQuoteRequest = {
         origin: formData.origin,
         destination: formData.destination,
-        weight: Number.Number.parseFloat(formData.weight),
+        weight: Number.parseFloat(formData.weight),
         pickupDate: formData.pickupDate,
         fragile: formData.fragile,
       };
@@ -143,7 +143,7 @@ export const QuoteRequestForm = ({ onSubmit, loading = false }: QuoteRequestForm
               </>
             ) : (
               <>
-                Calculate Rates
+                Calculate Rates{' '}
                 <span className="material-symbols-outlined">arrow_forward</span>
               </>
             )}
