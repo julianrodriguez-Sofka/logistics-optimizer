@@ -68,10 +68,10 @@ export const QuoteRequestForm = ({ onSubmit, loading = false }: QuoteRequestForm
         {/* Destination */}
         <FormField
           name="destination"
-          label="City"
+          label="Destination Address"
           type="text"
           value={formData.destination}
-          placeholder="Enter city, state, or zip"
+          placeholder="456 Delivery St, Los Angeles, CA"
           icon="pin_drop"
           error={errors.destination}
           touched={touched.destination}

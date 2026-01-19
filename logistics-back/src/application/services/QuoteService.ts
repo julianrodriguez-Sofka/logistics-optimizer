@@ -14,6 +14,7 @@ import { IShippingProvider } from '../../domain/interfaces/IShippingProvider';
 import { Quote } from '../../domain/entities/Quote';
 import { QuoteRequest } from '../../domain/entities/QuoteRequest';
 import { IQuoteRepository } from '../../domain/interfaces/IQuoteRepository';
+import { IRouteCalculator } from '../../domain/interfaces/IRouteCalculator';
 import { withTimeout } from '../utils/timeout';
 import { BadgeService } from './BadgeService';
 import { logger } from '../../infrastructure/logging/Logger';
@@ -37,7 +38,8 @@ export class QuoteService {
 
   constructor(
     private readonly providers: IShippingProvider[],
-    private readonly quoteRepository?: IQuoteRepository 
+    private readonly quoteRepository?: IQuoteRepository,
+    private readonly routeCalculator?: IRouteCalculator 
   ) {
     this.badgeService = new BadgeService();
   }
@@ -63,6 +65,21 @@ export class QuoteService {
       return cachedResponse;
     }
 
+    // Calculate route information if route calculator is available
+    let routeInfo = null;
+    if (this.routeCalculator) {
+      try {
+        this.logger.info('Calculating route information with Google Maps');
+        routeInfo = await this.routeCalculator.calculateRoute(request.origin, request.destination);
+        this.logger.info('Route calculated successfully', {
+          distance: routeInfo.distanceKm,
+          duration: routeInfo.durationMinutes
+        });
+      } catch (error) {
+        this.logger.warn('Failed to calculate route, continuing without route info', error);
+      }
+    }
+
     // Create timeout wrapper for each provider call with provider metadata
     const providerPromises = this.providers.map((provider, index) =>
       this.callProviderWithTimeout(provider, request)
@@ -86,12 +103,29 @@ export class QuoteService {
     // Extract successful quotes and failed providers
     const { quotes, messages } = this.processProviderResults(results);
 
+    // Add route information to all quotes
+    const quotesWithRoute = quotes.map(quote => {
+      if (routeInfo) {
+        quote.routeInfo = {
+          origin: routeInfo.origin.address,
+          destination: routeInfo.destination.address,
+          distanceKm: routeInfo.distanceKm,
+          durationMinutes: routeInfo.durationMinutes,
+          distanceText: routeInfo.distanceText,
+          durationText: routeInfo.durationText
+        };
+        quote.pricePerKm = quote.price / routeInfo.distanceKm;
+      }
+      return quote;
+    });
+
     // Assign badges to quotes before returning
-    const quotesWithBadges = this.badgeService.assignBadges(quotes);
+    const quotesWithBadges = this.badgeService.assignBadges(quotesWithRoute);
 
     this.logger.info('Quotes processed successfully', {
       totalQuotes: quotesWithBadges.length,
       failedProviders: messages.length,
+      hasRouteInfo: !!routeInfo,
     });
 
     // Save quotes to database (if repository is available)

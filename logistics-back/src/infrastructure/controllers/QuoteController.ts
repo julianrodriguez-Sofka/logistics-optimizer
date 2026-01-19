@@ -52,6 +52,8 @@ export class QuoteController {
           transportMode: quote.transportMode,
           isCheapest: quote.isCheapest,
           isFastest: quote.isFastest,
+          routeInfo: quote.routeInfo,
+          pricePerKm: quote.pricePerKm,
         })),
         messages: messages.length > 0 ? messages : undefined,
       });

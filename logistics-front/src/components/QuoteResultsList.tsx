@@ -1,14 +1,48 @@
-import type { IQuote, IProviderMessage } from '../models/Quote';
+import { useState } from 'react';
+import type { IQuote, IProviderMessage, IRouteInfo } from '../models/Quote';
 import { getProviderColor } from '../utils/providerConfig';
 import { ProviderLogo } from './ProviderLogo';
 import { OfflineProviderMessage } from './OfflineProviderMessage';
+import { RouteMapModal } from './RouteMapModal';
 
 interface QuoteResultsListProps {
   quotes: IQuote[];
   messages: IProviderMessage[];
+  routeInfo?: IRouteInfo;
 }
 
-export const QuoteResultsList = ({ quotes, messages }: QuoteResultsListProps) => {
+export const QuoteResultsList = ({ quotes, messages, routeInfo }: QuoteResultsListProps) => {
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [selectedOrigin, setSelectedOrigin] = useState('');
+  const [selectedDestination, setSelectedDestination] = useState('');
+
+  // Extract origin and destination from first quote or use defaults
+  const getDefaultAddresses = () => {
+    if (routeInfo) {
+      return {
+        origin: routeInfo.origin.address,
+        destination: routeInfo.destination.address
+      };
+    }
+    if (quotes[0]?.routeInfo) {
+      return {
+        origin: quotes[0].routeInfo.origin.address,
+        destination: quotes[0].routeInfo.destination.address
+      };
+    }
+    // Fallback to demo addresses
+    return {
+      origin: 'Bogotá, Colombia',
+      destination: 'Medellín, Colombia'
+    };
+  };
+
+  const handleShowRoute = (customOrigin?: string, customDestination?: string) => {
+    const defaults = getDefaultAddresses();
+    setSelectedOrigin(customOrigin || defaults.origin);
+    setSelectedDestination(customDestination || defaults.destination);
+    setShowMapModal(true);
+  };
 
   if (quotes.length === 0) {
     return (
@@ -20,9 +54,52 @@ export const QuoteResultsList = ({ quotes, messages }: QuoteResultsListProps) =>
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between pb-2">
+      {/* Header with Map Button - Always visible */}
+      <div className="flex items-center justify-between pb-2 flex-wrap gap-3">
         <h3 className="text-text-dark text-xl font-bold">Cotizaciones Recomendadas</h3>
+        <button
+          onClick={() => handleShowRoute()}
+          className="bg-primary hover:bg-primary/90 text-white px-4 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all hover:shadow-lg shadow-primary/20"
+          title="Ver ruta en mapa interactivo"
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>map</span>
+          Ver Ruta en Mapa
+        </button>
       </div>
+
+      {/* Route Information Summary */}
+      {routeInfo && (
+        <div className="bg-gradient-to-r from-primary/5 to-accent-info/5 border border-primary/20 rounded-xl p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="material-symbols-outlined text-primary">route</span>
+            <h4 className="text-text-dark font-bold text-sm">Información de Ruta</h4>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="flex flex-col items-center p-3 bg-white rounded-lg">
+              <span className="material-symbols-outlined text-primary mb-1" style={{ fontSize: '20px' }}>straighten</span>
+              <p className="text-xs text-text-muted mb-1">Distancia</p>
+              <p className="text-lg font-bold text-text-dark">{routeInfo.distanceKm.toFixed(0)} km</p>
+            </div>
+            <div className="flex flex-col items-center p-3 bg-white rounded-lg">
+              <span className="material-symbols-outlined text-accent-info mb-1" style={{ fontSize: '20px' }}>schedule</span>
+              <p className="text-xs text-text-muted mb-1">Duración</p>
+              <p className="text-lg font-bold text-text-dark">{routeInfo.durationFormatted}</p>
+            </div>
+            <div className="flex flex-col items-center p-3 bg-white rounded-lg">
+              <span className="material-symbols-outlined text-accent-success mb-1" style={{ fontSize: '20px' }}>category</span>
+              <p className="text-xs text-text-muted mb-1">Categoría</p>
+              <p className="text-lg font-bold text-text-dark">{routeInfo.category}</p>
+            </div>
+            <div className="flex flex-col items-center p-3 bg-white rounded-lg">
+              <span className="material-symbols-outlined text-accent-warning mb-1" style={{ fontSize: '20px' }}>location_on</span>
+              <p className="text-xs text-text-muted mb-1">Ruta</p>
+              <p className="text-sm font-medium text-text-dark">
+                {routeInfo.origin.address.split(',')[0]} → {routeInfo.destination.address.split(',')[0]}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col gap-4">
         {quotes.map((quote, index) => {
@@ -61,7 +138,23 @@ export const QuoteResultsList = ({ quotes, messages }: QuoteResultsListProps) =>
                       </span>
                       {quote.transportMode}
                     </span>
+                    {quote.pricePerKm && (
+                      <span className="flex items-center gap-1 text-xs">
+                        <span className="material-symbols-outlined text-xs">payments</span>
+                        ${quote.pricePerKm.toFixed(2)}/km
+                      </span>
+                    )}
                   </div>
+                  {quote.routeInfo && (
+                    <div className="mt-2 flex gap-2 text-xs text-text-muted">
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-xs">route</span>
+                        {quote.routeInfo.distanceKm.toFixed(0)} km
+                      </span>
+                      <span>•</span>
+                      <span className="font-medium">{quote.routeInfo.category}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Price & Badges */}
@@ -91,6 +184,22 @@ export const QuoteResultsList = ({ quotes, messages }: QuoteResultsListProps) =>
                   <p className="text-text-dark text-3xl font-black tracking-tight">
                     ${quote.price.toLocaleString('es-CO')}
                   </p>
+                  
+                  {/* View Route Button - Always show for demo */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (quote.routeInfo) {
+                        handleShowRoute(quote.routeInfo.origin.address, quote.routeInfo.destination.address);
+                      } else {
+                        handleShowRoute();
+                      }
+                    }}
+                    className="text-xs text-primary hover:text-primary/80 font-semibold flex items-center gap-1 transition-colors mt-1 hover:underline"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>map</span>
+                    Ver Ruta
+                  </button>
                 </div>
               </div>
             </div>
@@ -111,6 +220,14 @@ export const QuoteResultsList = ({ quotes, messages }: QuoteResultsListProps) =>
           ))}
         </div>
       )}
+
+      {/* Route Map Modal */}
+      <RouteMapModal
+        isOpen={showMapModal}
+        origin={selectedOrigin}
+        destination={selectedDestination}
+        onClose={() => setShowMapModal(false)}
+      />
     </div>
   );
 };

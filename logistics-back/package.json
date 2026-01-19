@@ -35,7 +35,9 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@googlemaps/google-maps-services-js": "^3.4.2",
     "@types/mongoose": "^5.11.97",
+    "axios": "^1.13.2",
     "express": "^4.18.0",
     "mongoose": "^8.21.0"
   }

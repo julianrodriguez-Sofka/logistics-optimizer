@@ -319,6 +319,198 @@ class DatabaseService {
 
 ---
 
+## 🗺️ Integración con Google Maps (MCP)
+
+El proyecto incluye una integración completa con Google Maps a través de un **Servidor MCP (Model Context Protocol)**. Esto permite:
+
+### ✨ Características
+
+- ✅ **Cálculo de rutas reales** entre origen y destino
+- ✅ **Distancias precisas** en kilómetros y metros
+- ✅ **Tiempo estimado de viaje** con tráfico
+- ✅ **Visualización interactiva** del mapa con DirectionsRenderer
+- ✅ **Precio por kilómetro** calculado automáticamente
+- ✅ **Factor de distancia** aplicado a cotizaciones (1.0x - 2.0x)
+- ✅ **Geocodificación** de direcciones a coordenadas
+- ✅ **Múltiples modos de viaje** (conducir, caminar, bicicleta, tránsito)
+
+### 🛠️ Componentes
+
+#### 1. Servidor MCP (`mcp-servers/google-maps-mcp/`)
+
+Servidor Model Context Protocol que expone herramientas de Google Maps:
+
+**Herramientas disponibles:**
+- `calculate_route`: Calcula rutas con Directions API
+- `geocode_address`: Convierte direcciones a coordenadas
+- `reverse_geocode`: Convierte coordenadas a direcciones
+- `get_distance_matrix`: Matriz de distancias para múltiples orígenes/destinos
+
+**Uso con GitHub Copilot:**
+```
+@workspace Calcula la ruta entre Bogotá y Medellín usando el MCP de Google Maps
+```
+
+#### 2. Backend Integration (`logistics-back/`)
+
+**GoogleMapsAdapter** (`infrastructure/adapters/GoogleMapsAdapter.ts`):
+- Implementa `IRouteCalculator`
+- Cache de resultados (1 hora TTL)
+- Manejo de errores robusto
+- Integrado automáticamente en `QuoteService`
+
+**DistanceBasedPricingService** (`application/services/DistanceBasedPricingService.ts`):
+- Aplica factor de distancia a las cotizaciones:
+  - 0-100 km: 1.0x (Local)
+  - 100-300 km: 1.2x (Regional)
+  - 300-800 km: 1.5x (Nacional)
+  - 800+ km: 2.0x (Internacional)
+
+#### 3. Frontend Components (`logistics-front/`)
+
+**RouteMap** (`components/RouteMap.tsx`):
+- Visualización interactiva con Google Maps JavaScript API
+- DirectionsRenderer para dibujar la ruta
+- Estados de carga y error
+
+**RouteMapModal** (`components/RouteMapModal.tsx`):
+- Modal de pantalla completa
+- Diseño consistente con el tema de la aplicación
+
+**QuoteResultsList** (actualizado):
+- Muestra información de ruta en cada cotización
+- Card resumen con distancia, duración y categoría
+- Botón "Ver Ruta en Mapa" integrado
+
+### 🔑 Configuración de Google Maps API
+
+#### Paso 1: Obtener API Key
+
+Sigue la guía detallada en [`GOOGLE_MAPS_SETUP.md`](GOOGLE_MAPS_SETUP.md) para:
+1. Crear proyecto en Google Cloud Console
+2. Habilitar APIs necesarias (Directions, Geocoding, Maps JavaScript)
+3. Obtener y configurar API Key
+4. Configurar restricciones de seguridad
+
+#### Paso 2: Configurar Variables de Entorno
+
+**Backend** (`logistics-back/.env`):
+```env
+GOOGLE_MAPS_API_KEY=tu_api_key_aqui
+GOOGLE_MAPS_CACHE_TTL=3600
+```
+
+**Frontend** (`logistics-front/.env`):
+```env
+VITE_GOOGLE_MAPS_API_KEY=tu_api_key_aqui
+```
+
+**Servidor MCP** (`mcp-servers/google-maps-mcp/.env`):
+```env
+GOOGLE_MAPS_API_KEY=tu_api_key_aqui
+```
+
+#### Paso 3: Instalar y Compilar MCP Server
+
+```bash
+cd mcp-servers/google-maps-mcp
+npm install
+npm run build
+```
+
+#### Paso 4: Configurar VS Code
+
+El servidor MCP está preconfigurado en `.vscode/settings.json`. Para usarlo:
+
+1. Instala la extensión **Copilot MCP** (ya está instalada)
+2. Reinicia VS Code
+3. El servidor se activará automáticamente al usar GitHub Copilot
+
+### 📊 Arquitectura de la Integración
+
+```
+┌─────────────────────┐
+│   GitHub Copilot    │
+│   (Chat Interface)  │
+└──────────┬──────────┘
+           │ MCP Protocol
+           ▼
+┌─────────────────────┐
+│  Google Maps MCP    │
+│      Server         │
+│  (Tools Provider)   │
+└──────────┬──────────┘
+           │ Google Maps API
+           ▼
+┌─────────────────────┐
+│   Google Cloud      │
+│   Maps Platform     │
+└─────────────────────┘
+
+┌─────────────────────┐
+│  Frontend (React)   │
+│  - RouteMap         │
+│  - @react-google-   │
+│    maps/api         │
+└──────────┬──────────┘
+           │ HTTP
+           ▼
+┌─────────────────────┐
+│  Backend (Express)  │
+│  - GoogleMaps       │
+│    Adapter          │
+│  - QuoteService     │
+└──────────┬──────────┘
+           │ Google Maps API
+           ▼
+┌─────────────────────┐
+│   Google Cloud      │
+│   Maps Platform     │
+└─────────────────────┘
+```
+
+### 🎯 Uso en el Proyecto
+
+#### Desde el Frontend
+
+1. Ingresa origen y destino en el formulario
+2. Obtén cotizaciones normalmente
+3. Verás información de ruta automáticamente:
+   - Distancia en km
+   - Duración estimada
+   - Categoría (Local, Regional, Nacional, Internacional)
+   - Precio por km
+4. Haz clic en "Ver Ruta en Mapa" para visualización interactiva
+
+#### Desde GitHub Copilot (MCP)
+
+```
+@workspace Usando el MCP de Google Maps:
+1. Calcula la ruta entre "Bogotá, Colombia" y "Medellín, Colombia"
+2. Geocodifica "Carrera 7 # 71-21, Bogotá"
+3. Obtén la matriz de distancias entre [Bogotá, Cali] y [Medellín, Cartagena]
+```
+
+### 🔒 Seguridad y Costos
+
+**Crédito Gratuito**: $200 USD/mes de Google Cloud
+**Solicitudes gratuitas**: ~28,000 solicitudes de Directions API/mes
+
+**Mejores Prácticas**:
+1. Nunca incluyas la API key en el código
+2. Usa archivos `.env` (están en `.gitignore`)
+3. Configura restricciones de API en Google Cloud Console
+4. Monitorea el uso regularmente
+
+### 📚 Documentación Adicional
+
+- [Guía completa de configuración](GOOGLE_MAPS_SETUP.md)
+- [README del MCP Server](mcp-servers/google-maps-mcp/README.md)
+- [Google Maps Platform Docs](https://developers.google.com/maps/documentation)
+- [Model Context Protocol Spec](https://modelcontextprotocol.io/)
+
+---
+
 
 ## 🚀 Instalación y Ejecución
 

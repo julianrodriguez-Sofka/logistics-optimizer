@@ -1,4 +1,25 @@
 /**
+ * Route Information interface
+ */
+export interface IRouteInfo {
+  distanceKm: number;
+  distanceMeters: number;
+  durationSeconds: number;
+  durationFormatted: string;
+  category: string;
+  origin: {
+    address: string;
+    lat: number;
+    lng: number;
+  };
+  destination: {
+    address: string;
+    lat: number;
+    lng: number;
+  };
+}
+
+/**
  * Quote interface matching backend API contract
  */
 export interface IQuote {
@@ -12,6 +33,8 @@ export interface IQuote {
   transportMode: string;
   isCheapest: boolean;
   isFastest: boolean;
+  routeInfo?: IRouteInfo; // Optional route information
+  pricePerKm?: number; // Optional price per kilometer
 }
 
 /**
@@ -29,4 +52,5 @@ export interface IProviderMessage {
 export interface IQuoteResponse {
   quotes: IQuote[];
   messages?: IProviderMessage[];
+  routeInfo?: IRouteInfo; // Optional shared route information
 }

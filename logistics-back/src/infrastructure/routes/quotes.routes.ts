@@ -1,13 +1,14 @@
 import { Router, Request, Response } from 'express';
-import { QuoteController } from '../controllers/QuoteController';
-import { QuoteService } from '../../application/services/QuoteService';
-import { BadgeService } from '../../application/services/BadgeService';
-import { FedExAdapter } from '../adapters/FedExAdapter';
-import { DHLAdapter } from '../adapters/DHLAdapter';
-import { LocalAdapter } from '../adapters/LocalAdapter';
-import { QuoteRepository } from '../database/repositories/QuoteRepository';
-import { MongoDBConnection } from '../database/connection';
-import { validateQuoteRequest } from '../middlewares/validateQuoteRequest';
+import { QuoteController } from '../controllers/QuoteController.js';
+import { QuoteService } from '../../application/services/QuoteService.js';
+import { BadgeService } from '../../application/services/BadgeService.js';
+import { FedExAdapter } from '../adapters/FedExAdapter.js';
+import { DHLAdapter } from '../adapters/DHLAdapter.js';
+import { LocalAdapter } from '../adapters/LocalAdapter.js';
+import { OpenRouteServiceAdapter } from '../adapters/OpenRouteServiceAdapter.js';
+import { QuoteRepository } from '../database/repositories/QuoteRepository.js';
+import { MongoDBConnection } from '../database/connection.js';
+import { validateQuoteRequest } from '../middlewares/validateQuoteRequest.js';
 
 console.log('🔧 Initializing quote routes...');
 
@@ -28,12 +29,26 @@ if (isConnected) {
   console.warn('⚠️  Running without quote repository (MongoDB not connected)');
 }
 
+// Initialize OpenRouteService adapter (Free alternative to Google Maps)
+let routeCalculator;
+const openRouteServiceKey = process.env.OPENROUTESERVICE_API_KEY;
+if (openRouteServiceKey && openRouteServiceKey !== 'your_openrouteservice_api_key_here') {
+  routeCalculator = new OpenRouteServiceAdapter(openRouteServiceKey);
+  console.log('🗺️  OpenRouteService adapter initialized (Free - 2000 requests/day)');
+} else {
+  console.warn('⚠️  Running without route calculation (API key not configured)');
+  console.warn('   Set OPENROUTESERVICE_API_KEY in .env to enable route calculation');
+  console.warn('   Get free API key at: https://openrouteservice.org/dev/#/signup');
+}
+
 const quoteService = new QuoteService(
   [fedexAdapter, dhlAdapter, localAdapter],
-  quoteRepository // Optional - graceful degradation if undefined
+  quoteRepository, // Optional - graceful degradation if undefined
+  routeCalculator // Optional - graceful degradation if undefined
 );
 
 console.log('📝 QuoteService created with repository:', !!quoteRepository);
+console.log('🗺️  QuoteService created with route calculator:', !!routeCalculator);
 
 const badgeService = new BadgeService();
 const quoteController = new QuoteController(quoteService, badgeService);

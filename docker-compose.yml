@@ -35,6 +35,10 @@ services:
       PORT: 3000
       MONGODB_URI: mongodb://admin:adminpassword@mongodb:27017/logistics-optimizer?authSource=admin
       LOG_LEVEL: debug
+      OPENROUTESERVICE_API_KEY: eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjkwZmU1ODYwMDc3MDQyN2JiYTlhNzlkMjUyMWI5Njk2IiwiaCI6Im11cm11cjY0In0=
+      ADAPTER_TIMEOUT: 5000
+      CACHE_TTL_SECONDS: 300
+      ROUTE_CACHE_TTL: 3600
     ports:
       - "3000:3000"
     volumes:
