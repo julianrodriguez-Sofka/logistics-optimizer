@@ -28,6 +28,25 @@ export interface IProviderMessage {
 export interface IQuoteResponse {
   quotes: Quote[];
   messages: IProviderMessage[];
+  routeInfo?: {
+    origin: { address: string; lat: number; lng: number };
+    destination: { address: string; lat: number; lng: number };
+    distanceKm: number;
+    distanceMeters: number;
+    durationSeconds: number;
+    durationFormatted: string;
+    category: string;
+    routeCoordinates?: Array<[number, number]>;
+    transportMode?: string;
+    segments?: Array<{
+      mode: 'air' | 'ground';
+      transportLabel: string;
+      coordinates: Array<[number, number]>;
+      distanceKm: number;
+      durationMinutes: number;
+      color: string;
+    }>;
+  };
 }
 
 export class QuoteService {

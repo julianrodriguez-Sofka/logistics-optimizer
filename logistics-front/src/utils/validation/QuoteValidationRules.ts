@@ -1,29 +1,69 @@
-
-
 import { VALIDATION } from '../constants';
 
 export interface IValidationRule {
   validate: (value: string | number | boolean) => string | undefined;
 }
 
-export class QuoteValidationRules {
+/**
+ * Input sanitization utilities
+ */
+class InputSanitizer {
   /**
-   * Validate origin field - must not be empty
+   * Sanitize string input by trimming and removing dangerous characters
+   */
+  static sanitize(value: unknown): string {
+    if (typeof value !== 'string') return '';
+    return value
+      .trim()
+      .slice(0, 200) // Max length
+      .replace(/[<>]/g, '') // Remove potential HTML
+      .replace(/[\x00-\x1F\x7F]/g, ''); // Remove control characters
+  }
+}
+
+export class QuoteValidationRules {
+  private static readonly MIN_ADDRESS_LENGTH = 3;
+  private static readonly MAX_ADDRESS_LENGTH = 200;
+
+  /**
+   * Validate origin field - must not be empty and have minimum length
    */
   static validateOrigin(origin: string | number | boolean | undefined): string | undefined {
-    if (typeof origin !== 'string' || origin.trim() === '') {
+    const sanitized = InputSanitizer.sanitize(origin);
+    
+    if (!sanitized) {
       return 'El origen es requerido';
     }
+    
+    if (sanitized.length < QuoteValidationRules.MIN_ADDRESS_LENGTH) {
+      return `El origen debe tener al menos ${QuoteValidationRules.MIN_ADDRESS_LENGTH} caracteres`;
+    }
+    
+    if (sanitized.length > QuoteValidationRules.MAX_ADDRESS_LENGTH) {
+      return `El origen no puede exceder ${QuoteValidationRules.MAX_ADDRESS_LENGTH} caracteres`;
+    }
+    
     return undefined;
   }
 
   /**
-   * Validate destination field - must not be empty
+   * Validate destination field - must not be empty and different from origin
    */
   static validateDestination(destination: string | number | boolean | undefined): string | undefined {
-    if (typeof destination !== 'string' || destination.trim() === '') {
+    const sanitized = InputSanitizer.sanitize(destination);
+    
+    if (!sanitized) {
       return 'El destino es requerido';
     }
+    
+    if (sanitized.length < QuoteValidationRules.MIN_ADDRESS_LENGTH) {
+      return `El destino debe tener al menos ${QuoteValidationRules.MIN_ADDRESS_LENGTH} caracteres`;
+    }
+    
+    if (sanitized.length > QuoteValidationRules.MAX_ADDRESS_LENGTH) {
+      return `El destino no puede exceder ${QuoteValidationRules.MAX_ADDRESS_LENGTH} caracteres`;
+    }
+    
     return undefined;
   }
 

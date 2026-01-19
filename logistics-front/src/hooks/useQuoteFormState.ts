@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ChangeEvent } from 'react';
 import { QuoteValidator, type FormErrors } from '../utils/validation/QuoteValidator';
+
+// Session storage key
+const FORM_STORAGE_KEY = 'logistics_quote_form_data';
 
 /**
  * Form state interface
@@ -19,19 +22,39 @@ export interface QuoteFormState {
  * Hook to manage quote request form state
  * Implements Single Responsibility Principle
  * Separates form state management from UI rendering
+ * Persists form data to sessionStorage
  */
 export function useQuoteFormState() {
-  const [formData, setFormData] = useState<QuoteFormState>({
-    origin: '',
-    destination: '',
-    weight: '',
-    pickupDate: '',
-    fragile: false,
-    transportMode: 'driving-car', // Use car profile for routing (pricing is still for trucks)
+  const [formData, setFormData] = useState<QuoteFormState>(() => {
+    try {
+      const saved = sessionStorage.getItem(FORM_STORAGE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error('Failed to load form data from sessionStorage', error);
+    }
+    return {
+      origin: '',
+      destination: '',
+      weight: '',
+      pickupDate: '',
+      fragile: false,
+      transportMode: 'driving-car', // Use car profile for routing (pricing is still for trucks)
+    };
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  // Persist form data to sessionStorage
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formData));
+    } catch (error) {
+      console.error('Failed to save form data to sessionStorage', error);
+    }
+  }, [formData]);
 
   /**
    * Handle field change event
@@ -102,15 +125,24 @@ export function useQuoteFormState() {
    * Reset form to initial state
    */
   const resetForm = () => {
-    setFormData({
+    const initialState = {
       origin: '',
       destination: '',
       weight: '',
       pickupDate: '',
       fragile: false,
-    });
+      transportMode: 'driving-car',
+    };
+    setFormData(initialState);
     setErrors({});
     setTouched({});
+    
+    // Clear from sessionStorage
+    try {
+      sessionStorage.removeItem(FORM_STORAGE_KEY);
+    } catch (error) {
+      console.error('Failed to clear form data from sessionStorage', error);
+    }
   };
 
   /**

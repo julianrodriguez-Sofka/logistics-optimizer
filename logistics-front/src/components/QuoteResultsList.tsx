@@ -9,9 +9,10 @@ interface QuoteResultsListProps {
   quotes: IQuote[];
   messages: IProviderMessage[];
   routeInfo?: IRouteInfo;
+  onSelectQuote?: (quote: IQuote) => void;
 }
 
-export const QuoteResultsList = ({ quotes, messages, routeInfo }: QuoteResultsListProps) => {
+export const QuoteResultsList = ({ quotes, messages, routeInfo, onSelectQuote }: QuoteResultsListProps) => {
   const [showMapModal, setShowMapModal] = useState(false);
   const [selectedOrigin, setSelectedOrigin] = useState('');
   const [selectedDestination, setSelectedDestination] = useState('');
@@ -189,21 +190,38 @@ export const QuoteResultsList = ({ quotes, messages, routeInfo }: QuoteResultsLi
                     ${quote.price.toLocaleString('es-CO')}
                   </p>
                   
-                  {/* View Route Button - Always show for demo */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (quote.routeInfo?.origin?.address && quote.routeInfo?.destination?.address) {
-                        handleShowRoute(quote.routeInfo.origin.address, quote.routeInfo.destination.address);
-                      } else {
-                        handleShowRoute();
-                      }
-                    }}
-                    className="text-xs text-primary hover:text-primary/80 font-semibold flex items-center gap-1 transition-colors mt-1 hover:underline"
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>map</span>
-                    Ver Ruta
-                  </button>
+                  {/* Buttons Container */}
+                  <div className="flex flex-col gap-2 mt-2 w-full">
+                    {/* Select Quote Button */}
+                    {onSelectQuote && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectQuote(quote);
+                        }}
+                        className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all hover:shadow-lg whitespace-nowrap"
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check_circle</span>
+                        Seleccionar
+                      </button>
+                    )}
+                    
+                    {/* View Route Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (quote.routeInfo?.origin?.address && quote.routeInfo?.destination?.address) {
+                          handleShowRoute(quote.routeInfo.origin.address, quote.routeInfo.destination.address);
+                        } else {
+                          handleShowRoute();
+                        }
+                      }}
+                      className="text-xs text-primary hover:text-primary/80 font-semibold flex items-center justify-center gap-1 transition-colors hover:underline"
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>map</span>
+                      Ver Ruta
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

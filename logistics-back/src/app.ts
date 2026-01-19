@@ -39,10 +39,14 @@ export async function initializeRoutes() {
   // Dynamic imports to ensure MongoDB is connected first
   const quotesRouter = (await import('./infrastructure/routes/quotes.routes')).default;
   const healthRouter = (await import('./infrastructure/routes/health.routes')).default;
+  const shipmentsRouter = (await import('./infrastructure/routes/shipments.routes')).default;
+  const customersRouter = (await import('./infrastructure/routes/customers.routes')).default;
   
   // API Routes
-  app.use('/api', quotesRouter);
+  app.use('/api/quotes', quotesRouter);
   app.use('/api', healthRouter);
+  app.use('/api/shipments', shipmentsRouter);
+  app.use('/api/customers', customersRouter);
   
   // 404 handler - MUST BE AFTER ALL ROUTES
   app.use((req: Request, res: Response, next: NextFunction) => {

@@ -63,7 +63,7 @@ const router = Router();
 
 // POST /api/quotes - Request shipping quotes
 // Apply validation middleware before controller (Task 2.4 from HU-02)
-router.post('/quotes', validateQuoteRequest, (req: Request, res: Response) => {
+router.post('/', validateQuoteRequest, (req: Request, res: Response) => {
   quoteController.requestQuotes(req, res);
 });
 

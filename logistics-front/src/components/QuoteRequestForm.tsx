@@ -12,9 +12,10 @@ import { VALIDATION, BUSINESS_RULES } from '../utils/constants';
 interface QuoteRequestFormProps {
   onSubmit: (data: IQuoteRequest) => void;
   loading?: boolean;
+  disabled?: boolean;
 }
 
-export const QuoteRequestForm = ({ onSubmit, loading = false }: QuoteRequestFormProps) => {
+export const QuoteRequestForm = ({ onSubmit, loading = false, disabled = false }: QuoteRequestFormProps) => {
   const {
     formData,
     errors,
@@ -131,9 +132,9 @@ export const QuoteRequestForm = ({ onSubmit, loading = false }: QuoteRequestForm
         <div className="pt-4">
           <button
             type="submit"
-            disabled={!isFormValid() || loading}
+            disabled={!isFormValid() || loading || disabled}
             className={`w-full ${
-              !isFormValid() || loading
+              !isFormValid() || loading || disabled
                 ? 'bg-border-light text-text-muted cursor-not-allowed'
                 : 'bg-primary hover:bg-green-700 text-white shadow-lg shadow-primary/20'
             } font-bold h-14 rounded-lg transition-all flex items-center justify-center gap-2`}

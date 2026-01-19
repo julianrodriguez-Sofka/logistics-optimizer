@@ -1,13 +1,15 @@
 import axios from 'axios';
 import { IRouteCalculator } from '../../domain/interfaces/IRouteCalculator.js';
-import { RouteInfo, RouteCoordinate, RouteSegment } from '../../domain/entities/RouteInfo.js';
-import { Location } from '../../domain/entities/Location.js';
+import { RouteInfo, RouteCoordinate, RouteSegment, TransportMode } from '../../domain/entities/RouteInfo.js';
+import { Location, LocationFactory } from '../../domain/entities/Location.js';
 
 /**
  * MultiModalRouteAdapter
  * Calculates combined air + ground routes for long-distance deliveries
  * Air segment: Direct geodesic line (great circle)
  * Ground segment: Road route using OpenRouteService
+ * 
+ * Implements IRouteCalculator interface (receives string addresses, geocodes internally)
  */
 export class MultiModalRouteAdapter implements IRouteCalculator {
   private readonly apiKey: string;
@@ -33,17 +35,26 @@ export class MultiModalRouteAdapter implements IRouteCalculator {
 
   /**
    * Calculate multi-modal route: air + ground delivery
-   * 1. Air segment: origin → nearest airport to destination
-   * 2. Ground segment: airport → final destination
+   * Implements IRouteCalculator interface
+   * 1. Geocode origin and destination addresses
+   * 2. Air segment: origin → nearest airport to destination
+   * 3. Ground segment: airport → final destination
    */
   async calculateRoute(
-    origin: Location,
-    destination: Location,
-    transportMode: string = 'air-ground'
+    originAddress: string,
+    destinationAddress: string,
+    transportMode: TransportMode = 'air-ground'
   ): Promise<RouteInfo> {
-    const cacheKey = `${origin.lat},${origin.lng}-${destination.lat},${destination.lng}-${transportMode}`;
+    const cacheKey = `${originAddress}-${destinationAddress}-${transportMode}`.toLowerCase();
     const cached = this.getFromCache(cacheKey);
     if (cached) return cached;
+
+    // Geocode addresses to coordinates
+    const originCoords = await this.geocode(originAddress);
+    const destCoords = await this.geocode(destinationAddress);
+    
+    const origin = LocationFactory.createWithCoordinates(originAddress, originCoords.lat, originCoords.lng);
+    const destination = LocationFactory.createWithCoordinates(destinationAddress, destCoords.lat, destCoords.lng);
 
     try {
       // Find nearest airport to destination
@@ -227,5 +238,65 @@ export class MultiModalRouteAdapter implements IRouteCalculator {
 
   private saveToCache(key: string, data: RouteInfo): void {
     this.cache.set(key, { data, timestamp: Date.now() });
+  }
+
+  /**
+   * Geocode an address to coordinates using OpenRouteService
+   * Implements Strategy Pattern for Colombian address handling
+   */
+  private async geocode(address: string): Promise<{ lat: number; lng: number }> {
+    const response = await axios.get(`${this.baseUrl}/geocode/search`, {
+      params: {
+        api_key: this.apiKey,
+        text: address,
+      },
+      timeout: 10000,
+    });
+
+    if (!response.data.features || response.data.features.length === 0) {
+      throw new Error(`No results found for address: ${address}`);
+    }
+
+    const coords = response.data.features[0].geometry.coordinates;
+    return {
+      lng: coords[0],
+      lat: coords[1],
+    };
+  }
+
+  /**
+   * Get only the distance in kilometers between two locations
+   * Implements IRouteCalculator interface
+   */
+  async getDistanceInKm(origin: string, destination: string): Promise<number> {
+    const routeInfo = await this.calculateRoute(origin, destination);
+    return routeInfo.distanceKm;
+  }
+
+  /**
+   * Estimate traffic delay (not available for air routes)
+   * Implements IRouteCalculator interface
+   */
+  async estimateTrafficDelay(
+    origin: string,
+    destination: string,
+    departureTime: Date
+  ): Promise<number> {
+    // Traffic delay estimation not applicable for air segments
+    console.log('⚠️  Traffic delay estimation not available for air-ground routes');
+    return 0;
+  }
+
+  /**
+   * Validate if an address can be geocoded
+   * Implements IRouteCalculator interface
+   */
+  async validateAddress(address: string): Promise<boolean> {
+    try {
+      await this.geocode(address);
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }
