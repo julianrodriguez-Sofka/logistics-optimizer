@@ -1,10 +1,12 @@
 import { RouteMap } from './RouteMap';
 import type { FC } from 'react';
+import type { IRouteInfo } from '../models/Quote';
 
 interface RouteMapModalProps {
   isOpen: boolean;
   origin: string;
   destination: string;
+  routeInfo?: IRouteInfo; // Optional route information with full coordinates
   onClose: () => void;
 }
 
@@ -18,6 +20,7 @@ export const RouteMapModal: FC<RouteMapModalProps> = ({
   isOpen,
   origin,
   destination,
+  routeInfo,
   onClose,
 }) => {
   if (!isOpen) return null;
@@ -52,7 +55,18 @@ export const RouteMapModal: FC<RouteMapModalProps> = ({
 
         {/* Map Container */}
         <div className="bg-white">
-          <RouteMap origin={origin} destination={destination} onClose={onClose} />
+          <RouteMap 
+            origin={origin} 
+            destination={destination}
+            originCoords={routeInfo?.origin?.lat && routeInfo?.origin?.lng ? [routeInfo.origin.lat, routeInfo.origin.lng] : undefined}
+            destCoords={routeInfo?.destination?.lat && routeInfo?.destination?.lng ? [routeInfo.destination.lat, routeInfo.destination.lng] : undefined}
+            routeCoordinates={routeInfo?.routeCoordinates}
+            segments={routeInfo?.segments}
+            distance={routeInfo?.distanceKm ? `${routeInfo.distanceKm.toFixed(1)} km` : undefined}
+            duration={routeInfo?.durationFormatted}
+            transportMode={routeInfo?.transportMode}
+            onClose={onClose} 
+          />
         </div>
       </div>
     </div>

@@ -53,7 +53,8 @@ export abstract class BaseShippingAdapter implements IShippingProvider {
     }
 
     try {
-      const routeInfo = await this.routeCalculator.calculateRoute(origin, destination);
+      // Use 'driving-car' profile to avoid OpenRouteService distance limits
+      const routeInfo = await this.routeCalculator.calculateRoute(origin, destination, 'driving-car');
       return routeInfo.getDistanceFactor();
     } catch (error) {
       // If route calculation fails, use default factor

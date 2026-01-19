@@ -39,7 +39,8 @@ export class QuoteService {
   constructor(
     private readonly providers: IShippingProvider[],
     private readonly quoteRepository?: IQuoteRepository,
-    private readonly routeCalculator?: IRouteCalculator 
+    private readonly routeCalculator?: IRouteCalculator,
+    private readonly multiModalCalculator?: IRouteCalculator // For air-ground routes
   ) {
     this.badgeService = new BadgeService();
   }
@@ -67,13 +68,20 @@ export class QuoteService {
 
     // Calculate route information if route calculator is available
     let routeInfo = null;
+    // Use 'driving-car' profile to avoid OpenRouteService distance limits
+    // Pricing is still calculated for truck transport (see adapters)
+    const transportMode = 'driving-car';
+    
+    // Use standard route calculator (air-ground mode removed)
     if (this.routeCalculator) {
       try {
-        this.logger.info('Calculating route information with Google Maps');
-        routeInfo = await this.routeCalculator.calculateRoute(request.origin, request.destination);
+        this.logger.info('Calculating standard route with OpenRouteService', { mode: transportMode });
+        routeInfo = await this.routeCalculator.calculateRoute(request.origin, request.destination, transportMode);
         this.logger.info('Route calculated successfully', {
           distance: routeInfo.distanceKm,
-          duration: routeInfo.durationMinutes
+          duration: routeInfo.durationFormatted,
+          transportMode: routeInfo.transportMode,
+          routePoints: routeInfo.routeCoordinates.length
         });
       } catch (error) {
         this.logger.warn('Failed to calculate route, continuing without route info', error);
@@ -107,12 +115,24 @@ export class QuoteService {
     const quotesWithRoute = quotes.map(quote => {
       if (routeInfo) {
         quote.routeInfo = {
-          origin: routeInfo.origin.address,
-          destination: routeInfo.destination.address,
+          origin: {
+            address: routeInfo.origin.address,
+            lat: routeInfo.origin.lat,
+            lng: routeInfo.origin.lng,
+          },
+          destination: {
+            address: routeInfo.destination.address,
+            lat: routeInfo.destination.lat,
+            lng: routeInfo.destination.lng,
+          },
           distanceKm: routeInfo.distanceKm,
-          durationMinutes: routeInfo.durationMinutes,
-          distanceText: routeInfo.distanceText,
-          durationText: routeInfo.durationText
+          distanceMeters: routeInfo.distanceMeters,
+          durationSeconds: routeInfo.durationSeconds,
+          durationFormatted: routeInfo.durationFormatted,
+          category: this.categorizeDistance(routeInfo.distanceKm),
+          routeCoordinates: routeInfo.routeCoordinates, // Full route geometry
+          transportMode: routeInfo.transportMode,
+          segments: routeInfo.segments, // Multi-modal segments (air + ground)
         };
         quote.pricePerKm = quote.price / routeInfo.distanceKm;
       }
@@ -131,7 +151,29 @@ export class QuoteService {
     // Save quotes to database (if repository is available)
     await this.saveQuotesToDatabase(quotesWithBadges, request);
 
-    return { quotes: quotesWithBadges, messages };
+    // Build routeInfo for response (shared route information)
+    const routeInfoResponse = routeInfo ? {
+      origin: {
+        address: routeInfo.origin.address,
+        lat: routeInfo.origin.lat,
+        lng: routeInfo.origin.lng,
+      },
+      destination: {
+        address: routeInfo.destination.address,
+        lat: routeInfo.destination.lat,
+        lng: routeInfo.destination.lng,
+      },
+      distanceKm: routeInfo.distanceKm,
+      distanceMeters: routeInfo.distanceMeters,
+      durationSeconds: routeInfo.durationSeconds,
+      durationFormatted: routeInfo.durationFormatted,
+      category: this.categorizeDistance(routeInfo.distanceKm),
+      routeCoordinates: routeInfo.routeCoordinates, // Full route geometry
+      transportMode: routeInfo.transportMode,
+      segments: routeInfo.segments, // Multi-modal segments (air + ground)
+    } : undefined;
+
+    return { quotes: quotesWithBadges, messages, routeInfo: routeInfoResponse };
   }
 
   /**
@@ -267,5 +309,15 @@ export class QuoteService {
       isCheapest: quote.isCheapest,
       isFastest: quote.isFastest,
     });
+  }
+
+  /**
+   * Categorize distance for display purposes
+   */
+  private categorizeDistance(distanceKm: number): string {
+    if (distanceKm < 100) return 'Local';
+    if (distanceKm < 500) return 'Regional';
+    if (distanceKm < 1000) return 'Nacional';
+    return 'Larga Distancia';
   }
 }

@@ -6,6 +6,28 @@ import { Location } from './Location.js';
 export type TrafficCondition = 'light' | 'moderate' | 'heavy' | 'unknown';
 
 /**
+ * Transport Mode Enum
+ */
+export type TransportMode = 'driving-car' | 'driving-hgv' | 'foot-walking' | 'cycling-regular' | 'air-ground';
+
+/**
+ * Route Segment - Represents one leg of a multi-modal journey
+ */
+export interface RouteSegment {
+  mode: 'air' | 'ground';
+  transportLabel: string; // "Avión" or "Camión"
+  coordinates: RouteCoordinate[];
+  distanceKm: number;
+  durationMinutes: number;
+  color: string; // Color for map display
+}
+
+/**
+ * Route Coordinates - [lat, lng]
+ */
+export type RouteCoordinate = [number, number];
+
+/**
  * RouteInfo Entity
  * Represents the calculated route between two locations with distance and duration
  */
@@ -18,6 +40,9 @@ export class RouteInfo {
   public readonly durationFormatted: string;
   public readonly trafficCondition: TrafficCondition;
   public readonly calculatedAt: Date;
+  public readonly routeCoordinates: RouteCoordinate[]; // Full route geometry
+  public readonly transportMode: TransportMode;
+  public readonly segments?: RouteSegment[]; // For multi-modal routes
 
   constructor(data: {
     origin: Location;
@@ -25,6 +50,9 @@ export class RouteInfo {
     distanceMeters: number;
     durationSeconds: number;
     trafficCondition?: TrafficCondition;
+    routeCoordinates?: RouteCoordinate[];
+    transportMode?: TransportMode;
+    segments?: RouteSegment[];
   }) {
     this.origin = data.origin;
     this.destination = data.destination;
@@ -34,6 +62,9 @@ export class RouteInfo {
     this.durationFormatted = this.formatDuration(data.durationSeconds);
     this.trafficCondition = data.trafficCondition || 'unknown';
     this.calculatedAt = new Date();
+    this.routeCoordinates = data.routeCoordinates || [[data.origin.lat, data.origin.lng], [data.destination.lat, data.destination.lng]];
+    this.transportMode = data.transportMode || 'driving-car';
+    this.segments = data.segments;
   }
 
   /**

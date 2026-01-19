@@ -6,6 +6,7 @@ import { FedExAdapter } from '../adapters/FedExAdapter.js';
 import { DHLAdapter } from '../adapters/DHLAdapter.js';
 import { LocalAdapter } from '../adapters/LocalAdapter.js';
 import { OpenRouteServiceAdapter } from '../adapters/OpenRouteServiceAdapter.js';
+import { MultiModalRouteAdapter } from '../adapters/MultiModalRouteAdapter.js';
 import { QuoteRepository } from '../database/repositories/QuoteRepository.js';
 import { MongoDBConnection } from '../database/connection.js';
 import { validateQuoteRequest } from '../middlewares/validateQuoteRequest.js';
@@ -31,10 +32,13 @@ if (isConnected) {
 
 // Initialize OpenRouteService adapter (Free alternative to Google Maps)
 let routeCalculator;
+let multiModalCalculator;
 const openRouteServiceKey = process.env.OPENROUTESERVICE_API_KEY;
 if (openRouteServiceKey && openRouteServiceKey !== 'your_openrouteservice_api_key_here') {
   routeCalculator = new OpenRouteServiceAdapter(openRouteServiceKey);
+  multiModalCalculator = new MultiModalRouteAdapter(openRouteServiceKey);
   console.log('🗺️  OpenRouteService adapter initialized (Free - 2000 requests/day)');
+  console.log('✈️  Multi-Modal adapter initialized (Air + Ground routes)');
 } else {
   console.warn('⚠️  Running without route calculation (API key not configured)');
   console.warn('   Set OPENROUTESERVICE_API_KEY in .env to enable route calculation');
@@ -44,7 +48,8 @@ if (openRouteServiceKey && openRouteServiceKey !== 'your_openrouteservice_api_ke
 const quoteService = new QuoteService(
   [fedexAdapter, dhlAdapter, localAdapter],
   quoteRepository, // Optional - graceful degradation if undefined
-  routeCalculator // Optional - graceful degradation if undefined
+  routeCalculator, // Optional - graceful degradation if undefined
+  multiModalCalculator // Optional - for air+ground routes
 );
 
 console.log('📝 QuoteService created with repository:', !!quoteRepository);

@@ -18,13 +18,13 @@ export const QuoteResultsList = ({ quotes, messages, routeInfo }: QuoteResultsLi
 
   // Extract origin and destination from first quote or use defaults
   const getDefaultAddresses = () => {
-    if (routeInfo) {
+    if (routeInfo?.origin?.address && routeInfo?.destination?.address) {
       return {
         origin: routeInfo.origin.address,
         destination: routeInfo.destination.address
       };
     }
-    if (quotes[0]?.routeInfo) {
+    if (quotes[0]?.routeInfo?.origin?.address && quotes[0]?.routeInfo?.destination?.address) {
       return {
         origin: quotes[0].routeInfo.origin.address,
         destination: quotes[0].routeInfo.destination.address
@@ -78,23 +78,23 @@ export const QuoteResultsList = ({ quotes, messages, routeInfo }: QuoteResultsLi
             <div className="flex flex-col items-center p-3 bg-white rounded-lg">
               <span className="material-symbols-outlined text-primary mb-1" style={{ fontSize: '20px' }}>straighten</span>
               <p className="text-xs text-text-muted mb-1">Distancia</p>
-              <p className="text-lg font-bold text-text-dark">{routeInfo.distanceKm.toFixed(0)} km</p>
+              <p className="text-lg font-bold text-text-dark">{routeInfo?.distanceKm?.toFixed(0) || '0'} km</p>
             </div>
             <div className="flex flex-col items-center p-3 bg-white rounded-lg">
               <span className="material-symbols-outlined text-accent-info mb-1" style={{ fontSize: '20px' }}>schedule</span>
               <p className="text-xs text-text-muted mb-1">Duración</p>
-              <p className="text-lg font-bold text-text-dark">{routeInfo.durationFormatted}</p>
+              <p className="text-lg font-bold text-text-dark">{routeInfo?.durationFormatted || 'N/A'}</p>
             </div>
             <div className="flex flex-col items-center p-3 bg-white rounded-lg">
               <span className="material-symbols-outlined text-accent-success mb-1" style={{ fontSize: '20px' }}>category</span>
               <p className="text-xs text-text-muted mb-1">Categoría</p>
-              <p className="text-lg font-bold text-text-dark">{routeInfo.category}</p>
+              <p className="text-lg font-bold text-text-dark">{routeInfo?.category || 'N/A'}</p>
             </div>
             <div className="flex flex-col items-center p-3 bg-white rounded-lg">
               <span className="material-symbols-outlined text-accent-warning mb-1" style={{ fontSize: '20px' }}>location_on</span>
               <p className="text-xs text-text-muted mb-1">Ruta</p>
               <p className="text-sm font-medium text-text-dark">
-                {routeInfo.origin.address.split(',')[0]} → {routeInfo.destination.address.split(',')[0]}
+                {routeInfo?.origin?.address?.split(',')[0] || 'Origen'} → {routeInfo?.destination?.address?.split(',')[0] || 'Destino'}
               </p>
             </div>
           </div>
@@ -145,14 +145,18 @@ export const QuoteResultsList = ({ quotes, messages, routeInfo }: QuoteResultsLi
                       </span>
                     )}
                   </div>
-                  {quote.routeInfo && (
+                  {quote.routeInfo?.distanceKm && (
                     <div className="mt-2 flex gap-2 text-xs text-text-muted">
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-xs">route</span>
                         {quote.routeInfo.distanceKm.toFixed(0)} km
                       </span>
-                      <span>•</span>
-                      <span className="font-medium">{quote.routeInfo.category}</span>
+                      {quote.routeInfo.category && (
+                        <>
+                          <span>•</span>
+                          <span className="font-medium">{quote.routeInfo.category}</span>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -189,7 +193,7 @@ export const QuoteResultsList = ({ quotes, messages, routeInfo }: QuoteResultsLi
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (quote.routeInfo) {
+                      if (quote.routeInfo?.origin?.address && quote.routeInfo?.destination?.address) {
                         handleShowRoute(quote.routeInfo.origin.address, quote.routeInfo.destination.address);
                       } else {
                         handleShowRoute();
@@ -226,6 +230,7 @@ export const QuoteResultsList = ({ quotes, messages, routeInfo }: QuoteResultsLi
         isOpen={showMapModal}
         origin={selectedOrigin}
         destination={selectedDestination}
+        routeInfo={routeInfo} // Pass route info with full coordinates
         onClose={() => setShowMapModal(false)}
       />
     </div>

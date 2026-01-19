@@ -41,38 +41,38 @@ export class WeightPricingCalculator {
   }
 
   /**
-   * FedEx weight tiers for Colombia (COP)
+   * FedEx weight tiers for Colombia (COP) - Truck transportation
    */
   static getFedExTiers(): WeightPricingTier[] {
     return [
-      { minWeight: 0, maxWeight: 5, ratePerKg: 8000 },      // Small packages
-      { minWeight: 5, maxWeight: 20, ratePerKg: 6500 },     // Medium packages
-      { minWeight: 20, maxWeight: 50, ratePerKg: 5500 },    // Large packages
-      { minWeight: 50, maxWeight: Infinity, ratePerKg: 4800 }, // Heavy freight
+      { minWeight: 0, maxWeight: 5, ratePerKg: 15000 },      // Small packages
+      { minWeight: 5, maxWeight: 20, ratePerKg: 12000 },     // Medium packages
+      { minWeight: 20, maxWeight: 50, ratePerKg: 10000 },    // Large packages
+      { minWeight: 50, maxWeight: Infinity, ratePerKg: 8500 }, // Heavy freight
     ];
   }
 
   /**
-   * DHL weight tiers for Colombia (COP)
+   * DHL weight tiers for Colombia (COP) - Truck transportation
    */
   static getDHLTiers(): WeightPricingTier[] {
     return [
-      { minWeight: 0, maxWeight: 5, ratePerKg: 7500 },
-      { minWeight: 5, maxWeight: 20, ratePerKg: 6000 },
-      { minWeight: 20, maxWeight: 50, ratePerKg: 5000 },
-      { minWeight: 50, maxWeight: Infinity, ratePerKg: 4500 },
+      { minWeight: 0, maxWeight: 5, ratePerKg: 13000 },
+      { minWeight: 5, maxWeight: 20, ratePerKg: 10500 },
+      { minWeight: 20, maxWeight: 50, ratePerKg: 9000 },
+      { minWeight: 50, maxWeight: Infinity, ratePerKg: 7800 },
     ];
   }
 
   /**
-   * Local carrier weight tiers for Colombia (COP) - Most economical
+   * Local carrier weight tiers for Colombia (COP) - Most economical truck transport
    */
   static getLocalTiers(): WeightPricingTier[] {
     return [
-      { minWeight: 0, maxWeight: 5, ratePerKg: 5000 },
-      { minWeight: 5, maxWeight: 20, ratePerKg: 4500 },
-      { minWeight: 20, maxWeight: 50, ratePerKg: 4000 },
-      { minWeight: 50, maxWeight: Infinity, ratePerKg: 3800 },
+      { minWeight: 0, maxWeight: 5, ratePerKg: 9000 },
+      { minWeight: 5, maxWeight: 20, ratePerKg: 7500 },
+      { minWeight: 20, maxWeight: 50, ratePerKg: 6500 },
+      { minWeight: 50, maxWeight: Infinity, ratePerKg: 5800 },
     ];
   }
 }

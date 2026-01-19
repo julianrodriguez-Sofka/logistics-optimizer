@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Multi-Modal Route</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #6B8E7D;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #5a7a69;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .segment {
+            background: #e8f5e9;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #4caf50;
+            border-radius: 4px;
+        }
+        .segment.air {
+            background: #e3f2fd;
+            border-left-color: #2196f3;
+        }
+        .segment.ground {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+        h3 {
+            color: #6B8E7D;
+            margin-top: 0;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Test de Rutas Multi-Modal</h1>
+        <p>Prueba las diferentes rutas con y sin modo multi-modal</p>
+        
+        <button onclick="testStandardRoute()">🚗 Ruta Estándar (Auto)</button>
+        <button onclick="testTruckRoute()">🚛 Ruta Camión</button>
+        <button onclick="testMultiModalRoute()">✈️ Ruta Multi-Modal (Avión + Camión)</button>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        async function testStandardRoute() {
+            await testRoute('driving-car', 'Auto');
+        }
+
+        async function testTruckRoute() {
+            await testRoute('driving-hgv', 'Camión');
+        }
+
+        async function testMultiModalRoute() {
+            await testRoute('air-ground', 'Avión + Camión');
+        }
+
+        async function testRoute(transportMode, label) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<p>⏳ Calculando ruta con modo: <strong>${label}</strong>...</p>`;
+
+            try {
+                const response = await fetch('http://localhost:3000/api/quotes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        origin: 'Cali, Colombia',
+                        destination: 'Bogota, Colombia',
+                        weight: 25,
+                        pickupDate: '2026-01-20',
+                        fragile: false,
+                        transportMode: transportMode
+                    })
+                });
+
+                const data = await response.json();
+
+                let html = `<h3>✅ Respuesta recibida</h3>`;
+                html += `<div class="success">`;
+                html += `<p><strong>Modo de Transporte:</strong> ${data.routeInfo?.transportMode || 'No especificado'}</p>`;
+                html += `<p><strong>Distancia:</strong> ${data.routeInfo?.distanceKm.toFixed(1)} km</p>`;
+                html += `<p><strong>Duración:</strong> ${data.routeInfo?.durationFormatted}</p>`;
+                html += `</div>`;
+
+                if (data.routeInfo?.segments && data.routeInfo.segments.length > 0) {
+                    html += `<h3>📍 Segmentos de la Ruta (${data.routeInfo.segments.length})</h3>`;
+                    data.routeInfo.segments.forEach((segment, index) => {
+                        html += `<div class="segment ${segment.mode}">`;
+                        html += `<h4>${index + 1}. ${segment.transportLabel} (${segment.mode})</h4>`;
+                        html += `<p>📏 Distancia: <strong>${segment.distanceKm.toFixed(1)} km</strong></p>`;
+                        html += `<p>⏱️ Duración: <strong>${segment.durationMinutes} minutos</strong></p>`;
+                        html += `<p>🎨 Color: <span style="color: ${segment.color}; font-weight: bold;">${segment.color}</span></p>`;
+                        html += `<p>📍 Puntos de coordenadas: ${segment.coordinates.length}</p>`;
+                        html += `</div>`;
+                    });
+                } else {
+                    html += `<div class="error">⚠️ No se encontraron segmentos multi-modales</div>`;
+                }
+
+                html += `<h3>📦 Cotizaciones (${data.quotes.length})</h3>`;
+                data.quotes.forEach(quote => {
+                    html += `<p>• ${quote.providerName}: $${quote.price} ${quote.currency}</p>`;
+                });
+
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

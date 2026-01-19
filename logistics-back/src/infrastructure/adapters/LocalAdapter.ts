@@ -4,8 +4,8 @@ import { ZoneConfig } from '../../domain/entities/ZoneConfig';
 import { WeightPricingCalculator } from '../../application/services/WeightPricingCalculator';
 
 export class LocalAdapter extends BaseShippingAdapter {
-  private readonly BASE_PRICE = 5000; // Base price in COP
-  private readonly MIN_DELIVERY_DAYS = 7;
+  private readonly BASE_PRICE = 15000; // Base price in COP for truck transport
+  private readonly MIN_DELIVERY_DAYS = 4;
   private readonly MAX_DELIVERY_DAYS = 7;
   private readonly CARRIER_NAME = 'Local';
 

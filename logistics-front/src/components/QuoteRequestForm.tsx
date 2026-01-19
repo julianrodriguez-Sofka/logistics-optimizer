@@ -4,10 +4,11 @@
  * ademas tiene un hook personaliado para centralizar la logica del estado del formulario y un Validator para validar 
  */
 
-import type { FormEvent } from 'react';
+import type { FormEvent, ChangeEvent } from 'react';
 import type { IQuoteRequest } from '../models/QuoteRequest';
 import { useQuoteFormState } from '../hooks/useQuoteFormState';
-import { FormField } from './FormField';import { VALIDATION, BUSINESS_RULES } from '../utils/constants';
+import { FormField } from './FormField';
+import { VALIDATION, BUSINESS_RULES } from '../utils/constants';
 interface QuoteRequestFormProps {
   onSubmit: (data: IQuoteRequest) => void;
   loading?: boolean;
@@ -29,15 +30,16 @@ export const QuoteRequestForm = ({ onSubmit, loading = false }: QuoteRequestForm
     e.preventDefault();
 
     if (validateAll()) {
-      const requestData: IQuoteRequest = {
+      const requestData: IQuoteRequest & { transportMode?: string } = {
         origin: formData.origin,
         destination: formData.destination,
         weight: Number.parseFloat(formData.weight),
         pickupDate: formData.pickupDate,
         fragile: formData.fragile,
+        transportMode: 'driving-car', // Use car profile for routing (pricing is for trucks)
       };
 
-      onSubmit(requestData);
+      onSubmit(requestData as IQuoteRequest);
       resetForm();
     }
   };

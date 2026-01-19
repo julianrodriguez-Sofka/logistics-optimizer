@@ -4,8 +4,8 @@ import { ZoneConfig } from '../../domain/entities/ZoneConfig';
 import { WeightPricingCalculator } from '../../application/services/WeightPricingCalculator';
 
 export class FedExAdapter extends BaseShippingAdapter {
-  private readonly BASE_PRICE = 10000; // Base price in COP
-  private readonly MIN_DELIVERY_DAYS = 3;
+  private readonly BASE_PRICE = 25000; // Base price in COP for truck transport
+  private readonly MIN_DELIVERY_DAYS = 2;
   private readonly MAX_DELIVERY_DAYS = 4;
   private readonly CARRIER_NAME = 'FedEx';
 

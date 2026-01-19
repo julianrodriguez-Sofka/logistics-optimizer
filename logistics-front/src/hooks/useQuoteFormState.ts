@@ -11,6 +11,7 @@ export interface QuoteFormState {
   weight: string;
   pickupDate: string;
   fragile: boolean;
+  transportMode: string; // Transport mode selection
   [key: string]: string | boolean; 
 }
 
@@ -26,6 +27,7 @@ export function useQuoteFormState() {
     weight: '',
     pickupDate: '',
     fragile: false,
+    transportMode: 'driving-car', // Use car profile for routing (pricing is still for trucks)
   });
 
   const [errors, setErrors] = useState<FormErrors>({});

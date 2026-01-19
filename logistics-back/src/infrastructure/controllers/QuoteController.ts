@@ -21,10 +21,11 @@ export class QuoteController {
         weight: req.body.weight,
         pickupDate: new Date(req.body.pickupDate),
         fragile: req.body.fragile,
+        transportMode: req.body.transportMode, // Pass transport mode
       });
 
       // Get quotes from all providers with error messages
-      const { quotes, messages } = await this.quoteService.getAllQuotesWithMessages(quoteRequest);
+      const { quotes, messages, routeInfo } = await this.quoteService.getAllQuotesWithMessages(quoteRequest);
 
       // Check if any providers responded
       if (quotes.length === 0) {
@@ -56,6 +57,7 @@ export class QuoteController {
           pricePerKm: quote.pricePerKm,
         })),
         messages: messages.length > 0 ? messages : undefined,
+        routeInfo: routeInfo, // Include shared route information with full geometry
       });
     } catch (error) {
       // Handle validation errors

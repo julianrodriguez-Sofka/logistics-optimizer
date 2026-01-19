@@ -1,4 +1,4 @@
-import { RouteInfo } from '../entities/RouteInfo.js';
+import { RouteInfo, TransportMode } from '../entities/RouteInfo.js';
 
 /**
  * IRouteCalculator Interface
@@ -11,10 +11,11 @@ export interface IRouteCalculator {
    * Calculate complete route information between two locations
    * @param origin - Starting address
    * @param destination - Ending address
+   * @param transportMode - Mode of transport (driving-car, driving-hgv, foot-walking, cycling-regular)
    * @returns RouteInfo with distance, duration, and coordinates
    * @throws Error if route cannot be calculated
    */
-  calculateRoute(origin: string, destination: string): Promise<RouteInfo>;
+  calculateRoute(origin: string, destination: string, transportMode?: TransportMode): Promise<RouteInfo>;
 
   /**
    * Get only the distance in kilometers between two locations
