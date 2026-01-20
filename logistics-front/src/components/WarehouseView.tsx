@@ -551,16 +551,35 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   ];
 
   return (
-    <div className="w-72 flex-shrink-0 space-y-6">
+    <div className="w-72 flex-shrink-0 space-y-5">
+      {/* Search */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
+        <div className="relative">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400" style={{ fontSize: '20px' }}>
+            search
+          </span>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Buscar pedido..."
+            className="w-full pl-12 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-primary/30 focus:outline-none transition-all text-sm"
+          />
+        </div>
+      </div>
+
       {/* Status Filter */}
-      <div className="bg-white rounded-xl shadow-lg p-4">
-        <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-          <span>🔍</span> Filtrar por Estado
-        </h3>
-        <div className="space-y-1">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+          <h3 className="font-bold text-slate-800 flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary" style={{ fontSize: '20px' }}>filter_list</span>
+            Filtrar por Estado
+          </h3>
+        </div>
+        <div className="p-3 space-y-1">
           {allStatuses.map((status) => {
             const config = status === 'ALL' 
-              ? { label: 'Todos', icon: '📋', bgColor: 'bg-blue-100', color: 'text-blue-700' }
+              ? { label: 'Todos', icon: '📋', bgColor: 'bg-primary/10', color: 'text-primary' }
               : STATUS_CONFIG[status];
             const count = status === 'ALL' 
               ? Object.values(statusCounts).reduce((a, b) => a + b, 0)
@@ -570,18 +589,18 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
               <button
                 key={status}
                 onClick={() => onStatusChange(status)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all ${
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all ${
                   selectedStatus === status
-                    ? `${config?.bgColor} ${config?.color}`
-                    : 'hover:bg-gray-50 text-gray-600'
+                    ? 'bg-primary/10 text-primary'
+                    : 'hover:bg-slate-50 text-slate-600'
                 }`}
               >
-                <span className="flex items-center gap-2">
-                  <span>{config?.icon}</span>
+                <span className="flex items-center gap-2.5">
+                  <span className="text-base">{config?.icon}</span>
                   <span className="text-sm font-medium">{config?.label}</span>
                 </span>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  selectedStatus === status ? 'bg-white/50' : 'bg-gray-100'
+                <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
+                  selectedStatus === status ? 'bg-primary/20 text-primary' : 'bg-slate-100 text-slate-500'
                 }`}>
                   {count}
                 </span>
@@ -591,27 +610,19 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
         </div>
       </div>
 
-      {/* Search */}
-      <div className="bg-white rounded-xl shadow-lg p-4">
-        <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-          <span>🔎</span> Buscar
-        </h3>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Tracking, nombre, email..."
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
-
-      {/* Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-        <h4 className="font-semibold text-blue-800 mb-2">ℹ️ Control Manual</h4>
-        <p className="text-sm text-blue-700">
-          Los estados se cambian <strong>manualmente</strong>. Usa el botón "Avanzar" en cada 
-          pedido para actualizar su estado. Los cambios se guardan automáticamente.
-        </p>
+      {/* Info Card */}
+      <div className="bg-gradient-to-br from-primary/5 to-secondary/5 border border-primary/20 rounded-2xl p-5">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-primary" style={{ fontSize: '20px' }}>touch_app</span>
+          </div>
+          <div>
+            <h4 className="font-semibold text-slate-800 mb-1">Control Manual</h4>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Usa el botón "Avanzar" en cada pedido para actualizar su estado. Los cambios se guardan automáticamente.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -758,44 +769,48 @@ const WarehouseView: React.FC = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-gray-600">Cargando almacén...</p>
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <span className="material-symbols-outlined text-white" style={{ fontSize: '32px' }}>inventory_2</span>
+          </div>
+          <p className="text-slate-600 font-medium">Cargando almacén...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <header className="bg-white border-b border-slate-200/80">
+        <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                <span className="text-3xl">🏭</span>
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                  <span className="material-symbols-outlined text-white" style={{ fontSize: '22px' }}>warehouse</span>
+                </div>
                 Almacén de Envíos
               </h1>
-              <p className="text-gray-500 mt-1">
-                Gestiona y rastrea todos los pedidos - Control manual de estados
+              <p className="text-slate-500 text-sm mt-1">
+                Gestiona y rastrea todos los pedidos • Control manual de estados
               </p>
             </div>
             
             {/* Stats */}
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-100 px-4 py-2 rounded-xl text-center">
-                <p className="text-2xl font-bold text-blue-700">{stats.total}</p>
-                <p className="text-xs text-blue-600">Total Pedidos</p>
+            <div className="hidden md:flex items-center gap-3">
+              <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 px-5 py-3 rounded-xl text-center min-w-[100px]">
+                <p className="text-2xl font-bold text-primary">{stats.total}</p>
+                <p className="text-xs text-primary/70 font-medium">Total</p>
               </div>
-              <div className="bg-green-100 px-4 py-2 rounded-xl text-center">
-                <p className="text-2xl font-bold text-green-700">{stats.delivered}</p>
-                <p className="text-xs text-green-600">Entregados</p>
+              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200 px-5 py-3 rounded-xl text-center min-w-[100px]">
+                <p className="text-2xl font-bold text-emerald-600">{stats.delivered}</p>
+                <p className="text-xs text-emerald-600/70 font-medium">Entregados</p>
               </div>
-              <div className="bg-indigo-100 px-4 py-2 rounded-xl text-center">
-                <p className="text-2xl font-bold text-indigo-700">{stats.inTransit}</p>
-                <p className="text-xs text-indigo-600">En Camino</p>
+              <div className="bg-gradient-to-br from-violet-50 to-violet-100/50 border border-violet-200 px-5 py-3 rounded-xl text-center min-w-[100px]">
+                <p className="text-2xl font-bold text-violet-600">{stats.inTransit}</p>
+                <p className="text-xs text-violet-600/70 font-medium">En Camino</p>
               </div>
             </div>
           </div>
@@ -803,14 +818,15 @@ const WarehouseView: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-6">
+      <main className="max-w-7xl mx-auto px-8 py-8">
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            ⚠️ {error}
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3">
+            <span className="material-symbols-outlined text-red-500">error</span>
+            <span>{error}</span>
           </div>
         )}
 
-        <div className="flex gap-6">
+        <div className="flex gap-8">
           {/* Sidebar */}
           <FilterSidebar
             selectedStatus={selectedStatus}
@@ -823,19 +839,21 @@ const WarehouseView: React.FC = () => {
           {/* Shipments Grid */}
           <div className="flex-1">
             {filteredShipments.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-                <div className="text-6xl mb-4">📭</div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-12 text-center">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-slate-400" style={{ fontSize: '40px' }}>inbox</span>
+                </div>
+                <h3 className="text-lg font-bold text-slate-700 mb-2">
                   No hay envíos
                 </h3>
-                <p className="text-gray-500">
+                <p className="text-slate-500 text-sm max-w-sm mx-auto">
                   {searchQuery || selectedStatus !== 'ALL'
                     ? 'No se encontraron envíos con los filtros aplicados'
-                    : 'Aún no hay envíos en el sistema'}
+                    : 'Aún no hay envíos en el sistema. Crea uno nuevo para comenzar.'}
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {filteredShipments.map((shipment) => (
                   <ShipmentCard
                     key={getShipmentId(shipment)}

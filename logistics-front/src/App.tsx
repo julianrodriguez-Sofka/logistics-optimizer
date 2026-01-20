@@ -1,7 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import './index.css';
 import { Sidebar } from './components/Sidebar';
-import { PageHeader } from './components/PageHeader';
 import { QuoteRequestForm } from './components/QuoteRequestForm';
 import { QuoteResultsList } from './components/QuoteResultsList';
 import { ErrorAlert } from './components/ErrorAlert';
@@ -245,7 +244,7 @@ function App() {
   if (currentView === 'create-shipment') {
     return (
       <ErrorBoundary>
-        <div className="flex h-screen w-full bg-background-light">
+        <div className="flex h-screen w-full bg-slate-50">
           <Sidebar onNavigate={handleNavigate} currentView={currentView} />
           <div className="flex-1 overflow-y-auto">
             <ShipmentWizard 
@@ -263,7 +262,7 @@ function App() {
   if (currentView === 'warehouse') {
     return (
       <ErrorBoundary>
-        <div className="flex h-screen w-full bg-background-light">
+        <div className="flex h-screen w-full bg-slate-50">
           <Sidebar onNavigate={handleNavigate} currentView={currentView} />
           <div className="flex-1 overflow-y-auto">
             <WarehouseView />
@@ -276,73 +275,143 @@ function App() {
   // Render Main Quotes view
   return (
     <ErrorBoundary>
-      <div className="flex h-screen w-full bg-background-light">
+      <div className="flex h-screen w-full bg-slate-50">
         <Sidebar onNavigate={handleNavigate} currentView={currentView} />
-        <div className="flex-1 flex flex-col h-full overflow-y-auto bg-background-light relative">
-          <PageHeader
-            title="New Shipment Estimate"
-            description="Enter details to compare rates across all connected providers via Unified API."
-          />
-
-          {/* OpenStreetMap + OpenRouteService Integration Banner */}
-          <div className="mx-6 md:mx-12 mb-6">
-            <div className="bg-gradient-to-r from-primary/10 to-accent-success/10 border-2 border-primary/30 rounded-xl p-4 flex items-center gap-4 shadow-sm">
-              <div className="bg-primary text-white rounded-full p-3 flex-shrink-0">
-                <span className="material-symbols-outlined text-2xl">map</span>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-text-dark font-bold text-base mb-1 flex items-center gap-2">
-                  🗺️ Integración: OpenStreetMap + OpenRouteService
-                  <span className="bg-accent-success text-white text-xs px-2 py-0.5 rounded-full font-bold">GRATIS</span>
-                </h3>
-                <p className="text-text-muted text-sm">
-                  Visualiza rutas reales, calcula distancias precisas y tiempos de entrega. ¡Sin tarjeta de crédito! 100% gratis con OpenStreetMap.
-                </p>
+        
+        <div className="flex-1 flex flex-col h-full overflow-hidden">
+          {/* Modern Header */}
+          <header className="bg-white border-b border-slate-200/80 px-8 py-6">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                    Nueva Cotización
+                  </h1>
+                  <p className="text-slate-500 text-sm mt-1">
+                    Compara tarifas de múltiples proveedores en segundos
+                  </p>
+                </div>
+                
+                {/* Quick Stats */}
+                <div className="hidden md:flex items-center gap-4">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-xl">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span className="text-sm font-medium text-emerald-700">Sistema Activo</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl">
+                    <span className="material-symbols-outlined text-slate-500" style={{ fontSize: '18px' }}>schedule</span>
+                    <span className="text-sm font-medium text-slate-600">
+                      {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'short' })}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          </header>
 
-          <div className="flex-1 w-full px-6 md:px-12 pb-12">
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-              <div className="xl:col-span-5 flex flex-col gap-6">
-                <QuoteRequestForm 
-                  onSubmit={handleSubmit} 
-                  loading={loading}
-                  disabled={loading}
-                />
-                {error && (
-                  <ErrorAlert 
-                    message={error} 
-                    onClose={handleDismissError}
-                  />
-                )}
-              </div>
-              <div
-                className={`xl:col-span-7 flex flex-col gap-6 transition-opacity duration-300 ${
-                  currentStep === 2 ? 'opacity-100' : 'opacity-50 pointer-events-none'
-                }`}
-              >
-                {loading && <LoadingSpinner message="Cargando cotizaciones..." />}
-                {!loading && currentStep === 2 && (
-                  <>
-                    <QuoteResultsList 
-                      quotes={quotes} 
-                      messages={messages} 
-                      routeInfo={routeInfo} 
-                      onSelectQuote={handleSelectQuote}
+          {/* Main Content */}
+          <main className="flex-1 overflow-y-auto">
+            <div className="max-w-7xl mx-auto px-8 py-8">
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+                
+                {/* Left Panel - Form */}
+                <div className="xl:col-span-5 space-y-6">
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+                    <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                          <span className="material-symbols-outlined text-white" style={{ fontSize: '20px' }}>edit_note</span>
+                        </div>
+                        <div>
+                          <h2 className="font-bold text-slate-800">Datos del Envío</h2>
+                          <p className="text-xs text-slate-500">Complete los campos para cotizar</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <QuoteRequestForm 
+                        onSubmit={handleSubmit} 
+                        loading={loading}
+                        disabled={loading}
+                      />
+                    </div>
+                  </div>
+                  
+                  {error && (
+                    <ErrorAlert 
+                      message={error} 
+                      onClose={handleDismissError}
                     />
-                    <button
-                      onClick={handleNewQuote}
-                      className="bg-border-light hover:bg-primary hover:text-white text-text-dark px-5 py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-colors"
-                    >
-                      <span className="material-symbols-outlined">refresh</span>
-                      Nueva Cotización
-                    </button>
-                  </>
-                )}
+                  )}
+                </div>
+                
+                {/* Right Panel - Results */}
+                <div className={`xl:col-span-7 space-y-6 transition-all duration-500 ${
+                  currentStep === 2 ? 'opacity-100 translate-x-0' : 'opacity-40 translate-x-4 pointer-events-none'
+                }`}>
+                  
+                  {loading && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-12">
+                      <LoadingSpinner message="Buscando las mejores tarifas..." />
+                    </div>
+                  )}
+                  
+                  {!loading && currentStep === 2 && (
+                    <>
+                      <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+                        <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-white">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-white" style={{ fontSize: '20px' }}>local_shipping</span>
+                              </div>
+                              <div>
+                                <h2 className="font-bold text-slate-800">Cotizaciones Disponibles</h2>
+                                <p className="text-xs text-slate-500">{quotes.length} opciones encontradas</p>
+                              </div>
+                            </div>
+                            <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
+                              ✓ Actualizado
+                            </span>
+                          </div>
+                        </div>
+                        <div className="p-6">
+                          <QuoteResultsList 
+                            quotes={quotes} 
+                            messages={messages} 
+                            routeInfo={routeInfo} 
+                            onSelectQuote={handleSelectQuote}
+                          />
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={handleNewQuote}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-white hover:bg-slate-50 border-2 border-dashed border-slate-300 hover:border-primary text-slate-600 hover:text-primary rounded-xl font-semibold transition-all"
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>refresh</span>
+                        Nueva Cotización
+                      </button>
+                    </>
+                  )}
+                  
+                  {!loading && currentStep === 1 && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-12 text-center">
+                      <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-slate-400" style={{ fontSize: '40px' }}>package_2</span>
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-700 mb-2">
+                        Completa el Formulario
+                      </h3>
+                      <p className="text-slate-500 text-sm max-w-sm mx-auto">
+                        Ingresa los datos de tu envío para obtener las mejores cotizaciones de nuestros proveedores
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          </main>
         </div>
       </div>
     </ErrorBoundary>
