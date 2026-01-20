@@ -16,6 +16,8 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Shipment, ShipmentStatusType } from '../models/Shipment';
+import type { Customer } from '../models/Customer';
+import type { IQuote } from '../models/Quote';
 import { shipmentService } from '../services/shipmentService';
 import {
   shipmentStateService,
@@ -32,6 +34,9 @@ import {
 
 interface ShipmentWithLocalState extends Shipment {
   localState: ShipmentLocalState;
+  // Additional fields that might come from API with different names
+  customerInfo?: Customer;
+  quote?: IQuote;
 }
 
 interface StatusConfig {
@@ -331,6 +336,8 @@ const ShipmentCard: React.FC<ShipmentCardProps> = ({
 }) => {
   const localState = shipment.localState;
   const isFragile = shipment.package?.fragile || shipment.package?.isFragile;
+  const packageDescription = shipment.package?.description;
+  const paymentMethod = shipment.payment?.method;
 
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow">
@@ -341,7 +348,7 @@ const ShipmentCard: React.FC<ShipmentCardProps> = ({
             <span className="text-lg">📦</span>
             <div>
               <p className="font-bold text-gray-800 text-sm">{shipment.trackingNumber}</p>
-              <p className="text-xs text-gray-500">{shipment.customerInfo?.name || 'Cliente'}</p>
+              <p className="text-xs text-gray-500">{shipment.customer?.name || shipment.customerInfo?.name || 'Cliente'}</p>
             </div>
           </div>
           <StatusBadge status={localState.status} />
@@ -355,6 +362,14 @@ const ShipmentCard: React.FC<ShipmentCardProps> = ({
 
       {/* Content */}
       <div className="p-4 space-y-3">
+        {/* Package Description - NEW */}
+        {packageDescription && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+            <p className="text-xs text-blue-600 mb-1 font-medium">📝 Descripción del paquete</p>
+            <p className="text-sm text-blue-800">{packageDescription}</p>
+          </div>
+        )}
+
         {/* Addresses */}
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
@@ -377,17 +392,28 @@ const ShipmentCard: React.FC<ShipmentCardProps> = ({
             <span className="text-gray-600">
               <strong>{shipment.package?.weight || 0}</strong> kg
             </span>
-            {shipment.quote?.price && (
+            {(shipment.selectedQuote?.price || shipment.quote?.price) && (
               <span className="text-green-600 font-semibold">
-                {formatCurrency(shipment.quote.price)}
+                {formatCurrency(shipment.selectedQuote?.price || shipment.quote?.price || 0)}
               </span>
             )}
           </div>
-          {isFragile && (
-            <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">
-              ⚠️ Frágil
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {isFragile && (
+              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">
+                ⚠️ Frágil
+              </span>
+            )}
+            {paymentMethod && (
+              <span className={`text-xs px-2 py-1 rounded-full ${
+                paymentMethod === 'CASH' 
+                  ? 'bg-green-100 text-green-700' 
+                  : 'bg-blue-100 text-blue-700'
+              }`}>
+                {paymentMethod === 'CASH' ? '💵 Efectivo' : '💳 Tarjeta'}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Truck Assignment */}
@@ -615,7 +641,10 @@ const WarehouseView: React.FC = () => {
       // Merge API data with local state
       const merged: ShipmentWithLocalState[] = shipmentsArray.map((s) => {
         const id = getShipmentId(s);
-        const localState = shipmentStateService.getState(id, s.currentStatus);
+        // Pass payment method to determine initial state
+        // CASH payments should start as PAYMENT_CONFIRMED
+        const paymentMethod = s.payment?.method as 'CARD' | 'CASH' | undefined;
+        const localState = shipmentStateService.getState(id, s.currentStatus, paymentMethod);
         return {
           ...s,
           localState,

@@ -166,10 +166,31 @@ class ShipmentStateService {
 
   /**
    * Get state for a shipment, creating default if not exists
+   * @param shipmentId - Unique identifier for the shipment
+   * @param defaultStatus - Initial status from API (optional)
+   * @param paymentMethod - Payment method to determine initial state (optional)
    */
-  public getState(shipmentId: string, defaultStatus?: ShipmentStatusType): ShipmentLocalState {
+  public getState(
+    shipmentId: string, 
+    defaultStatus?: ShipmentStatusType,
+    paymentMethod?: 'CARD' | 'CASH'
+  ): ShipmentLocalState {
     if (!this.states.has(shipmentId)) {
-      const initialStatus = defaultStatus || 'PAYMENT_CONFIRMED';
+      // Determine initial status based on payment method
+      // CASH payments go directly to PAYMENT_CONFIRMED since payment is at delivery
+      // CARD payments that show as PENDING_PAYMENT should remain so until confirmed
+      let initialStatus = defaultStatus || 'PAYMENT_CONFIRMED';
+      let initialNote = 'Estado inicial';
+      
+      // If payment is CASH and status is PENDING_PAYMENT, upgrade to PAYMENT_CONFIRMED
+      if (paymentMethod === 'CASH' && initialStatus === 'PENDING_PAYMENT') {
+        initialStatus = 'PAYMENT_CONFIRMED';
+        initialNote = 'Pago en efectivo - Confirmado al crear pedido';
+      } else if (paymentMethod === 'CARD' && initialStatus === 'PENDING_PAYMENT') {
+        // Card payment that's pending might need verification
+        initialNote = 'Esperando confirmación de pago con tarjeta';
+      }
+
       const newState: ShipmentLocalState = {
         id: shipmentId,
         status: initialStatus,
@@ -178,7 +199,7 @@ class ShipmentStateService {
           {
             status: initialStatus,
             timestamp: Date.now(),
-            note: 'Estado inicial',
+            note: initialNote,
           },
         ],
       };

@@ -3,18 +3,19 @@ import { QuoteRequestForm } from './QuoteRequestForm';
 import QuoteSelectionCard from './QuoteSelectionCard';
 import ShipmentDetailsForm from './ShipmentDetailsForm';
 import PaymentForm from './PaymentForm';
+import { PaymentProcessingModal } from './PaymentProcessingModal';
 import { StepIndicator } from './StepIndicator';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorAlert } from './ErrorAlert';
 import type { ShipmentDetailsData } from './ShipmentDetailsForm';
 import type { IQuoteRequest } from '../models/QuoteRequest';
 import type { IQuote } from '../models/Quote';
-import type { PaymentFormData } from '../models/Payment';
+import type { PaymentFormData, PaymentMethod } from '../models/Payment';
 import type { CreateShipmentDTO } from '../models/Shipment';
 import { shipmentService } from '../services/shipmentService';
 import { requestQuotes } from '../services/quoteService';
 
-type WizardStep = 'address' | 'quotes' | 'customer' | 'payment' | 'confirmation';
+type WizardStep = 'address' | 'quotes' | 'customer' | 'payment' | 'processing' | 'confirmation';
 
 interface ShipmentWizardProps {
   selectedQuote?: IQuote | null;
@@ -36,6 +37,8 @@ const ShipmentWizard: React.FC<ShipmentWizardProps> = ({
   const [isCreatingShipment, setIsCreatingShipment] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdShipment, setCreatedShipment] = useState<any>(null);
+  const [showPaymentProcessing, setShowPaymentProcessing] = useState(false);
+  const [currentPaymentMethod, setCurrentPaymentMethod] = useState<PaymentMethod>('CARD');
 
   // If quote and request are provided, skip to customer step
   useEffect(() => {
@@ -73,13 +76,26 @@ const ShipmentWizard: React.FC<ShipmentWizardProps> = ({
     setCurrentStep('payment');
   };
 
-  // Step 4: Payment & Create Shipment
+  // Pending payment data for processing
+  const [pendingPayment, setPendingPayment] = useState<PaymentFormData | null>(null);
+
+  // Step 4: Payment - Show processing modal
   const handlePaymentSubmit = async (payment: PaymentFormData) => {
     if (!quoteRequest || !selectedQuote || !shipmentDetails) return;
 
+    setError(null);
+    setCurrentPaymentMethod(payment.method);
+    setPendingPayment(payment);
+    setShowPaymentProcessing(true);
+  };
+
+  // Called when payment processing animation completes
+  const handlePaymentProcessingComplete = async () => {
+    if (!quoteRequest || !selectedQuote || !shipmentDetails || !pendingPayment) return;
+
     try {
-      setError(null);
       setIsCreatingShipment(true);
+      setShowPaymentProcessing(false);
 
       const shipmentData: CreateShipmentDTO = {
         customer: {
@@ -119,13 +135,13 @@ const ShipmentWizard: React.FC<ShipmentWizardProps> = ({
         },
         pickupDate: new Date(quoteRequest.pickupDate),
         payment: {
-          method: payment.method,
-          amount: payment.amount,
-          ...(payment.method === 'CARD' && {
-            cardNumber: payment.cardNumber,
-            cardHolderName: payment.cardHolderName,
-            expirationDate: payment.expirationDate,
-            cvv: payment.cvv,
+          method: pendingPayment.method,
+          amount: pendingPayment.amount,
+          ...(pendingPayment.method === 'CARD' && {
+            cardNumber: pendingPayment.cardNumber,
+            cardHolderName: pendingPayment.cardHolderName,
+            expirationDate: pendingPayment.expirationDate,
+            cvv: pendingPayment.cvv,
           }),
         },
         notes: `Destinatario: ${shipmentDetails.receiver.name}, Tel: ${shipmentDetails.receiver.phone}`,
@@ -138,6 +154,7 @@ const ShipmentWizard: React.FC<ShipmentWizardProps> = ({
       setError(err instanceof Error ? err.message : 'Error al crear el envío');
     } finally {
       setIsCreatingShipment(false);
+      setPendingPayment(null);
     }
   };
 
@@ -416,12 +433,21 @@ const ShipmentWizard: React.FC<ShipmentWizardProps> = ({
               <LoadingSpinner />
               <p className="mt-4 text-gray-600">
                 {isLoadingQuotes && 'Obteniendo cotizaciones...'}
-                {isCreatingShipment && 'Creando envío y procesando pago...'}
+                {isCreatingShipment && 'Finalizando registro del envío...'}
               </p>
             </div>
           )}
         </div>
       </div>
+
+      {/* Payment Processing Modal */}
+      <PaymentProcessingModal
+        isOpen={showPaymentProcessing}
+        paymentMethod={currentPaymentMethod}
+        amount={selectedQuote?.price || 0}
+        onComplete={handlePaymentProcessingComplete}
+        trackingNumber={createdShipment?.trackingNumber}
+      />
     </div>
   );
 };
