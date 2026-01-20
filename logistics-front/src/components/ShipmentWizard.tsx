@@ -36,7 +36,7 @@ const ShipmentWizard: React.FC<ShipmentWizardProps> = ({
   const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
   const [isCreatingShipment, setIsCreatingShipment] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [createdShipment, setCreatedShipment] = useState<any>(null);
+  const [createdShipment, setCreatedShipment] = useState<CreateShipmentDTO | null>(null);
   const [showPaymentProcessing, setShowPaymentProcessing] = useState(false);
   const [currentPaymentMethod, setCurrentPaymentMethod] = useState<PaymentMethod>('CARD');
 

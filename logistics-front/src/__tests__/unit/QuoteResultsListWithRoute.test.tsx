@@ -8,7 +8,7 @@ import { mockQuoteWithRoute, mockRouteInfo } from '../mocks/routeMocks';
 
 // Mock the RouteMapModal component
 vi.mock('../../components/RouteMapModal', () => ({
-  RouteMapModal: ({ isOpen, origin, destination }: any) =>
+  RouteMapModal: ({ isOpen, origin, destination }: { isOpen: boolean; origin: string; destination: string }) =>
     isOpen ? (
       <div data-testid="route-map-modal">
         <span>Origin: {origin}</span>

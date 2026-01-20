@@ -14,15 +14,14 @@
  * - Dependency Inversion: Depends on abstractions (service interface)
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Shipment, ShipmentStatusType } from '../models/Shipment';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import type { Shipment, ShipmentStatusType } from '../models/Shipment';
 import type { Customer } from '../models/Customer';
 import type { IQuote } from '../models/Quote';
 import { shipmentService } from '../services/shipmentService';
+import type { ShipmentLocalState, Truck } from '../services/ShipmentStateService';
 import {
   shipmentStateService,
-  ShipmentLocalState,
-  Truck,
   STATUS_FLOW,
   TERMINAL_STATES,
   AVAILABLE_TRUCKS,

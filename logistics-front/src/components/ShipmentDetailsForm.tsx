@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { CustomerFormData, DocumentType } from '../models/Customer';
-import { FormField } from './FormField';
+import React, { useState, useMemo } from 'react';
+import type { CustomerFormData } from '../models/Customer';
 
 export interface ShipmentDetailsData {
   sender: CustomerFormData;
@@ -55,12 +54,11 @@ const ShipmentDetailsForm: React.FC<ShipmentDetailsFormProps> = ({
     packageDescription: '',
   });
 
-  const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [activeSection, setActiveSection] = useState<'sender' | 'receiver' | 'package'>('sender');
 
-  // Real-time validation
-  useEffect(() => {
+  // Real-time validation using useMemo instead of useEffect
+  const errors = useMemo<ValidationErrors>(() => {
     const newErrors: ValidationErrors = {};
 
     // Sender validations
@@ -106,7 +104,7 @@ const ShipmentDetailsForm: React.FC<ShipmentDetailsFormProps> = ({
       newErrors.receiverAddress = 'La dirección debe tener al menos 10 caracteres';
     }
 
-    setErrors(newErrors);
+    return newErrors;
   }, [formData, touched]);
 
   const handleSenderChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -182,12 +180,6 @@ const ShipmentDetailsForm: React.FC<ShipmentDetailsFormProps> = ({
     }
 
     onSubmit(formData);
-  };
-
-  const getSectionStatus = (section: 'sender' | 'receiver' | 'package') => {
-    if (section === 'sender') return isSenderComplete();
-    if (section === 'receiver') return isReceiverComplete();
-    return true; // Package is optional
   };
 
   return (

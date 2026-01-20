@@ -1,5 +1,5 @@
-import React from 'react';
-import { ShipmentStatusType, getStatusInfo } from '../models/Shipment';
+import type { ShipmentStatusType } from '../models/Shipment';
+import { getStatusInfo } from '../models/Shipment';
 
 interface ShipmentFiltersProps {
   selectedStatus: ShipmentStatusType | 'ALL';

@@ -33,11 +33,11 @@ export function useDebounce<T>(value: T, delay: number): T {
  * @param delay - The delay in milliseconds
  * @returns Debounced callback function
  */
-export function useDebouncedCallback<T extends (...args: any[]) => any>(
+export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): (...args: Parameters<T>) => void {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callbackRef = useRef(callback);
 
   // Update callback ref on each render
@@ -68,6 +68,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
 /**
  * useThrottle Hook
  * Implements Throttling Pattern - limits execution to once per time period
+ * Uses setTimeout exclusively to avoid synchronous setState within effect
  * 
  * @param value - The value to throttle
  * @param interval - The throttle interval in milliseconds
@@ -75,23 +76,32 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
  */
 export function useThrottle<T>(value: T, interval: number): T {
   const [throttledValue, setThrottledValue] = useState<T>(value);
-  const lastExecuted = useRef<number>(Date.now());
+  const lastExecuted = useRef<number>(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const now = Date.now();
     const elapsed = now - lastExecuted.current;
 
-    if (elapsed >= interval) {
-      lastExecuted.current = now;
-      setThrottledValue(value);
-    } else {
-      const timerId = setTimeout(() => {
-        lastExecuted.current = Date.now();
-        setThrottledValue(value);
-      }, interval - elapsed);
-
-      return () => clearTimeout(timerId);
+    // Clear existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
+
+    // Calculate delay - if enough time passed, update soon; otherwise wait
+    const delay = elapsed >= interval ? 0 : interval - elapsed;
+
+    timeoutRef.current = setTimeout(() => {
+      lastExecuted.current = Date.now();
+      setThrottledValue(value);
+    }, delay);
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [value, interval]);
 
   return throttledValue;
@@ -105,12 +115,12 @@ export function useThrottle<T>(value: T, interval: number): T {
  * @param interval - The throttle interval in milliseconds
  * @returns Throttled callback function
  */
-export function useThrottledCallback<T extends (...args: any[]) => any>(
+export function useThrottledCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   interval: number
 ): (...args: Parameters<T>) => void {
   const lastExecuted = useRef<number>(0);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callbackRef = useRef(callback);
 
   useEffect(() => {

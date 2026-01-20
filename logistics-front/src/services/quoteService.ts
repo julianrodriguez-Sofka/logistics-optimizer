@@ -36,7 +36,8 @@ class InputSanitizer {
       .trim()
       .slice(0, maxLength)
       .replace(/[<>]/g, '') // Remove potential HTML
-      .replace(/[\x00-\x1F\x7F]/g, ''); // Remove control characters
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u001F\u007F]/g, ''); // Remove control characters
   }
 
   /**

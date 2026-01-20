@@ -121,9 +121,11 @@ describe('WarehouseView', () => {
 
       render(<WarehouseView />);
 
+      // Wait for loading to complete and empty state to appear
       await waitFor(() => {
-        expect(screen.getByText(/No hay envíos/i)).toBeInTheDocument();
-      });
+        // Look for the empty state heading text
+        expect(screen.getByRole('heading', { level: 3, name: /No hay envíos/i })).toBeInTheDocument();
+      }, { timeout: 3000 });
     });
   });
 
@@ -290,9 +292,12 @@ describe('WarehouseView', () => {
       render(<WarehouseView />);
 
       await waitFor(() => {
-        expect(screen.getByText(/No Entregado/i)).toBeInTheDocument();
-        expect(screen.getByText(/Devolución/i)).toBeInTheDocument();
-      });
+        // Buttons have emoji prefixes: "❌ No Entregado" and "↩️ Devolución"
+        const noEntregadoButton = screen.getByRole('button', { name: /No Entregado/i });
+        const devolucionButton = screen.getByRole('button', { name: /Devolución/i });
+        expect(noEntregadoButton).toBeInTheDocument();
+        expect(devolucionButton).toBeInTheDocument();
+      }, { timeout: 3000 });
     });
   });
 
@@ -355,10 +360,12 @@ describe('WarehouseView', () => {
 
       render(<WarehouseView />);
 
+      // Cash payments should be upgraded to PAYMENT_CONFIRMED by ShipmentStateService
+      // The StatusBadge displays "💳 Pago Confirmado" for PAYMENT_CONFIRMED status
       await waitFor(() => {
-        // Cash payments should be upgraded to PAYMENT_CONFIRMED
-        expect(screen.getByText(/Pago Confirmado/i)).toBeInTheDocument();
-      });
+        const statusBadge = screen.getByText(/Pago Confirmado/i);
+        expect(statusBadge).toBeInTheDocument();
+      }, { timeout: 3000 });
     });
   });
 });

@@ -1,12 +1,13 @@
-import axios, { AxiosError } from 'axios';
-import { 
+import axios from 'axios';
+import type { AxiosError } from 'axios';
+import type { 
   Shipment, 
   CreateShipmentDTO, 
   ShipmentStatistics, 
   ShipmentFilters,
   ShipmentStatusType 
 } from '../models/Shipment';
-import { Customer } from '../models/Customer';
+import type { Customer } from '../models/Customer';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 

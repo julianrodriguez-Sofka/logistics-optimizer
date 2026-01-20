@@ -4,7 +4,7 @@
  * ademas tiene un hook personaliado para centralizar la logica del estado del formulario y un Validator para validar 
  */
 
-import type { FormEvent, ChangeEvent } from 'react';
+import type { FormEvent } from 'react';
 import type { IQuoteRequest } from '../models/QuoteRequest';
 import { useQuoteFormState } from '../hooks/useQuoteFormState';
 import { FormField } from './FormField';

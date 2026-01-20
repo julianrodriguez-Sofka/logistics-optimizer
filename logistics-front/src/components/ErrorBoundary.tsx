@@ -1,4 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
 
 /**
  * Error Boundary Component
@@ -114,23 +115,6 @@ export class ErrorBoundary extends Component<Props, State> {
 
     return this.props.children;
   }
-}
-
-/**
- * Higher-Order Component for Error Boundary
- * Implements the Decorator Pattern
- */
-export function withErrorBoundary<P extends object>(
-  WrappedComponent: React.ComponentType<P>,
-  fallback?: ReactNode
-): React.FC<P> {
-  return function WithErrorBoundaryComponent(props: P) {
-    return (
-      <ErrorBoundary fallback={fallback}>
-        <WrappedComponent {...props} />
-      </ErrorBoundary>
-    );
-  };
 }
 
 export default ErrorBoundary;

@@ -13,7 +13,7 @@
  * - Dependency Inversion: Can be injected as dependency
  */
 
-import { ShipmentStatusType } from '../models/Shipment';
+import type { ShipmentStatusType } from '../models/Shipment';
 
 // ============================================================================
 // TYPES & INTERFACES

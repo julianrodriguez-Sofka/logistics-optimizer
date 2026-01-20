@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { CustomerFormData, DocumentType } from '../models/Customer';
+import React, { useState, useMemo } from 'react';
+import type { CustomerFormData } from '../models/Customer';
 import { FormField } from './FormField';
 
 interface CustomerInfoFormProps {
@@ -32,11 +32,10 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
     documentNumber: initialData?.documentNumber || '',
   });
 
-  const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  // Real-time validation
-  useEffect(() => {
+  // Real-time validation using useMemo instead of useEffect
+  const errors = useMemo<ValidationErrors>(() => {
     const newErrors: ValidationErrors = {};
 
     if (touched.name && formData.name.length < 3) {
@@ -66,7 +65,7 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
       newErrors.documentNumber = 'El número de documento debe tener al menos 5 caracteres';
     }
 
-    setErrors(newErrors);
+    return newErrors;
   }, [formData, touched]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

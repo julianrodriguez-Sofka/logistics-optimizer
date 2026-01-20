@@ -24,7 +24,7 @@ import {
   SPECIAL_STATES,
   AVAILABLE_TRUCKS,
 } from '../../../services/ShipmentStateService';
-import type { ShipmentStatusType } from '../../../models/Shipment';
+// ShipmentStatusType used implicitly in service tests
 
 // Mock localStorage
 const localStorageMock = (() => {

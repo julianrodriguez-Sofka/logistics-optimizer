@@ -1,27 +1,27 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Shipment, ShipmentStatusType } from '../models/Shipment';
+import type { Shipment, ShipmentStatusType } from '../models/Shipment';
 
 // For WebSocket, we need the base URL (without /api)
 // In Docker, use 'http://backend:3000', in local dev use 'http://localhost:3000'
 const SOCKET_URL = import.meta.env.VITE_API_BASE_URL || 'http://backend:3000';
 
-// WebSocket event types
-export enum WebSocketEvents {
+// WebSocket event types as const object (compatible with verbatimModuleSyntax)
+export const WebSocketEvents = {
   // Client to Server
-  JOIN_WAREHOUSE = 'JOIN_WAREHOUSE',
-  LEAVE_WAREHOUSE = 'LEAVE_WAREHOUSE',
-  TRACK_SHIPMENT = 'TRACK_SHIPMENT',
-  UNTRACK_SHIPMENT = 'UNTRACK_SHIPMENT',
+  JOIN_WAREHOUSE: 'JOIN_WAREHOUSE',
+  LEAVE_WAREHOUSE: 'LEAVE_WAREHOUSE',
+  TRACK_SHIPMENT: 'TRACK_SHIPMENT',
+  UNTRACK_SHIPMENT: 'UNTRACK_SHIPMENT',
 
   // Server to Client
-  SHIPMENT_CREATED = 'SHIPMENT_CREATED',
-  SHIPMENT_UPDATED = 'SHIPMENT_UPDATED',
-  STATUS_CHANGED = 'STATUS_CHANGED',
-  PAYMENT_PROCESSED = 'PAYMENT_PROCESSED',
-  NOTIFICATION = 'NOTIFICATION',
-  ERROR = 'ERROR',
-}
+  SHIPMENT_CREATED: 'SHIPMENT_CREATED',
+  SHIPMENT_UPDATED: 'SHIPMENT_UPDATED',
+  STATUS_CHANGED: 'STATUS_CHANGED',
+  PAYMENT_PROCESSED: 'PAYMENT_PROCESSED',
+  NOTIFICATION: 'NOTIFICATION',
+  ERROR: 'ERROR',
+} as const;
 
 // Event payload interfaces
 export interface ShipmentCreatedPayload {
@@ -79,67 +79,71 @@ export interface UseWebSocketReturn {
  */
 export const useWebSocket = (handlers?: WebSocketEventHandlers): UseWebSocketReturn => {
   const [connected, setConnected] = useState(false);
-  const [connectedClientsCount, setConnectedClientsCount] = useState(0);
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [connectedClientsCount] = useState(0);
   const socketRef = useRef<Socket | null>(null);
 
   // Initialize socket connection
   useEffect(() => {
     console.log('🔌 Connecting to WebSocket:', SOCKET_URL);
 
-    const socket = io(SOCKET_URL, {
+    const newSocket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
     });
 
-    socketRef.current = socket;
+    socketRef.current = newSocket;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Initializing socket state from effect is intentional
+    setSocket(newSocket);
 
     // Connection event handlers
-    socket.on('connect', () => {
-      console.log('✅ WebSocket connected:', socket.id);
+    newSocket.on('connect', () => {
+      console.log('✅ WebSocket connected:', newSocket.id);
       setConnected(true);
     });
 
-    socket.on('disconnect', (reason) => {
+    newSocket.on('disconnect', (reason) => {
       console.log('❌ WebSocket disconnected:', reason);
       setConnected(false);
     });
 
-    socket.on('connect_error', (error) => {
+    newSocket.on('connect_error', (error) => {
       console.error('🔴 WebSocket connection error:', error);
       setConnected(false);
     });
 
     // Custom event handlers
     if (handlers?.onShipmentCreated) {
-      socket.on(WebSocketEvents.SHIPMENT_CREATED, handlers.onShipmentCreated);
+      newSocket.on(WebSocketEvents.SHIPMENT_CREATED, handlers.onShipmentCreated);
     }
 
     if (handlers?.onShipmentUpdated) {
-      socket.on(WebSocketEvents.SHIPMENT_UPDATED, handlers.onShipmentUpdated);
+      newSocket.on(WebSocketEvents.SHIPMENT_UPDATED, handlers.onShipmentUpdated);
     }
 
     if (handlers?.onStatusChanged) {
-      socket.on(WebSocketEvents.STATUS_CHANGED, handlers.onStatusChanged);
+      newSocket.on(WebSocketEvents.STATUS_CHANGED, handlers.onStatusChanged);
     }
 
     if (handlers?.onPaymentProcessed) {
-      socket.on(WebSocketEvents.PAYMENT_PROCESSED, handlers.onPaymentProcessed);
+      newSocket.on(WebSocketEvents.PAYMENT_PROCESSED, handlers.onPaymentProcessed);
     }
 
     if (handlers?.onNotification) {
-      socket.on(WebSocketEvents.NOTIFICATION, handlers.onNotification);
+      newSocket.on(WebSocketEvents.NOTIFICATION, handlers.onNotification);
     }
 
     if (handlers?.onError) {
-      socket.on(WebSocketEvents.ERROR, handlers.onError);
+      newSocket.on(WebSocketEvents.ERROR, handlers.onError);
     }
 
     // Cleanup on unmount
     return () => {
       console.log('🔌 Disconnecting WebSocket');
-      socket.disconnect();
+      newSocket.disconnect();
+      setSocket(null);
     };
   }, [handlers]);
 
@@ -175,15 +179,18 @@ export const useWebSocket = (handlers?: WebSocketEventHandlers): UseWebSocketRet
     }
   }, []);
 
-  return {
-    socket: socketRef.current,
+  // Memoize return object - use state instead of ref for socket
+  const returnValue = useMemo(() => ({
+    socket,
     connected,
     joinWarehouse,
     leaveWarehouse,
     trackShipment,
     untrackShipment,
     connectedClientsCount,
-  };
+  }), [socket, connected, joinWarehouse, leaveWarehouse, trackShipment, untrackShipment, connectedClientsCount]);
+
+  return returnValue;
 };
 
 /**
@@ -193,7 +200,7 @@ export const useWarehouseWebSocket = () => {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [notifications, setNotifications] = useState<NotificationPayload[]>([]);
 
-  const handlers: WebSocketEventHandlers = {
+  const handlers: WebSocketEventHandlers = useMemo(() => ({
     onShipmentCreated: ({ shipment }) => {
       console.log('📦 New shipment created:', shipment.trackingNumber);
       setShipments((prev) => [shipment, ...prev]);
@@ -260,22 +267,22 @@ export const useWarehouseWebSocket = () => {
         },
       ]);
     },
-  };
+  }), []);
 
-  const websocket = useWebSocket(handlers);
+  const { connected, joinWarehouse, leaveWarehouse, ...rest } = useWebSocket(handlers);
 
   // Auto-join warehouse on mount
   useEffect(() => {
-    if (websocket.connected) {
-      websocket.joinWarehouse();
+    if (connected) {
+      joinWarehouse();
     }
 
     return () => {
-      if (websocket.connected) {
-        websocket.leaveWarehouse();
+      if (connected) {
+        leaveWarehouse();
       }
     };
-  }, [websocket.connected]);
+  }, [connected, joinWarehouse, leaveWarehouse]);
 
   const clearNotifications = useCallback(() => {
     setNotifications([]);
@@ -286,7 +293,10 @@ export const useWarehouseWebSocket = () => {
   }, []);
 
   return {
-    ...websocket,
+    connected,
+    joinWarehouse,
+    leaveWarehouse,
+    ...rest,
     shipments,
     setShipments,
     notifications,

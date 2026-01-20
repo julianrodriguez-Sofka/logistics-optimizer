@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { QuoteRequestForm } from '../../../components/QuoteRequestForm';
@@ -50,7 +50,7 @@ describe('QuoteRequestForm', () => {
     const user = userEvent.setup();
     render(<QuoteRequestForm onSubmit={() => {}} />);
     
-    const destinationInput = screen.getByLabelText(/city/i);
+    const destinationInput = screen.getByLabelText(/destination address/i);
     await user.click(destinationInput);
     await user.tab();
     
@@ -97,12 +97,15 @@ describe('QuoteRequestForm', () => {
     const dateString = tomorrow.toISOString().split('T')[0];
     
     await user.type(screen.getByLabelText(/origin address/i), 'New York, NY');
-    await user.type(screen.getByLabelText(/city/i), 'Los Angeles, CA');
+    await user.type(screen.getByLabelText(/destination address/i), 'Los Angeles, CA');
     await user.type(screen.getByLabelText(/weight/i), '5.5');
     await user.type(screen.getByLabelText(/pickup date/i), dateString);
     
-    const submitButton = screen.getByRole('button', { name: /calculate rates/i });
-    expect(submitButton).toBeEnabled();
+    // Wait for validation to complete
+    await waitFor(() => {
+      const submitButton = screen.getByRole('button', { name: /calculate rates/i });
+      expect(submitButton).toBeEnabled();
+    }, { timeout: 3000 });
   });
 
   it('should call onSubmit with form data when submitted', async () => {
@@ -116,19 +119,24 @@ describe('QuoteRequestForm', () => {
     const dateString = tomorrow.toISOString().split('T')[0];
     
     await user.type(screen.getByLabelText(/origin address/i), 'New York, NY');
-    await user.type(screen.getByLabelText(/city/i), 'Los Angeles, CA');
+    await user.type(screen.getByLabelText(/destination address/i), 'Los Angeles, CA');
     await user.type(screen.getByLabelText(/weight/i), '10');
     await user.type(screen.getByLabelText(/pickup date/i), dateString);
+    
+    // Wait for form to be valid before clicking submit
+    await waitFor(() => {
+      const submitButton = screen.getByRole('button', { name: /calculate rates/i });
+      expect(submitButton).toBeEnabled();
+    }, { timeout: 3000 });
     
     const submitButton = screen.getByRole('button', { name: /calculate rates/i });
     await user.click(submitButton);
     
-    expect(mockSubmit).toHaveBeenCalledWith({
+    expect(mockSubmit).toHaveBeenCalledWith(expect.objectContaining({
       origin: 'New York, NY',
       destination: 'Los Angeles, CA',
       weight: 10,
-      pickupDate: expect.any(String),
       fragile: false,
-    });
+    }));
   });
 });

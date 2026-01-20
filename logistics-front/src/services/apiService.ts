@@ -29,19 +29,21 @@ export interface RequestConfig {
   signal?: AbortSignal;
 }
 
-// Circuit Breaker States
-enum CircuitState {
-  CLOSED = 'CLOSED',     // Normal operation
-  OPEN = 'OPEN',         // Failing, reject requests
-  HALF_OPEN = 'HALF_OPEN' // Testing if service recovered
-}
+// Circuit Breaker States as const object (compatible with verbatimModuleSyntax)
+const CircuitState = {
+  CLOSED: 'CLOSED',     // Normal operation
+  OPEN: 'OPEN',         // Failing, reject requests
+  HALF_OPEN: 'HALF_OPEN' // Testing if service recovered
+} as const;
+
+type CircuitStateType = typeof CircuitState[keyof typeof CircuitState];
 
 /**
  * Circuit Breaker Implementation
  * Prevents cascading failures by stopping requests to failing services
  */
 class CircuitBreaker {
-  private state: CircuitState = CircuitState.CLOSED;
+  private state: CircuitStateType = CircuitState.CLOSED;
   private failureCount: number = 0;
   private lastFailureTime: number = 0;
   private successCount: number = 0;
@@ -106,7 +108,7 @@ class CircuitBreaker {
     }
   }
 
-  getState(): CircuitState {
+  getState(): CircuitStateType {
     return this.state;
   }
 
@@ -122,7 +124,7 @@ class CircuitBreaker {
  * Prevents duplicate in-flight requests
  */
 class RequestDeduplicator {
-  private pendingRequests: Map<string, Promise<any>> = new Map();
+  private pendingRequests: Map<string, Promise<unknown>> = new Map();
 
   async deduplicate<T>(key: string, requestFn: () => Promise<T>): Promise<T> {
     // Check if there's already a pending request with this key
