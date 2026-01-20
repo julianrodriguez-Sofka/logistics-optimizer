@@ -1,10 +1,10 @@
 import React from 'react';
-import { Quote } from '../models/Quote';
+import { IQuote } from '../models/Quote';
 import { QuoteBadge } from './QuoteBadge';
 import { ProviderLogo } from './ProviderLogo';
 
 interface QuoteSelectionCardProps {
-  quote: Quote;
+  quote: IQuote;
   isSelected: boolean;
   onSelect: () => void;
 }
@@ -100,8 +100,8 @@ const QuoteSelectionCard: React.FC<QuoteSelectionCardProps> = ({
       {/* Badges */}
       {quote.badges && quote.badges.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {quote.badges.map((badge) => (
-            <QuoteBadge key={badge} badge={badge} />
+          {quote.badges.map((badgeType) => (
+            <QuoteBadge key={badgeType} type={badgeType as 'cheapest' | 'fastest'} visible={true} />
           ))}
         </div>
       )}

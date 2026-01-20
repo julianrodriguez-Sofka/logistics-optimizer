@@ -1,7 +1,7 @@
 /**
  * Test utilities for OpenRouteService Integration
  */
-import type { IRouteInfo, IQuote } from '../models/Quote';
+import type { IRouteInfo, IQuote } from '../../models/Quote';
 
 /**
  * Mock route info for testing

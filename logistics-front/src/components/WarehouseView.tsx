@@ -52,12 +52,13 @@ interface StatusConfig {
 const STATUS_CONFIG: Record<ShipmentStatusType, StatusConfig> = {
   PENDING_PAYMENT: { label: 'Pendiente de Pago', color: 'text-amber-700', bgColor: 'bg-amber-100', icon: '⏳' },
   PAYMENT_CONFIRMED: { label: 'Pago Confirmado', color: 'text-blue-700', bgColor: 'bg-blue-100', icon: '💳' },
-  PREPARING: { label: 'Preparando', color: 'text-purple-700', bgColor: 'bg-purple-100', icon: '📦' },
+  PROCESSING: { label: 'Procesando', color: 'text-purple-700', bgColor: 'bg-purple-100', icon: '📦' },
   READY_FOR_PICKUP: { label: 'Listo Recoger', color: 'text-cyan-700', bgColor: 'bg-cyan-100', icon: '✅' },
   IN_TRANSIT: { label: 'En Camino', color: 'text-indigo-700', bgColor: 'bg-indigo-100', icon: '🚚' },
   OUT_FOR_DELIVERY: { label: 'En Reparto', color: 'text-orange-700', bgColor: 'bg-orange-100', icon: '🏃' },
   DELIVERED: { label: 'Entregado', color: 'text-green-700', bgColor: 'bg-green-100', icon: '✅' },
   FAILED_DELIVERY: { label: 'No Entregado', color: 'text-red-700', bgColor: 'bg-red-100', icon: '❌' },
+  CANCELLED: { label: 'Cancelado', color: 'text-gray-700', bgColor: 'bg-gray-100', icon: '🚫' },
   RETURNED: { label: 'Devolución', color: 'text-gray-700', bgColor: 'bg-gray-100', icon: '↩️' },
 };
 
@@ -70,14 +71,26 @@ const getShipmentId = (shipment: Shipment): string => {
 };
 
 const getOriginAddress = (shipment: Shipment): string => {
-  if (shipment.address?.origin) return shipment.address.origin;
-  if (shipment.origin) return shipment.origin;
+  if (shipment.address?.origin) {
+    return typeof shipment.address.origin === 'string' 
+      ? shipment.address.origin 
+      : shipment.address.origin.city || 'N/A';
+  }
+  if (shipment.origin) {
+    return typeof shipment.origin === 'string' ? shipment.origin : shipment.origin.city || 'N/A';
+  }
   return 'N/A';
 };
 
 const getDestinationAddress = (shipment: Shipment): string => {
-  if (shipment.address?.destination) return shipment.address.destination;
-  if (shipment.destination) return shipment.destination;
+  if (shipment.address?.destination) {
+    return typeof shipment.address.destination === 'string' 
+      ? shipment.address.destination 
+      : shipment.address.destination.city || 'N/A';
+  }
+  if (shipment.destination) {
+    return typeof shipment.destination === 'string' ? shipment.destination : shipment.destination.city || 'N/A';
+  }
   return 'N/A';
 };
 
@@ -157,7 +170,7 @@ const StatusFlowControl: React.FC<StatusFlowControlProps> = ({
   const hasTruck = !!shipment.localState.assignedTruckId;
 
   // Require truck for certain transitions
-  const requiresTruck = ['PREPARING', 'READY_FOR_PICKUP'].includes(currentStatus);
+  const requiresTruck = ['PROCESSING', 'READY_FOR_PICKUP'].includes(currentStatus);
   const canAdvance = nextStatus && !isTerminal && (!requiresTruck || hasTruck);
 
   return (
@@ -540,7 +553,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   const allStatuses: (ShipmentStatusType | 'ALL')[] = [
     'ALL',
     'PAYMENT_CONFIRMED',
-    'PREPARING',
+    'PROCESSING',
     'READY_FOR_PICKUP',
     'IN_TRANSIT',
     'OUT_FOR_DELIVERY',
@@ -878,3 +891,4 @@ const WarehouseView: React.FC = () => {
 };
 
 export { WarehouseView };
+export default WarehouseView;

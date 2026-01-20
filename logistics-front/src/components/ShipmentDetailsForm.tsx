@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CustomerFormData, DocumentType } from '../models/Customer';
-import { FormField } from './FormField';
+import { CustomerFormData } from '../models/Customer';
 
 export interface ShipmentDetailsData {
   sender: CustomerFormData;
@@ -187,11 +186,14 @@ const ShipmentDetailsForm: React.FC<ShipmentDetailsFormProps> = ({
 
   // Real-time validation
   useEffect(() => {
-    const senderErrors = validateSenderFields(formData.sender, touched);
-    const receiverErrors = validateReceiverFields(formData.receiver, touched);
-    const newErrors = { ...senderErrors, ...receiverErrors };
+    const updateErrors = () => {
+      const senderErrors = validateSenderFields(formData.sender, touched);
+      const receiverErrors = validateReceiverFields(formData.receiver, touched);
+      const newErrors = { ...senderErrors, ...receiverErrors };
+      setErrors(newErrors);
+    };
 
-    setErrors(newErrors);
+    updateErrors();
   }, [formData, touched]);
 
   const handleSenderChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -251,12 +253,6 @@ const ShipmentDetailsForm: React.FC<ShipmentDetailsFormProps> = ({
     }
 
     onSubmit(formData);
-  };
-
-  const getSectionStatus = (section: 'sender' | 'receiver' | 'package') => {
-    if (section === 'sender') return isSenderComplete();
-    if (section === 'receiver') return isReceiverComplete();
-    return true; // Package is optional
   };
 
   return (

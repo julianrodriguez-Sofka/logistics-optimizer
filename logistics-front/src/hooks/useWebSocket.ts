@@ -79,25 +79,25 @@ export interface UseWebSocketReturn {
  */
 export const useWebSocket = (handlers?: WebSocketEventHandlers): UseWebSocketReturn => {
   const [connected, setConnected] = useState(false);
-  const [connectedClientsCount, setConnectedClientsCount] = useState(0);
+  const [connectedClientsCount] = useState(0);
   const socketRef = useRef<Socket | null>(null);
 
   // Initialize socket connection
   useEffect(() => {
     console.log('🔌 Connecting to WebSocket:', SOCKET_URL);
 
-    const socket = io(SOCKET_URL, {
+    const newSocket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
     });
 
-    socketRef.current = socket;
+    socketRef.current = newSocket;
 
     // Connection event handlers
     const handleConnect = () => {
-      console.log('✅ WebSocket connected:', socket.id);
+      console.log('✅ WebSocket connected:', newSocket.id);
       setConnected(true);
     };
 
@@ -111,34 +111,34 @@ export const useWebSocket = (handlers?: WebSocketEventHandlers): UseWebSocketRet
       setConnected(false);
     };
 
-    socket.on('connect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
-    socket.on('connect_error', handleConnectError);
+    newSocket.on('connect', handleConnect);
+    newSocket.on('disconnect', handleDisconnect);
+    newSocket.on('connect_error', handleConnectError);
 
     // Register custom event handlers
     if (handlers?.onShipmentCreated) {
-      socket.on(WebSocketEvents.SHIPMENT_CREATED, handlers.onShipmentCreated);
+      newSocket.on(WebSocketEvents.SHIPMENT_CREATED, handlers.onShipmentCreated);
     }
     if (handlers?.onShipmentUpdated) {
-      socket.on(WebSocketEvents.SHIPMENT_UPDATED, handlers.onShipmentUpdated);
+      newSocket.on(WebSocketEvents.SHIPMENT_UPDATED, handlers.onShipmentUpdated);
     }
     if (handlers?.onStatusChanged) {
-      socket.on(WebSocketEvents.STATUS_CHANGED, handlers.onStatusChanged);
+      newSocket.on(WebSocketEvents.STATUS_CHANGED, handlers.onStatusChanged);
     }
     if (handlers?.onPaymentProcessed) {
-      socket.on(WebSocketEvents.PAYMENT_PROCESSED, handlers.onPaymentProcessed);
+      newSocket.on(WebSocketEvents.PAYMENT_PROCESSED, handlers.onPaymentProcessed);
     }
     if (handlers?.onNotification) {
-      socket.on(WebSocketEvents.NOTIFICATION, handlers.onNotification);
+      newSocket.on(WebSocketEvents.NOTIFICATION, handlers.onNotification);
     }
     if (handlers?.onError) {
-      socket.on(WebSocketEvents.ERROR, handlers.onError);
+      newSocket.on(WebSocketEvents.ERROR, handlers.onError);
     }
 
     // Cleanup on unmount
     return () => {
       console.log('🔌 Disconnecting WebSocket');
-      socket.disconnect();
+      newSocket.disconnect();
     };
   }, [handlers]);
 
@@ -175,7 +175,7 @@ export const useWebSocket = (handlers?: WebSocketEventHandlers): UseWebSocketRet
   }, []);
 
   return {
-    socket: socketRef.current,
+    socket: null, // Socket is managed internally via ref, not exposed to consumers
     connected,
     joinWarehouse,
     leaveWarehouse,
@@ -274,7 +274,8 @@ export const useWarehouseWebSocket = () => {
         websocket.leaveWarehouse();
       }
     };
-  }, [websocket.connected]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [websocket.connected, websocket.joinWarehouse, websocket.leaveWarehouse]);
 
   const clearNotifications = useCallback(() => {
     setNotifications([]);

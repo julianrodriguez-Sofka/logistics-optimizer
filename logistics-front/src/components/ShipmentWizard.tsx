@@ -11,7 +11,7 @@ import type { ShipmentDetailsData } from './ShipmentDetailsForm';
 import type { IQuoteRequest } from '../models/QuoteRequest';
 import type { IQuote } from '../models/Quote';
 import type { PaymentFormData, PaymentMethod } from '../models/Payment';
-import type { CreateShipmentDTO } from '../models/Shipment';
+import type { CreateShipmentDTO, Shipment } from '../models/Shipment';
 import { shipmentService } from '../services/shipmentService';
 import { requestQuotes } from '../services/quoteService';
 
@@ -36,7 +36,7 @@ const ShipmentWizard: React.FC<ShipmentWizardProps> = ({
   const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
   const [isCreatingShipment, setIsCreatingShipment] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [createdShipment, setCreatedShipment] = useState<CreateShipmentDTO | null>(null);
+  const [createdShipment, setCreatedShipment] = useState<Shipment | null>(null);
   const [showPaymentProcessing, setShowPaymentProcessing] = useState(false);
   const [currentPaymentMethod, setCurrentPaymentMethod] = useState<PaymentMethod>('CARD');
 
@@ -131,7 +131,10 @@ const ShipmentWizard: React.FC<ShipmentWizardProps> = ({
           currency: selectedQuote.currency,
           minDays: selectedQuote.minDays,
           maxDays: selectedQuote.maxDays,
+          estimatedDays: selectedQuote.estimatedDays,
           transportMode: selectedQuote.transportMode,
+          isCheapest: selectedQuote.isCheapest,
+          isFastest: selectedQuote.isFastest,
         },
         pickupDate: new Date(quoteRequest.pickupDate),
         payment: {
