@@ -9,6 +9,13 @@ describe('validateQuoteRequest middleware - HU-02 Task 2.3', () => {
   let jsonMock: jest.Mock;
   let statusMock: jest.Mock;
 
+  // Helper function to get future date string
+  const getFutureDate = (daysFromNow: number): string => {
+    const date = new Date();
+    date.setDate(date.getDate() + daysFromNow);
+    return date.toISOString().split('T')[0];
+  };
+
   beforeEach(() => {
     jsonMock = jest.fn();
     statusMock = jest.fn().mockReturnValue({ json: jsonMock });
@@ -31,7 +38,7 @@ describe('validateQuoteRequest middleware - HU-02 Task 2.3', () => {
         origin: 'Bogotá',
         destination: 'Medellín',
         weight: 5.5,
-        pickupDate: '2026-01-15',
+        pickupDate: getFutureDate(5), // 5 days from now
         fragile: false,
       };
 
@@ -50,7 +57,7 @@ describe('validateQuoteRequest middleware - HU-02 Task 2.3', () => {
         origin: 'Cali',
         destination: 'Barranquilla',
         weight: 10,
-        pickupDate: '2026-01-20',
+        pickupDate: getFutureDate(3), // 3 days from now
         fragile: true,
       };
 
@@ -71,7 +78,7 @@ describe('validateQuoteRequest middleware - HU-02 Task 2.3', () => {
         origin: 'Bogotá',
         destination: 'Medellín',
         weight: 0.05,
-        pickupDate: '2026-01-15',
+        pickupDate: getFutureDate(5),
         fragile: false,
       };
 
@@ -95,7 +102,7 @@ describe('validateQuoteRequest middleware - HU-02 Task 2.3', () => {
         origin: 'Bogotá',
         destination: 'Medellín',
         weight: 1001,
-        pickupDate: '2026-01-15',
+        pickupDate: getFutureDate(5),
         fragile: false,
       };
 
@@ -119,7 +126,7 @@ describe('validateQuoteRequest middleware - HU-02 Task 2.3', () => {
         origin: 'Bogotá',
         destination: 'Medellín',
         weight: null,
-        pickupDate: '2026-01-15',
+        pickupDate: getFutureDate(5),
         fragile: false,
       };
 
@@ -200,7 +207,7 @@ describe('validateQuoteRequest middleware - HU-02 Task 2.3', () => {
         origin: '',
         destination: 'Medellín',
         weight: 5,
-        pickupDate: '2026-01-15',
+        pickupDate: getFutureDate(5),
         fragile: false,
       };
 
@@ -224,7 +231,7 @@ describe('validateQuoteRequest middleware - HU-02 Task 2.3', () => {
         origin: 'Bogotá',
         destination: '',
         weight: 5,
-        pickupDate: '2026-01-15',
+        pickupDate: getFutureDate(5),
         fragile: false,
       };
 
@@ -250,7 +257,7 @@ describe('validateQuoteRequest middleware - HU-02 Task 2.3', () => {
         origin: 'Bogotá',
         destination: 'Medellín',
         weight: 5,
-        pickupDate: '2026-01-15',
+        pickupDate: getFutureDate(5), // Use future date to avoid date validation error
         fragile: 'yes', // Invalid - should be boolean
       };
 

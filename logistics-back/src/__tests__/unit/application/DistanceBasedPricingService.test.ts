@@ -105,11 +105,15 @@ describe('DistanceBasedPricingService', () => {
   describe('enrichQuoteWithRouteInfo', () => {
     it('should enrich quote with route information', async () => {
       const mockQuote = new Quote({
+        providerId: 'fedex-ground',
         providerName: 'FedEx',
         price: 100,
         currency: 'USD',
         minDays: 2,
         maxDays: 3,
+        transportMode: 'Truck',
+        isCheapest: false,
+        isFastest: false,
       });
 
       const mockRouteInfo = new RouteInfo({
@@ -134,11 +138,15 @@ describe('DistanceBasedPricingService', () => {
 
     it('should calculate correct price per km', async () => {
       const mockQuote = new Quote({
+        providerId: 'dhl-express',
         providerName: 'DHL',
         price: 500,
         currency: 'USD',
         minDays: 3,
         maxDays: 5,
+        transportMode: 'Air',
+        isCheapest: false,
+        isFastest: false,
       });
 
       const mockRouteInfo = new RouteInfo({

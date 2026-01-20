@@ -319,195 +319,217 @@ class DatabaseService {
 
 ---
 
-## 🗺️ Integración con Google Maps (MCP)
+## 🗺️ Integración con OpenRouteService
 
-El proyecto incluye una integración completa con Google Maps a través de un **Servidor MCP (Model Context Protocol)**. Esto permite:
+El proyecto utiliza **OpenRouteService** como proveedor de mapas y cálculo de rutas. Es una alternativa **gratuita y open-source** a Google Maps, basada en datos de **OpenStreetMap**.
 
-### ✨ Características
+### ¿Qué es OpenRouteService?
 
-- ✅ **Cálculo de rutas reales** entre origen y destino
-- ✅ **Distancias precisas** en kilómetros y metros
-- ✅ **Tiempo estimado de viaje** con tráfico
-- ✅ **Visualización interactiva** del mapa con DirectionsRenderer
-- ✅ **Precio por kilómetro** calculado automáticamente
-- ✅ **Factor de distancia** aplicado a cotizaciones (1.0x - 2.0x)
-- ✅ **Geocodificación** de direcciones a coordenadas
-- ✅ **Múltiples modos de viaje** (conducir, caminar, bicicleta, tránsito)
+[OpenRouteService](https://openrouteservice.org/) es un servicio de mapas gratuito desarrollado por la Universidad de Heidelberg que proporciona:
 
-### 🛠️ Componentes
+- **Geocodificación**: Convertir direcciones en coordenadas geográficas
+- **Cálculo de rutas**: Obtener la ruta óptima entre dos puntos
+- **Múltiples modos de transporte**: Carro, camión (HGV), bicicleta, a pie
+- **Datos abiertos**: Basado en OpenStreetMap, sin costos por solicitud
 
-#### 1. Servidor MCP (`mcp-servers/google-maps-mcp/`)
+**Ventajas sobre Google Maps:**
+- ✅ **Gratuito** (2,000 solicitudes/día en tier gratuito)
+- ✅ **Sin tarjeta de crédito** requerida
+- ✅ **Open Source** y basado en datos abiertos
+- ✅ **Sin restricciones de uso comercial** en tier gratuito
 
-Servidor Model Context Protocol que expone herramientas de Google Maps:
+### ✨ Características Implementadas
 
-**Herramientas disponibles:**
-- `calculate_route`: Calcula rutas con Directions API
-- `geocode_address`: Convierte direcciones a coordenadas
-- `reverse_geocode`: Convierte coordenadas a direcciones
-- `get_distance_matrix`: Matriz de distancias para múltiples orígenes/destinos
+| Característica | Descripción |
+|---------------|-------------|
+| 🗺️ Cálculo de rutas | Rutas reales entre ciudades colombianas |
+| 📍 Geocodificación | Conversión de direcciones a coordenadas |
+| 📏 Distancia y tiempo | Distancia en km y duración estimada |
+| 🚚 Multi-modal | Soporte para camión, avión + camión |
+| 💾 Cache inteligente | TTL de 1 hora para reducir llamadas API |
+| 🇨🇴 Fallback colombiano | Estrategias de geocodificación para direcciones locales |
 
-**Uso con GitHub Copilot:**
+### 🛠️ Arquitectura de Implementación
+
 ```
-@workspace Calcula la ruta entre Bogotá y Medellín usando el MCP de Google Maps
+┌─────────────────────────────────────────────────────────────────┐
+│                        FRONTEND (React)                         │
+├─────────────────────────────────────────────────────────────────┤
+│  RouteMap.tsx              │  RouteMapModal.tsx                 │
+│  - Leaflet + OpenStreetMap │  - Modal de pantalla completa      │
+│  - Marcadores origen/dest  │  - Información de ruta             │
+│  - Polylines de ruta       │  - Soporte multi-modal             │
+└─────────────────────────────────────────────────────────────────┘
+                              │ HTTP
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        BACKEND (Express)                        │
+├─────────────────────────────────────────────────────────────────┤
+│  QuoteService                                                   │
+│    └── IRouteCalculator (Interface)                             │
+│           ├── OpenRouteServiceAdapter                           │
+│           │     - Geocodificación con fallback                  │
+│           │     - Cache con TTL                                 │
+│           │     - Normalización de direcciones colombianas      │
+│           └── MultiModalRouteAdapter                            │
+│                 - Rutas avión + camión                          │
+└─────────────────────────────────────────────────────────────────┘
+                              │ HTTPS
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    OpenRouteService API                         │
+│              https://api.openrouteservice.org                   │
+├─────────────────────────────────────────────────────────────────┤
+│  /v2/directions/{profile}/geojson  - Cálculo de rutas          │
+│  /geocode/search                    - Geocodificación           │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-#### 2. Backend Integration (`logistics-back/`)
+### 🔧 Componentes del Backend
 
-**GoogleMapsAdapter** (`infrastructure/adapters/GoogleMapsAdapter.ts`):
-- Implementa `IRouteCalculator`
-- Cache de resultados (1 hora TTL)
-- Manejo de errores robusto
-- Integrado automáticamente en `QuoteService`
+#### OpenRouteServiceAdapter (`infrastructure/adapters/OpenRouteServiceAdapter.ts`)
 
-**DistanceBasedPricingService** (`application/services/DistanceBasedPricingService.ts`):
-- Aplica factor de distancia a las cotizaciones:
-  - 0-100 km: 1.0x (Local)
-  - 100-300 km: 1.2x (Regional)
-  - 300-800 km: 1.5x (Nacional)
-  - 800+ km: 2.0x (Internacional)
+Implementa la interfaz `IRouteCalculator` para el cálculo de rutas:
 
-#### 3. Frontend Components (`logistics-front/`)
+```typescript
+class OpenRouteServiceAdapter implements IRouteCalculator {
+  private readonly apiKey: string;
+  private readonly cache = new Map<string, { data: RouteInfo; timestamp: number }>();
+  private readonly cacheTTL: number;
 
-**RouteMap** (`components/RouteMap.tsx`):
-- Visualización interactiva con Google Maps JavaScript API
-- DirectionsRenderer para dibujar la ruta
-- Estados de carga y error
+  // Calcula ruta entre dos ubicaciones
+  async calculateRoute(origin: string, destination: string, mode: TransportMode): Promise<RouteInfo>;
+  
+  // Geocodifica con estrategia de fallback para Colombia
+  private async geocode(address: string): Promise<{ lat: number; lng: number }>;
+  
+  // Normaliza direcciones colombianas (Calle, Carrera, etc.)
+  private normalizeColombianAddress(address: string): string;
+}
+```
 
-**RouteMapModal** (`components/RouteMapModal.tsx`):
-- Modal de pantalla completa
-- Diseño consistente con el tema de la aplicación
+**Estrategia de Geocodificación (Strategy Pattern):**
 
-**QuoteResultsList** (actualizado):
-- Muestra información de ruta en cada cotización
-- Card resumen con distancia, duración y categoría
-- Botón "Ver Ruta en Mapa" integrado
+```typescript
+// 3 estrategias de fallback para direcciones colombianas:
+// 1. Intenta con dirección original
+// 2. Normaliza (quita "Calle", "Carrera", etc.)
+// 3. Extrae solo el nombre de la ciudad
 
-### 🔑 Configuración de Google Maps API
+private async geocode(address: string) {
+  // Strategy 1: Original address
+  try { return await this.tryGeocode(address); } catch {}
+  
+  // Strategy 2: Normalized (remove street details)
+  try { return await this.tryGeocode(this.normalizeColombianAddress(address)); } catch {}
+  
+  // Strategy 3: City name only
+  return await this.tryGeocode(this.extractCityName(address));
+}
+```
 
-#### Paso 1: Obtener API Key
+#### MultiModalRouteAdapter (`infrastructure/adapters/MultiModalRouteAdapter.ts`)
 
-Sigue la guía detallada en [`GOOGLE_MAPS_SETUP.md`](GOOGLE_MAPS_SETUP.md) para:
-1. Crear proyecto en Google Cloud Console
-2. Habilitar APIs necesarias (Directions, Geocoding, Maps JavaScript)
-3. Obtener y configurar API Key
-4. Configurar restricciones de seguridad
+Calcula rutas multi-modales (avión + camión):
 
-#### Paso 2: Configurar Variables de Entorno
+```typescript
+class MultiModalRouteAdapter implements IRouteCalculator {
+  // Calcula ruta combinando segmento aéreo + terrestre
+  async calculateAirGroundRoute(origin: string, destination: string): Promise<RouteInfo>;
+}
+```
+
+### 🎨 Componentes del Frontend
+
+#### RouteMap (`components/RouteMap.tsx`)
+
+Visualización interactiva con **Leaflet** y **OpenStreetMap**:
+
+```tsx
+<MapContainer center={center} zoom={7}>
+  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+  
+  {/* Marcadores */}
+  <Marker position={originCoords}><Popup>Origen</Popup></Marker>
+  <Marker position={destCoords}><Popup>Destino</Popup></Marker>
+  
+  {/* Ruta */}
+  {segments.map(segment => (
+    <Polyline 
+      positions={segment.coordinates}
+      color={segment.mode === 'air' ? '#2196F3' : '#FF9800'}
+      dashArray={segment.mode === 'air' ? '15, 15' : undefined}
+    />
+  ))}
+</MapContainer>
+```
+
+**Características visuales:**
+- 📍 Marcadores personalizados para origen y destino
+- 🛤️ Polylines con colores según modo de transporte
+- ✈️ Líneas punteadas para segmentos aéreos
+- 🚛 Líneas sólidas para segmentos terrestres
+- 🔄 Auto-ajuste de zoom para mostrar toda la ruta
+
+### 🔑 Configuración
+
+#### 1. Obtener API Key (Gratuito)
+
+1. Regístrate en [OpenRouteService](https://openrouteservice.org/dev/#/signup)
+2. Crea un nuevo token en el dashboard
+3. Copia tu API Key
+
+#### 2. Variables de Entorno
 
 **Backend** (`logistics-back/.env`):
 ```env
-GOOGLE_MAPS_API_KEY=tu_api_key_aqui
-GOOGLE_MAPS_CACHE_TTL=3600
+OPENROUTESERVICE_API_KEY=tu_api_key_aqui
 ```
 
 **Frontend** (`logistics-front/.env`):
 ```env
-VITE_GOOGLE_MAPS_API_KEY=tu_api_key_aqui
+VITE_API_BASE_URL=http://localhost:3000/api
 ```
 
-**Servidor MCP** (`mcp-servers/google-maps-mcp/.env`):
-```env
-GOOGLE_MAPS_API_KEY=tu_api_key_aqui
-```
+### 📊 Patrones de Diseño Aplicados
 
-#### Paso 3: Instalar y Compilar MCP Server
+| Patrón | Ubicación | Propósito |
+|--------|-----------|-----------|
+| **Adapter** | `OpenRouteServiceAdapter` | Adapta API externa a interfaz interna |
+| **Strategy** | Geocodificación | 3 estrategias de fallback |
+| **Cache** | Cache con TTL | Reduce llamadas API |
+| **Interface Segregation** | `IRouteCalculator` | Contrato mínimo |
+| **Dependency Injection** | `QuoteService` | Recibe `routeCalculator` como dependencia |
 
-```bash
-cd mcp-servers/google-maps-mcp
-npm install
-npm run build
-```
+### 🎯 Uso en la Aplicación
 
-#### Paso 4: Configurar VS Code
+1. **Usuario ingresa origen y destino** en el formulario de cotización
+2. **Backend calcula la ruta** usando OpenRouteService
+3. **Se muestra información de ruta** junto a cada cotización:
+   - Distancia en kilómetros
+   - Tiempo estimado de viaje
+   - Modo de transporte (terrestre/aéreo)
+4. **Usuario puede ver el mapa** con la ruta trazada
 
-El servidor MCP está preconfigurado en `.vscode/settings.json`. Para usarlo:
+### 🔒 Límites y Consideraciones
 
-1. Instala la extensión **Copilot MCP** (ya está instalada)
-2. Reinicia VS Code
-3. El servidor se activará automáticamente al usar GitHub Copilot
+| Tier | Límite | Costo |
+|------|--------|-------|
+| Gratuito | 2,000 solicitudes/día | $0 |
+| Pro | 50,000 solicitudes/día | Contactar |
 
-### 📊 Arquitectura de la Integración
+**Recomendaciones:**
+- ✅ Usar cache para reducir solicitudes
+- ✅ Validar direcciones antes de geocodificar
+- ✅ Implementar rate limiting si es necesario
+- ✅ Monitorear uso en el dashboard de ORS
 
-```
-┌─────────────────────┐
-│   GitHub Copilot    │
-│   (Chat Interface)  │
-└──────────┬──────────┘
-           │ MCP Protocol
-           ▼
-┌─────────────────────┐
-│  Google Maps MCP    │
-│      Server         │
-│  (Tools Provider)   │
-└──────────┬──────────┘
-           │ Google Maps API
-           ▼
-┌─────────────────────┐
-│   Google Cloud      │
-│   Maps Platform     │
-└─────────────────────┘
+### 📚 Referencias
 
-┌─────────────────────┐
-│  Frontend (React)   │
-│  - RouteMap         │
-│  - @react-google-   │
-│    maps/api         │
-└──────────┬──────────┘
-           │ HTTP
-           ▼
-┌─────────────────────┐
-│  Backend (Express)  │
-│  - GoogleMaps       │
-│    Adapter          │
-│  - QuoteService     │
-└──────────┬──────────┘
-           │ Google Maps API
-           ▼
-┌─────────────────────┐
-│   Google Cloud      │
-│   Maps Platform     │
-└─────────────────────┘
-```
-
-### 🎯 Uso en el Proyecto
-
-#### Desde el Frontend
-
-1. Ingresa origen y destino en el formulario
-2. Obtén cotizaciones normalmente
-3. Verás información de ruta automáticamente:
-   - Distancia en km
-   - Duración estimada
-   - Categoría (Local, Regional, Nacional, Internacional)
-   - Precio por km
-4. Haz clic en "Ver Ruta en Mapa" para visualización interactiva
-
-#### Desde GitHub Copilot (MCP)
-
-```
-@workspace Usando el MCP de Google Maps:
-1. Calcula la ruta entre "Bogotá, Colombia" y "Medellín, Colombia"
-2. Geocodifica "Carrera 7 # 71-21, Bogotá"
-3. Obtén la matriz de distancias entre [Bogotá, Cali] y [Medellín, Cartagena]
-```
-
-### 🔒 Seguridad y Costos
-
-**Crédito Gratuito**: $200 USD/mes de Google Cloud
-**Solicitudes gratuitas**: ~28,000 solicitudes de Directions API/mes
-
-**Mejores Prácticas**:
-1. Nunca incluyas la API key en el código
-2. Usa archivos `.env` (están en `.gitignore`)
-3. Configura restricciones de API en Google Cloud Console
-4. Monitorea el uso regularmente
-
-### 📚 Documentación Adicional
-
-- [Guía completa de configuración](GOOGLE_MAPS_SETUP.md)
-- [README del MCP Server](mcp-servers/google-maps-mcp/README.md)
-- [Google Maps Platform Docs](https://developers.google.com/maps/documentation)
-- [Model Context Protocol Spec](https://modelcontextprotocol.io/)
+- [OpenRouteService Documentation](https://openrouteservice.org/dev/#/api-docs)
+- [OpenStreetMap](https://www.openstreetmap.org/)
+- [Leaflet Documentation](https://leafletjs.com/reference.html)
+- [React-Leaflet](https://react-leaflet.js.org/)
 
 ---
 
