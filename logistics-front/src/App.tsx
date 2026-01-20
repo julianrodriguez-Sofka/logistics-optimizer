@@ -8,7 +8,7 @@ import { ErrorAlert } from './components/ErrorAlert';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import ShipmentWizard from './components/ShipmentWizard';
-import WarehouseView from './components/WarehouseView';
+import { WarehouseView } from './components/WarehouseView';
 import { requestQuotes } from './services/quoteService';
 import type { IQuoteRequest } from './models/QuoteRequest';
 import type { IQuote, IProviderMessage, IRouteInfo } from './models/Quote';

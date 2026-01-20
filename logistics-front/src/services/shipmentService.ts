@@ -121,15 +121,33 @@ export const shipmentService = {
         ...(filters?.search && { q: filters.search }),
       };
 
-      const response = await axios.get<PaginatedResponse<Shipment>>(
+      const response = await axios.get(
         `${API_URL}/shipments`,
         { params }
       );
 
-      return {
-        shipments: response.data.data,
-        total: response.data.pagination?.total || response.data.data.length,
-      };
+      // Handle nested response format: { success: true, data: { shipments: [...], pagination: {...} } }
+      const responseData = response.data;
+      
+      // Check if data contains shipments array (nested format)
+      if (responseData.data && Array.isArray(responseData.data.shipments)) {
+        return {
+          shipments: responseData.data.shipments,
+          total: responseData.data.pagination?.total || responseData.data.shipments.length,
+        };
+      }
+      
+      // Fallback: data is directly the array
+      if (Array.isArray(responseData.data)) {
+        return {
+          shipments: responseData.data,
+          total: responseData.pagination?.total || responseData.data.length,
+        };
+      }
+
+      // Last fallback: empty array
+      console.warn('Unexpected shipments response format:', responseData);
+      return { shipments: [], total: 0 };
     } catch (error) {
       handleApiError(error);
     }

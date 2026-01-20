@@ -26,10 +26,17 @@ export interface Address {
 
 export interface Package {
   weight: number;
-  length: number;
-  width: number;
-  height: number;
-  isFragile: boolean;
+  // Support both flat and nested dimensions format
+  length?: number;
+  width?: number;
+  height?: number;
+  dimensions?: {
+    length: number;
+    width: number;
+    height: number;
+  };
+  isFragile?: boolean;
+  fragile?: boolean; // Backend uses 'fragile' instead of 'isFragile'
   description?: string;
 }
 
