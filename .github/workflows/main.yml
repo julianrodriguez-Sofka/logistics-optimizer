@@ -10,12 +10,6 @@ on:
       - main
     types: [opened, synchronize, reopened]
 
-# Permisos explícitos para GitHub Actions
-permissions:
-  contents: read
-  pull-requests: read
-  checks: write
-
 # Evitar ejecuciones duplicadas
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -32,6 +26,11 @@ jobs:
     name: 🔧 Backend - Build & Test
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    
+    # Permisos a nivel de job
+    permissions:
+      contents: read
+      checks: write
 
     defaults:
       run:
@@ -108,6 +107,11 @@ jobs:
     name: 🎨 Frontend - Build & Test
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    
+    # Permisos a nivel de job
+    permissions:
+      contents: read
+      checks: write
 
     defaults:
       run:
@@ -190,6 +194,11 @@ jobs:
     # Always run SonarCloud, even if previous jobs failed
     if: always()
     timeout-minutes: 10
+    
+    # Permisos a nivel de job
+    permissions:
+      contents: read
+      pull-requests: read
 
     steps:
       - name: 📥 Checkout repository

@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import type { CustomerFormData } from '../models/Customer';
+import React, { useState, useEffect } from 'react';
+import { CustomerFormData, DocumentType } from '../models/Customer';
+import { FormField } from './FormField';
 
 export interface ShipmentDetailsData {
   sender: CustomerFormData;
@@ -30,6 +31,132 @@ interface ValidationErrors {
   receiverAddress?: string;
 }
 
+// ============================================================================
+// VALIDATION HELPERS - Extracted to reduce complexity
+// ============================================================================
+
+const validateName = (name: string, minLength: number = 3): string | undefined => {
+  if (name.length < minLength) {
+    return 'El nombre debe tener al menos 3 caracteres';
+  }
+  return undefined;
+};
+
+const validateEmail = (email: string): string | undefined => {
+  if (!email) return undefined;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return 'Email inválido';
+  }
+  return undefined;
+};
+
+const validatePhone = (phone: string): string | undefined => {
+  if (!phone) return undefined;
+  const phoneRegex = /^(\+57\s?)?3\d{9}$/;
+  if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+    return 'Formato: 3XX XXXXXXX';
+  }
+  return undefined;
+};
+
+const validateAddress = (address: string, minLength: number = 10): string | undefined => {
+  if (address.length < minLength) {
+    return 'La dirección debe tener al menos 10 caracteres';
+  }
+  return undefined;
+};
+
+const validateDocumentNumber = (documentNumber: string, minLength: number = 5): string | undefined => {
+  if (documentNumber.length < minLength) {
+    return 'Mínimo 5 caracteres';
+  }
+  return undefined;
+};
+
+const validateSenderFields = (
+  sender: CustomerFormData,
+  touched: Record<string, boolean>
+): Partial<ValidationErrors> => {
+  const errors: Partial<ValidationErrors> = {};
+
+  if (touched.senderName) {
+    errors.senderName = validateName(sender.name);
+  }
+  if (touched.senderEmail) {
+    errors.senderEmail = validateEmail(sender.email);
+  }
+  if (touched.senderPhone) {
+    errors.senderPhone = validatePhone(sender.phone);
+  }
+  if (touched.senderAddress) {
+    errors.senderAddress = validateAddress(sender.address);
+  }
+  if (touched.senderDocumentNumber) {
+    errors.senderDocumentNumber = validateDocumentNumber(sender.documentNumber);
+  }
+
+  return errors;
+};
+
+const validateReceiverFields = (
+  receiver: { name: string; phone: string; address: string },
+  touched: Record<string, boolean>
+): Partial<ValidationErrors> => {
+  const errors: Partial<ValidationErrors> = {};
+
+  if (touched.receiverName) {
+    errors.receiverName = validateName(receiver.name);
+  }
+  if (touched.receiverPhone) {
+    errors.receiverPhone = validatePhone(receiver.phone);
+  }
+  if (touched.receiverAddress) {
+    errors.receiverAddress = validateAddress(receiver.address);
+  }
+
+  return errors;
+};
+
+const isSenderDataComplete = (sender: CustomerFormData): boolean => {
+  if (!sender.name || !sender.email || !sender.phone || !sender.address || !sender.documentNumber) {
+    return false;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^(\+57\s?)?3\d{9}$/;
+
+  return (
+    emailRegex.test(sender.email) &&
+    phoneRegex.test(sender.phone.replace(/\s/g, '')) &&
+    sender.name.length >= 3 &&
+    sender.address.length >= 10 &&
+    sender.documentNumber.length >= 5
+  );
+};
+
+const isReceiverDataComplete = (receiver: {
+  name: string;
+  phone: string;
+  address: string;
+}): boolean => {
+  if (!receiver.name || !receiver.phone || !receiver.address) {
+    return false;
+  }
+
+  const phoneRegex = /^(\+57\s?)?3\d{9}$/;
+
+  return (
+    phoneRegex.test(receiver.phone.replace(/\s/g, '')) &&
+    receiver.name.length >= 3 &&
+    receiver.address.length >= 10
+  );
+};
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 const ShipmentDetailsForm: React.FC<ShipmentDetailsFormProps> = ({
   onSubmit,
   onBack,
@@ -54,57 +181,17 @@ const ShipmentDetailsForm: React.FC<ShipmentDetailsFormProps> = ({
     packageDescription: '',
   });
 
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [activeSection, setActiveSection] = useState<'sender' | 'receiver' | 'package'>('sender');
 
-  // Real-time validation using useMemo instead of useEffect
-  const errors = useMemo<ValidationErrors>(() => {
-    const newErrors: ValidationErrors = {};
+  // Real-time validation
+  useEffect(() => {
+    const senderErrors = validateSenderFields(formData.sender, touched);
+    const receiverErrors = validateReceiverFields(formData.receiver, touched);
+    const newErrors = { ...senderErrors, ...receiverErrors };
 
-    // Sender validations
-    if (touched.senderName && formData.sender.name.length < 3) {
-      newErrors.senderName = 'El nombre debe tener al menos 3 caracteres';
-    }
-
-    if (touched.senderEmail && formData.sender.email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.sender.email)) {
-        newErrors.senderEmail = 'Email inválido';
-      }
-    }
-
-    if (touched.senderPhone && formData.sender.phone) {
-      const phoneRegex = /^(\+57\s?)?3\d{9}$/;
-      if (!phoneRegex.test(formData.sender.phone.replace(/\s/g, ''))) {
-        newErrors.senderPhone = 'Formato: 3XX XXXXXXX';
-      }
-    }
-
-    if (touched.senderAddress && formData.sender.address.length < 10) {
-      newErrors.senderAddress = 'La dirección debe tener al menos 10 caracteres';
-    }
-
-    if (touched.senderDocumentNumber && formData.sender.documentNumber.length < 5) {
-      newErrors.senderDocumentNumber = 'Mínimo 5 caracteres';
-    }
-
-    // Receiver validations
-    if (touched.receiverName && formData.receiver.name.length < 3) {
-      newErrors.receiverName = 'El nombre debe tener al menos 3 caracteres';
-    }
-
-    if (touched.receiverPhone && formData.receiver.phone) {
-      const phoneRegex = /^(\+57\s?)?3\d{9}$/;
-      if (!phoneRegex.test(formData.receiver.phone.replace(/\s/g, ''))) {
-        newErrors.receiverPhone = 'Formato: 3XX XXXXXXX';
-      }
-    }
-
-    if (touched.receiverAddress && formData.receiver.address.length < 10) {
-      newErrors.receiverAddress = 'La dirección debe tener al menos 10 caracteres';
-    }
-
-    return newErrors;
+    setErrors(newErrors);
   }, [formData, touched]);
 
   const handleSenderChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -132,27 +219,11 @@ const ShipmentDetailsForm: React.FC<ShipmentDetailsFormProps> = ({
   };
 
   const isSenderComplete = (): boolean => {
-    if (!formData.sender.name || !formData.sender.email || !formData.sender.phone ||
-        !formData.sender.address || !formData.sender.documentNumber) {
-      return false;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^(\+57\s?)?3\d{9}$/;
-    return emailRegex.test(formData.sender.email) && 
-           phoneRegex.test(formData.sender.phone.replace(/\s/g, '')) &&
-           formData.sender.name.length >= 3 &&
-           formData.sender.address.length >= 10 &&
-           formData.sender.documentNumber.length >= 5;
+    return isSenderDataComplete(formData.sender);
   };
 
   const isReceiverComplete = (): boolean => {
-    if (!formData.receiver.name || !formData.receiver.phone || !formData.receiver.address) {
-      return false;
-    }
-    const phoneRegex = /^(\+57\s?)?3\d{9}$/;
-    return phoneRegex.test(formData.receiver.phone.replace(/\s/g, '')) &&
-           formData.receiver.name.length >= 3 &&
-           formData.receiver.address.length >= 10;
+    return isReceiverDataComplete(formData.receiver);
   };
 
   const isFormValid = (): boolean => {
@@ -180,6 +251,12 @@ const ShipmentDetailsForm: React.FC<ShipmentDetailsFormProps> = ({
     }
 
     onSubmit(formData);
+  };
+
+  const getSectionStatus = (section: 'sender' | 'receiver' | 'package') => {
+    if (section === 'sender') return isSenderComplete();
+    if (section === 'receiver') return isReceiverComplete();
+    return true; // Package is optional
   };
 
   return (

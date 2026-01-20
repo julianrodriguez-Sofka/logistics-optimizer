@@ -682,16 +682,15 @@ const WarehouseView: React.FC = () => {
 
   // Subscribe to state changes
   useEffect(() => {
-    const unsubscribe = shipmentStateService.subscribe((shipmentId, newState) => {
+    const updateShipmentState = (shipmentId: string, newState: ShipmentLocalState) => {
       setShipments((prev) =>
         prev.map((s) =>
-          getShipmentId(s) === shipmentId
-            ? { ...s, localState: newState }
-            : s
+          getShipmentId(s) === shipmentId ? { ...s, localState: newState } : s
         )
       );
-    });
+    };
 
+    const unsubscribe = shipmentStateService.subscribe(updateShipmentState);
     return unsubscribe;
   }, []);
 
@@ -719,30 +718,26 @@ const WarehouseView: React.FC = () => {
 
   // Filter and search
   const filteredShipments = useMemo(() => {
-    return shipments.filter((s) => {
-      // Status filter
-      if (selectedStatus !== 'ALL' && s.localState.status !== selectedStatus) {
-        return false;
-      }
+    const matchesStatus = (s: ShipmentWithLocalState) => {
+      return selectedStatus === 'ALL' || s.localState.status === selectedStatus;
+    };
 
-      // Search filter
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        const searchFields = [
-          s.trackingNumber,
-          s.customerInfo?.name,
-          s.customerInfo?.email,
-          getOriginAddress(s),
-          getDestinationAddress(s),
-        ].filter(Boolean);
+    const matchesSearch = (s: ShipmentWithLocalState) => {
+      if (!searchQuery.trim()) return true;
 
-        return searchFields.some((field) =>
-          field?.toLowerCase().includes(query)
-        );
-      }
+      const query = searchQuery.toLowerCase();
+      const searchFields = [
+        s.trackingNumber,
+        s.customerInfo?.name,
+        s.customerInfo?.email,
+        getOriginAddress(s),
+        getDestinationAddress(s),
+      ].filter(Boolean);
 
-      return true;
-    });
+      return searchFields.some((field) => field?.toLowerCase().includes(query));
+    };
+
+    return shipments.filter((s) => matchesStatus(s) && matchesSearch(s));
   }, [shipments, selectedStatus, searchQuery]);
 
   // Status counts for sidebar
@@ -757,12 +752,15 @@ const WarehouseView: React.FC = () => {
 
   // Statistics
   const stats = useMemo(() => {
-    const total = shipments.length;
-    const delivered = shipments.filter(s => s.localState.status === 'DELIVERED').length;
-    const inTransit = shipments.filter(s => 
-      ['IN_TRANSIT', 'OUT_FOR_DELIVERY'].includes(s.localState.status)
-    ).length;
-    return { total, delivered, inTransit };
+    const isDelivered = (s: ShipmentWithLocalState) => s.localState.status === 'DELIVERED';
+    const isInTransit = (s: ShipmentWithLocalState) =>
+      ['IN_TRANSIT', 'OUT_FOR_DELIVERY'].includes(s.localState.status);
+
+    return {
+      total: shipments.length,
+      delivered: shipments.filter(isDelivered).length,
+      inTransit: shipments.filter(isInTransit).length,
+    };
   }, [shipments]);
 
   // Loading state

@@ -102,9 +102,8 @@ describe('WarehouseView', () => {
 
   describe('Loading State', () => {
     it('should show loading indicator initially', async () => {
-      vi.mocked(shipmentService.getShipments).mockImplementation(
-        () => new Promise(() => {}) // Never resolves
-      );
+      const neverResolve = () => new Promise(() => {}); // Never resolves
+      vi.mocked(shipmentService.getShipments).mockImplementation(neverResolve);
 
       render(<WarehouseView />);
 
@@ -114,18 +113,17 @@ describe('WarehouseView', () => {
 
   describe('Empty State', () => {
     it('should show empty state when no shipments', async () => {
-      vi.mocked(shipmentService.getShipments).mockResolvedValue({
-        shipments: [],
-        total: 0,
-      });
+      const emptyResponse = { shipments: [], total: 0 };
+      vi.mocked(shipmentService.getShipments).mockResolvedValue(emptyResponse);
 
       render(<WarehouseView />);
 
+      const waitOptions = { timeout: 3000 };
       // Wait for loading to complete and empty state to appear
       await waitFor(() => {
-        // Look for the empty state heading text
-        expect(screen.getByRole('heading', { level: 3, name: /No hay envíos/i })).toBeInTheDocument();
-      }, { timeout: 3000 });
+        const heading = screen.getByRole('heading', { level: 3, name: /No hay envíos/i });
+        expect(heading).toBeInTheDocument();
+      }, waitOptions);
     });
   });
 
@@ -244,26 +242,26 @@ describe('WarehouseView', () => {
         createMockShipment({ id: '1', trackingNumber: 'LOG-SEARCH-001' }),
         createMockShipment({ id: '2', trackingNumber: 'LOG-OTHER-002' }),
       ];
-      vi.mocked(shipmentService.getShipments).mockResolvedValue({
-        shipments,
-        total: 2,
-      });
+      const shipmentsResponse = { shipments, total: 2 };
+      vi.mocked(shipmentService.getShipments).mockResolvedValue(shipmentsResponse);
 
       const user = userEvent.setup();
       render(<WarehouseView />);
 
-      await waitFor(() => {
-        expect(screen.getByText('LOG-SEARCH-001')).toBeInTheDocument();
-      });
+      const waitForFirstShipment = async () => {
+        await waitFor(() => {
+          expect(screen.getByText('LOG-SEARCH-001')).toBeInTheDocument();
+        });
+      };
+
+      await waitForFirstShipment();
 
       // Type in search
       const searchInput = screen.getByPlaceholderText(/Buscar pedido/i);
       await user.type(searchInput, 'SEARCH');
 
       // Should filter results
-      await waitFor(() => {
-        expect(screen.getByText('LOG-SEARCH-001')).toBeInTheDocument();
-      });
+      await waitForFirstShipment();
     });
   });
 

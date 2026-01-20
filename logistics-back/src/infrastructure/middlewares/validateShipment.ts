@@ -6,6 +6,196 @@
 import { Request, Response, NextFunction } from 'express';
 import { ShipmentStatusType } from '../../domain/entities/ShipmentStatus';
 
+// ============================================================================
+// VALIDATION HELPERS - Extract logic to reduce complexity
+// ============================================================================
+
+const sendValidationError = (res: Response, error: string, field: string): void => {
+  res.status(400).json({ success: false, error, field });
+};
+
+const validateCustomerName = (name: string): string | null => {
+  if (!name || name.trim().length < 3) {
+    return 'Customer name must be at least 3 characters';
+  }
+  return null;
+};
+
+const validateEmail = (email: string): string | null => {
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    return 'Valid email is required';
+  }
+  return null;
+};
+
+const validatePhone = (phone: string): string | null => {
+  if (!phone || !/^(\+57)?[0-9]{10}$/.test(phone.replace(/\s/g, ''))) {
+    return 'Valid Colombian phone number is required';
+  }
+  return null;
+};
+
+const validateDocumentType = (documentType: string): string | null => {
+  const validTypes = ['CC', 'CE', 'NIT', 'PASSPORT'];
+  if (!documentType || !validTypes.includes(documentType)) {
+    return 'Valid document type is required (CC, CE, NIT, PASSPORT)';
+  }
+  return null;
+};
+
+const validateDocumentNumber = (documentNumber: string): string | null => {
+  if (!documentNumber || documentNumber.trim().length < 5) {
+    return 'Document number must be at least 5 characters';
+  }
+  return null;
+};
+
+const validateAddress = (address: any): string | null => {
+  if (!address || !address.origin || !address.destination) {
+    return 'Origin and destination addresses are required';
+  }
+  return null;
+};
+
+const validatePackageWeight = (weight: number): string | null => {
+  if (!weight || weight <= 0) {
+    return 'Package weight must be greater than 0';
+  }
+  return null;
+};
+
+const validatePackageDimensions = (dimensions: any): string | null => {
+  if (!dimensions || !dimensions.length || !dimensions.width || !dimensions.height) {
+    return 'Package dimensions (length, width, height) are required';
+  }
+  return null;
+};
+
+const validatePickupDate = (pickupDate: string): string | null => {
+  if (!pickupDate) {
+    return 'Pickup date is required';
+  }
+
+  const pickupDateObj = new Date(pickupDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (pickupDateObj < today) {
+    return 'Pickup date cannot be in the past';
+  }
+
+  return null;
+};
+
+const validatePaymentMethod = (method: string): string | null => {
+  if (!method || !['CARD', 'CASH'].includes(method)) {
+    return 'Valid payment method is required (CARD or CASH)';
+  }
+  return null;
+};
+
+const validatePaymentAmount = (amount: number): string | null => {
+  if (!amount || amount <= 0) {
+    return 'Payment amount must be greater than 0';
+  }
+  return null;
+};
+
+const validateCardDetails = (paymentRequest: any): { error: string | null; field: string } => {
+  if (!paymentRequest.cardNumber || paymentRequest.cardNumber.trim().length < 13) {
+    return { error: 'Valid card number is required', field: 'paymentRequest.cardNumber' };
+  }
+
+  if (!paymentRequest.cardHolderName || paymentRequest.cardHolderName.trim().length < 3) {
+    return { error: 'Card holder name is required', field: 'paymentRequest.cardHolderName' };
+  }
+
+  if (!paymentRequest.expirationDate || !/^(0[1-9]|1[0-2])\/\d{2}$/.test(paymentRequest.expirationDate)) {
+    return { error: 'Valid expiration date is required (MM/YY)', field: 'paymentRequest.expirationDate' };
+  }
+
+  if (!paymentRequest.cvv || !/^\d{3,4}$/.test(paymentRequest.cvv)) {
+    return { error: 'Valid CVV is required (3 or 4 digits)', field: 'paymentRequest.cvv' };
+  }
+
+  return { error: null, field: '' };
+};
+
+const validateCustomer = (customer: any, res: Response): boolean => {
+  if (!customer) {
+    sendValidationError(res, 'Customer information is required', 'customer');
+    return false;
+  }
+
+  const validations = [
+    { fn: () => validateCustomerName(customer.name), field: 'customer.name' },
+    { fn: () => validateEmail(customer.email), field: 'customer.email' },
+    { fn: () => validatePhone(customer.phone), field: 'customer.phone' },
+    { fn: () => validateDocumentType(customer.documentType), field: 'customer.documentType' },
+    { fn: () => validateDocumentNumber(customer.documentNumber), field: 'customer.documentNumber' },
+  ];
+
+  for (const validation of validations) {
+    const error = validation.fn();
+    if (error) {
+      sendValidationError(res, error, validation.field);
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const validatePackageInfo = (pkg: any, res: Response): boolean => {
+  if (!pkg) {
+    sendValidationError(res, 'Package information is required', 'package');
+    return false;
+  }
+
+  let error = validatePackageWeight(pkg.weight);
+  if (error) {
+    sendValidationError(res, error, 'package.weight');
+    return false;
+  }
+
+  error = validatePackageDimensions(pkg.dimensions);
+  if (error) {
+    sendValidationError(res, error, 'package.dimensions');
+    return false;
+  }
+
+  return true;
+};
+
+const validatePaymentInfo = (paymentRequest: any, res: Response): boolean => {
+  if (!paymentRequest) {
+    sendValidationError(res, 'Payment information is required', 'paymentRequest');
+    return false;
+  }
+
+  let error = validatePaymentMethod(paymentRequest.method);
+  if (error) {
+    sendValidationError(res, error, 'paymentRequest.method');
+    return false;
+  }
+
+  error = validatePaymentAmount(paymentRequest.amount);
+  if (error) {
+    sendValidationError(res, error, 'paymentRequest.amount');
+    return false;
+  }
+
+  if (paymentRequest.method === 'CARD') {
+    const cardValidation = validateCardDetails(paymentRequest);
+    if (cardValidation.error) {
+      sendValidationError(res, cardValidation.error, cardValidation.field);
+      return false;
+    }
+  }
+
+  return true;
+};
+
 /**
  * Validate shipment creation request
  */
@@ -17,197 +207,33 @@ export const validateShipmentCreation = (
   const { customer, address, package: pkg, pickupDate, selectedQuote, paymentRequest } = req.body;
 
   // Validate customer
-  if (!customer) {
-    res.status(400).json({
-      success: false,
-      error: 'Customer information is required',
-      field: 'customer',
-    });
-    return;
-  }
-
-  if (!customer.name || customer.name.trim().length < 3) {
-    res.status(400).json({
-      success: false,
-      error: 'Customer name must be at least 3 characters',
-      field: 'customer.name',
-    });
-    return;
-  }
-
-  if (!customer.email || !/^\S+@\S+\.\S+$/.test(customer.email)) {
-    res.status(400).json({
-      success: false,
-      error: 'Valid email is required',
-      field: 'customer.email',
-    });
-    return;
-  }
-
-  if (!customer.phone || !/^(\+57)?[0-9]{10}$/.test(customer.phone.replace(/\s/g, ''))) {
-    res.status(400).json({
-      success: false,
-      error: 'Valid Colombian phone number is required',
-      field: 'customer.phone',
-    });
-    return;
-  }
-
-  if (!customer.documentType || !['CC', 'CE', 'NIT', 'PASSPORT'].includes(customer.documentType)) {
-    res.status(400).json({
-      success: false,
-      error: 'Valid document type is required (CC, CE, NIT, PASSPORT)',
-      field: 'customer.documentType',
-    });
-    return;
-  }
-
-  if (!customer.documentNumber || customer.documentNumber.trim().length < 5) {
-    res.status(400).json({
-      success: false,
-      error: 'Document number must be at least 5 characters',
-      field: 'customer.documentNumber',
-    });
-    return;
-  }
+  if (!validateCustomer(customer, res)) return;
 
   // Validate address
-  if (!address || !address.origin || !address.destination) {
-    res.status(400).json({
-      success: false,
-      error: 'Origin and destination addresses are required',
-      field: 'address',
-    });
+  const addressError = validateAddress(address);
+  if (addressError) {
+    sendValidationError(res, addressError, 'address');
     return;
   }
 
   // Validate package
-  if (!pkg) {
-    res.status(400).json({
-      success: false,
-      error: 'Package information is required',
-      field: 'package',
-    });
-    return;
-  }
-
-  if (!pkg.weight || pkg.weight <= 0) {
-    res.status(400).json({
-      success: false,
-      error: 'Package weight must be greater than 0',
-      field: 'package.weight',
-    });
-    return;
-  }
-
-  if (!pkg.dimensions || !pkg.dimensions.length || !pkg.dimensions.width || !pkg.dimensions.height) {
-    res.status(400).json({
-      success: false,
-      error: 'Package dimensions (length, width, height) are required',
-      field: 'package.dimensions',
-    });
-    return;
-  }
+  if (!validatePackageInfo(pkg, res)) return;
 
   // Validate pickup date
-  if (!pickupDate) {
-    res.status(400).json({
-      success: false,
-      error: 'Pickup date is required',
-      field: 'pickupDate',
-    });
-    return;
-  }
-
-  const pickupDateObj = new Date(pickupDate);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  if (pickupDateObj < today) {
-    res.status(400).json({
-      success: false,
-      error: 'Pickup date cannot be in the past',
-      field: 'pickupDate',
-    });
+  const dateError = validatePickupDate(pickupDate);
+  if (dateError) {
+    sendValidationError(res, dateError, 'pickupDate');
     return;
   }
 
   // Validate selected quote
   if (!selectedQuote) {
-    res.status(400).json({
-      success: false,
-      error: 'Selected quote is required',
-      field: 'selectedQuote',
-    });
+    sendValidationError(res, 'Selected quote is required', 'selectedQuote');
     return;
   }
 
-  // Validate payment request
-  if (!paymentRequest) {
-    res.status(400).json({
-      success: false,
-      error: 'Payment information is required',
-      field: 'paymentRequest',
-    });
-    return;
-  }
-
-  if (!paymentRequest.method || !['CARD', 'CASH'].includes(paymentRequest.method)) {
-    res.status(400).json({
-      success: false,
-      error: 'Valid payment method is required (CARD or CASH)',
-      field: 'paymentRequest.method',
-    });
-    return;
-  }
-
-  if (!paymentRequest.amount || paymentRequest.amount <= 0) {
-    res.status(400).json({
-      success: false,
-      error: 'Payment amount must be greater than 0',
-      field: 'paymentRequest.amount',
-    });
-    return;
-  }
-
-  // Validate card payment details
-  if (paymentRequest.method === 'CARD') {
-    if (!paymentRequest.cardNumber || paymentRequest.cardNumber.trim().length < 13) {
-      res.status(400).json({
-        success: false,
-        error: 'Valid card number is required',
-        field: 'paymentRequest.cardNumber',
-      });
-      return;
-    }
-
-    if (!paymentRequest.cardHolderName || paymentRequest.cardHolderName.trim().length < 3) {
-      res.status(400).json({
-        success: false,
-        error: 'Card holder name is required',
-        field: 'paymentRequest.cardHolderName',
-      });
-      return;
-    }
-
-    if (!paymentRequest.expirationDate || !/^(0[1-9]|1[0-2])\/\d{2}$/.test(paymentRequest.expirationDate)) {
-      res.status(400).json({
-        success: false,
-        error: 'Valid expiration date is required (MM/YY)',
-        field: 'paymentRequest.expirationDate',
-      });
-      return;
-    }
-
-    if (!paymentRequest.cvv || !/^\d{3,4}$/.test(paymentRequest.cvv)) {
-      res.status(400).json({
-        success: false,
-        error: 'Valid CVV is required (3 or 4 digits)',
-        field: 'paymentRequest.cvv',
-      });
-      return;
-    }
-  }
+  // Validate payment
+  if (!validatePaymentInfo(paymentRequest, res)) return;
 
   next();
 };
@@ -223,11 +249,7 @@ export const validateStatusUpdate = (
   const { status } = req.body;
 
   if (!status) {
-    res.status(400).json({
-      success: false,
-      error: 'Status is required',
-      field: 'status',
-    });
+    sendValidationError(res, 'Status is required', 'status');
     return;
   }
 
@@ -245,11 +267,11 @@ export const validateStatusUpdate = (
   ];
 
   if (!validStatuses.includes(status)) {
-    res.status(400).json({
-      success: false,
-      error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
-      field: 'status',
-    });
+    sendValidationError(
+      res,
+      `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+      'status'
+    );
     return;
   }
 

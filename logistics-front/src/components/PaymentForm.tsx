@@ -26,6 +26,116 @@ interface ValidationResult {
   };
 }
 
+// ============================================================================
+// VALIDATION HELPERS - Extracted to reduce complexity
+// ============================================================================
+
+// Luhn Algorithm for card validation
+const validateCardNumberLuhn = (cardNumber: string): boolean => {
+  const digits = cardNumber.replace(/\D/g, '');
+  
+  if (digits.length < 13 || digits.length > 19) {
+    return false;
+  }
+
+  let sum = 0;
+  let isEven = false;
+
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let digit = parseInt(digits[i], 10);
+
+    if (isEven) {
+      digit *= 2;
+      if (digit > 9) {
+        digit -= 9;
+      }
+    }
+
+    sum += digit;
+    isEven = !isEven;
+  }
+
+  return sum % 10 === 0;
+};
+
+// Format card number with spaces (every 4 digits)
+const formatCardNumber = (value: string): string => {
+  const digits = value.replace(/\D/g, '').slice(0, 16);
+  const groups = digits.match(/.{1,4}/g);
+  return groups ? groups.join(' ') : digits;
+};
+
+// Format expiration date as MM/YY
+const formatExpirationDate = (value: string): string => {
+  const digits = value.replace(/\D/g, '').slice(0, 4);
+  if (digits.length >= 2) {
+    return digits.slice(0, 2) + '/' + digits.slice(2);
+  }
+  return digits;
+};
+
+// Detect card brand based on first digits
+const getCardBrand = (cardNumber: string): string => {
+  const digits = cardNumber.replace(/\s/g, '');
+  if (/^4/.test(digits)) return '💳 Visa';
+  if (/^5[1-5]/.test(digits)) return '💳 Mastercard';
+  if (/^3[47]/.test(digits)) return '💳 American Express';
+  if (/^6(?:011|5)/.test(digits)) return '💳 Discover';
+  return '';
+};
+
+const validateCardNumberField = (cardNumber: string): string | undefined => {
+  const cleanCardNumber = cardNumber.replace(/\s/g, '');
+  
+  if (!cleanCardNumber) return 'Número de tarjeta requerido';
+  if (cleanCardNumber.length < 13) return 'Mínimo 13 dígitos';
+  if (cleanCardNumber.length > 19) return 'Máximo 19 dígitos';
+  if (!/^\d+$/.test(cleanCardNumber)) return 'Solo números permitidos';
+  if (!validateCardNumberLuhn(cleanCardNumber)) return 'Número de tarjeta inválido';
+  
+  return undefined;
+};
+
+const validateCardHolderField = (cardHolderName: string): string | undefined => {
+  const trimmedName = cardHolderName.trim();
+  
+  if (!trimmedName) return 'Nombre del titular requerido';
+  if (trimmedName.length < 3) return 'Mínimo 3 caracteres';
+  if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(trimmedName)) return 'Solo letras permitidas';
+  
+  return undefined;
+};
+
+const validateExpirationField = (expirationDate: string): string | undefined => {
+  if (!expirationDate) return 'Fecha requerida';
+  
+  const expMatch = expirationDate.match(/^(\d{2})\/(\d{2})$/);
+  if (!expMatch) return 'Formato: MM/YY';
+  
+  const month = parseInt(expMatch[1], 10);
+  const year = parseInt(expMatch[2], 10) + 2000;
+  
+  if (month < 1 || month > 12) return 'Mes inválido (01-12)';
+  
+  const now = new Date();
+  const expDate = new Date(year, month - 1, 1);
+  const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  
+  if (expDate < currentMonth) return 'Tarjeta expirada';
+  
+  return undefined;
+};
+
+const validateCvvField = (cvv: string): string | undefined => {
+  if (!cvv) return 'CVV requerido';
+  if (!/^\d{3,4}$/.test(cvv)) return '3-4 dígitos';
+  return undefined;
+};
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 const PaymentForm: React.FC<PaymentFormProps> = ({
   amount,
   onSubmit,
@@ -42,119 +152,21 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
 
-  // Luhn Algorithm for card validation
-  const validateCardNumberLuhn = (cardNumber: string): boolean => {
-    const digits = cardNumber.replace(/\D/g, '');
-    
-    if (digits.length < 13 || digits.length > 19) {
-      return false;
-    }
-
-    let sum = 0;
-    let isEven = false;
-
-    for (let i = digits.length - 1; i >= 0; i--) {
-      let digit = parseInt(digits[i], 10);
-
-      if (isEven) {
-        digit *= 2;
-        if (digit > 9) {
-          digit -= 9;
-        }
-      }
-
-      sum += digit;
-      isEven = !isEven;
-    }
-
-    return sum % 10 === 0;
-  };
-
-  // Format card number with spaces (every 4 digits)
-  const formatCardNumber = (value: string): string => {
-    const digits = value.replace(/\D/g, '').slice(0, 16);
-    const groups = digits.match(/.{1,4}/g);
-    return groups ? groups.join(' ') : digits;
-  };
-
-  // Format expiration date as MM/YY
-  const formatExpirationDate = (value: string): string => {
-    const digits = value.replace(/\D/g, '').slice(0, 4);
-    if (digits.length >= 2) {
-      return digits.slice(0, 2) + '/' + digits.slice(2);
-    }
-    return digits;
-  };
-
-  // Detect card brand based on first digits
-  const getCardBrand = (cardNumber: string): string => {
-    const digits = cardNumber.replace(/\s/g, '');
-    if (/^4/.test(digits)) return '💳 Visa';
-    if (/^5[1-5]/.test(digits)) return '💳 Mastercard';
-    if (/^3[47]/.test(digits)) return '💳 American Express';
-    if (/^6(?:011|5)/.test(digits)) return '💳 Discover';
-    return '';
-  };
-
   // Validate card form - returns validation result
   const validateCardForm = useMemo((): ValidationResult => {
     const errors: ValidationResult['errors'] = {};
     
-    // Card number validation
-    const cleanCardNumber = cardForm.cardNumber.replace(/\s/g, '');
-    if (!cleanCardNumber) {
-      errors.cardNumber = 'Número de tarjeta requerido';
-    } else if (cleanCardNumber.length < 13) {
-      errors.cardNumber = 'Mínimo 13 dígitos';
-    } else if (cleanCardNumber.length > 19) {
-      errors.cardNumber = 'Máximo 19 dígitos';
-    } else if (!/^\d+$/.test(cleanCardNumber)) {
-      errors.cardNumber = 'Solo números permitidos';
-    } else if (!validateCardNumberLuhn(cleanCardNumber)) {
-      errors.cardNumber = 'Número de tarjeta inválido';
-    }
+    errors.cardNumber = validateCardNumberField(cardForm.cardNumber);
+    errors.cardHolderName = validateCardHolderField(cardForm.cardHolderName);
+    errors.expirationDate = validateExpirationField(cardForm.expirationDate);
+    errors.cvv = validateCvvField(cardForm.cvv);
 
-    // Card holder name validation
-    const trimmedName = cardForm.cardHolderName.trim();
-    if (!trimmedName) {
-      errors.cardHolderName = 'Nombre del titular requerido';
-    } else if (trimmedName.length < 3) {
-      errors.cardHolderName = 'Mínimo 3 caracteres';
-    } else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(trimmedName)) {
-      errors.cardHolderName = 'Solo letras permitidas';
-    }
-
-    // Expiration date validation
-    if (!cardForm.expirationDate) {
-      errors.expirationDate = 'Fecha requerida';
-    } else {
-      const expMatch = cardForm.expirationDate.match(/^(\d{2})\/(\d{2})$/);
-      if (!expMatch) {
-        errors.expirationDate = 'Formato: MM/YY';
-      } else {
-        const month = parseInt(expMatch[1], 10);
-        const year = parseInt(expMatch[2], 10) + 2000;
-        
-        if (month < 1 || month > 12) {
-          errors.expirationDate = 'Mes inválido (01-12)';
-        } else {
-          const now = new Date();
-          const expDate = new Date(year, month - 1, 1);
-          const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-          
-          if (expDate < currentMonth) {
-            errors.expirationDate = 'Tarjeta expirada';
-          }
-        }
+    // Remove undefined values
+    Object.keys(errors).forEach(key => {
+      if (errors[key as keyof typeof errors] === undefined) {
+        delete errors[key as keyof typeof errors];
       }
-    }
-
-    // CVV validation
-    if (!cardForm.cvv) {
-      errors.cvv = 'CVV requerido';
-    } else if (!/^\d{3,4}$/.test(cardForm.cvv)) {
-      errors.cvv = '3-4 dígitos';
-    }
+    });
 
     return {
       isValid: Object.keys(errors).length === 0,
