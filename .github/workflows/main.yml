@@ -69,7 +69,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
 
-      - name: 📈 Check coverage threshold (70%+)
+      - name: 📈 Check coverage threshold (80%+ for SonarCloud)
         run: |
           # Install jq for JSON parsing
           sudo apt-get update && sudo apt-get install -y jq bc
@@ -80,14 +80,27 @@ jobs:
           # Check for coverage-summary.json first (Jest generates this)
           if [ -f coverage/coverage-summary.json ]; then
             echo "✅ Found coverage-summary.json"
-            COVERAGE=$(jq -r '.total.lines.pct' coverage/coverage-summary.json)
-            echo "Backend Coverage: ${COVERAGE}%"
+            LINE_COV=$(jq -r '.total.lines.pct' coverage/coverage-summary.json)
+            BRANCH_COV=$(jq -r '.total.branches.pct' coverage/coverage-summary.json)
+            FUNC_COV=$(jq -r '.total.functions.pct' coverage/coverage-summary.json)
+            STMT_COV=$(jq -r '.total.statements.pct' coverage/coverage-summary.json)
             
-            if (( $(echo "$COVERAGE < 70" | bc -l) )); then
-              echo "❌ Backend coverage is below 70%: ${COVERAGE}%"
+            echo "================================================"
+            echo "📊 Backend Coverage Report"
+            echo "================================================"
+            echo "Lines:      ${LINE_COV}%"
+            echo "Branches:   ${BRANCH_COV}%"
+            echo "Functions:  ${FUNC_COV}%"
+            echo "Statements: ${STMT_COV}%"
+            echo "================================================"
+            
+            # Check line coverage (main metric for SonarCloud)
+            if (( $(echo "$LINE_COV < 80" | bc -l) )); then
+              echo "❌ Backend line coverage is below 80%: ${LINE_COV}%"
+              echo "   Required: 80% for SonarCloud Quality Gate"
               exit 1
             else
-              echo "✅ Backend coverage meets threshold: ${COVERAGE}%"
+              echo "✅ Backend coverage meets SonarCloud threshold: ${LINE_COV}%"
             fi
           else
             echo "❌ No coverage-summary.json found"
@@ -162,7 +175,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
 
-      - name: 📈 Check coverage threshold (70%+)
+      - name: 📈 Check coverage threshold (80%+ for SonarCloud)
         run: |
           # Install jq for JSON parsing
           sudo apt-get update && sudo apt-get install -y jq bc
@@ -173,14 +186,27 @@ jobs:
           # Check for coverage-summary.json (Vitest can generate this with json-summary reporter)
           if [ -f coverage/coverage-summary.json ]; then
             echo "✅ Found coverage-summary.json"
-            COVERAGE=$(jq -r '.total.lines.pct' coverage/coverage-summary.json)
-            echo "Frontend Coverage: ${COVERAGE}%"
+            LINE_COV=$(jq -r '.total.lines.pct' coverage/coverage-summary.json)
+            BRANCH_COV=$(jq -r '.total.branches.pct' coverage/coverage-summary.json)
+            FUNC_COV=$(jq -r '.total.functions.pct' coverage/coverage-summary.json)
+            STMT_COV=$(jq -r '.total.statements.pct' coverage/coverage-summary.json)
             
-            if (( $(echo "$COVERAGE < 70" | bc -l) )); then
-              echo "❌ Frontend coverage is below 70%: ${COVERAGE}%"
+            echo "================================================"
+            echo "📊 Frontend Coverage Report"
+            echo "================================================"
+            echo "Lines:      ${LINE_COV}%"
+            echo "Branches:   ${BRANCH_COV}%"
+            echo "Functions:  ${FUNC_COV}%"
+            echo "Statements: ${STMT_COV}%"
+            echo "================================================"
+            
+            # Check line coverage (main metric for SonarCloud)
+            if (( $(echo "$LINE_COV < 80" | bc -l) )); then
+              echo "❌ Frontend line coverage is below 80%: ${LINE_COV}%"
+              echo "   Required: 80% for SonarCloud Quality Gate"
               exit 1
             else
-              echo "✅ Frontend coverage meets threshold: ${COVERAGE}%"
+              echo "✅ Frontend coverage meets SonarCloud threshold: ${LINE_COV}%"
             fi
           else
             echo "❌ No coverage-summary.json found"
