@@ -66,7 +66,7 @@ async function startServer() {
       console.log('HTTP server closed');
       
       // Close connections
-      await MongoDBConnection.getInstance().close();
+      await MongoDBConnection.getInstance().disconnect();
       await RabbitMQConnection.getInstance().close();
       await WebSocketService.getInstance().close();
       

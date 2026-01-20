@@ -233,7 +233,7 @@ ShipmentSchema.virtual('id').get(function (this: IShipmentDocument) {
 // Ensure virtuals and populate customer in JSON
 ShipmentSchema.set('toJSON', {
   virtuals: true,
-  transform: (_doc, ret) => {
+  transform: (_doc, ret: Record<string, any>) => {
     delete ret._id;
     delete ret.__v;
     return ret;

@@ -30,4 +30,5 @@ export interface IShipmentRepository {
   search(query: string, page?: number, limit?: number): Promise<IShipmentData[]>;
   count(): Promise<number>;
   countByStatus(status: ShipmentStatusType): Promise<number>;
+  getStatistics(): Promise<any>;
 }

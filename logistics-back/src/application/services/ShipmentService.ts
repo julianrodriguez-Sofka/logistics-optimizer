@@ -103,7 +103,7 @@ export class ShipmentService {
         customer: customer.id // Use customer ID for MongoDB ObjectId reference
       };
 
-      const createdShipment = await this.shipmentRepository.create(shipmentToSave as IShipmentData);
+      const createdShipment = await this.shipmentRepository.create(shipmentToSave as unknown as IShipmentData);
 
       this.logger.info('Shipment created successfully', {
         shipmentId: createdShipment.id,

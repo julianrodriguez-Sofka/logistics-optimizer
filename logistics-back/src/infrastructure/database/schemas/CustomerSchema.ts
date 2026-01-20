@@ -69,7 +69,7 @@ CustomerSchema.virtual('id').get(function (this: ICustomerDocument) {
 // Ensure virtuals are included in JSON
 CustomerSchema.set('toJSON', {
   virtuals: true,
-  transform: (_doc, ret) => {
+  transform: (_doc, ret: Record<string, any>) => {
     delete ret._id;
     delete ret.__v;
     return ret;

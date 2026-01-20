@@ -4,12 +4,13 @@
  * Following SOLID principles - Single Responsibility
  */
 
-import amqp, { Connection, Channel } from 'amqplib';
+import amqp from 'amqplib';
+import type { Channel, ChannelModel } from 'amqplib';
 import { Logger } from '../logging/Logger';
 
 export class RabbitMQConnection {
   private static instance: RabbitMQConnection;
-  private connection: Connection | null = null;
+  private connection: ChannelModel | null = null;
   private channel: Channel | null = null;
   private logger = Logger.getInstance();
   private reconnectInterval: NodeJS.Timeout | null = null;
