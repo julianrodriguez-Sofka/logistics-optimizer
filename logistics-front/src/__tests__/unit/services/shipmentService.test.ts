@@ -306,7 +306,7 @@ describe('ShipmentService', () => {
       });
 
       await expect(
-        shipmentService.updateShipmentStatus('1', 'PREPARING')
+        shipmentService.updateShipmentStatus('1', 'PROCESSING')
       ).rejects.toThrow();
     });
   });

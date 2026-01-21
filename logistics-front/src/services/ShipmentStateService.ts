@@ -54,8 +54,9 @@ const TRUCKS_STORAGE_KEY = 'warehouse_trucks_state';
 
 // Status flow definition - represents the valid state transitions
 export const STATUS_FLOW: ShipmentStatusType[] = [
+  'PENDING_PAYMENT',
   'PAYMENT_CONFIRMED',
-  'PREPARING',
+  'PROCESSING',
   'READY_FOR_PICKUP',
   'IN_TRANSIT',
   'OUT_FOR_DELIVERY',

@@ -708,17 +708,61 @@ const WarehouseView: React.FC = () => {
   }, []);
 
   // Handlers
-  const handleAdvanceStatus = useCallback((shipmentId: string) => {
+  const handleAdvanceStatus = useCallback(async (shipmentId: string) => {
     const state = shipmentStateService.getState(shipmentId);
     const nextStatus = shipmentStateService.getNextStatus(state.status);
     
     if (nextStatus) {
-      shipmentStateService.updateStatus(shipmentId, nextStatus);
+      try {
+        // Update backend first
+        const updatedShipment = await shipmentService.updateShipmentStatus(shipmentId, nextStatus);
+        
+        // Update local state with the backend response
+        shipmentStateService.updateStatus(shipmentId, nextStatus);
+        
+        // Update the shipment in the local list to reflect all changes
+        setShipments((prev) =>
+          prev.map((s) => {
+            if (getShipmentId(s) === shipmentId) {
+              return {
+                ...updatedShipment,
+                localState: shipmentStateService.getState(shipmentId),
+              };
+            }
+            return s;
+          })
+        );
+      } catch (error) {
+        console.error('Error updating shipment status:', error);
+        // Optionally show error notification to user
+      }
     }
   }, []);
 
-  const handleSetSpecialStatus = useCallback((shipmentId: string, status: ShipmentStatusType) => {
-    shipmentStateService.updateStatus(shipmentId, status);
+  const handleSetSpecialStatus = useCallback(async (shipmentId: string, status: ShipmentStatusType) => {
+    try {
+      // Update backend first
+      const updatedShipment = await shipmentService.updateShipmentStatus(shipmentId, status);
+      
+      // Update local state with the backend response
+      shipmentStateService.updateStatus(shipmentId, status);
+      
+      // Update the shipment in the local list to reflect all changes
+      setShipments((prev) =>
+        prev.map((s) => {
+          if (getShipmentId(s) === shipmentId) {
+            return {
+              ...updatedShipment,
+              localState: shipmentStateService.getState(shipmentId),
+            };
+          }
+          return s;
+        })
+      );
+    } catch (error) {
+      console.error('Error setting special status:', error);
+      // Optionally show error notification to user
+    }
   }, []);
 
   const handleAssignTruck = useCallback((shipmentId: string, truck: Truck) => {

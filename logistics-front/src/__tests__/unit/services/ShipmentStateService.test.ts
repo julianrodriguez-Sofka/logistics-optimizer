@@ -89,18 +89,18 @@ describe('ShipmentStateService', () => {
     });
 
     it('should use provided default status', () => {
-      const state = shipmentStateService.getState('test-shipment-2', 'PREPARING');
+      const state = shipmentStateService.getState('test-shipment-2', 'PROCESSING');
       
-      expect(state.status).toBe('PREPARING');
+      expect(state.status).toBe('PROCESSING');
     });
 
     it('should return existing state on subsequent calls', () => {
-      const state1 = shipmentStateService.getState('test-shipment-3', 'PREPARING');
+      const state1 = shipmentStateService.getState('test-shipment-3', 'PROCESSING');
       const state2 = shipmentStateService.getState('test-shipment-3', 'DELIVERED');
       
       // Should return the first state, not create new one with DELIVERED
       expect(state1).toEqual(state2);
-      expect(state2.status).toBe('PREPARING');
+      expect(state2.status).toBe('PROCESSING');
     });
 
     it('should handle CASH payment method - upgrade PENDING to CONFIRMED', () => {
@@ -141,13 +141,13 @@ describe('ShipmentStateService', () => {
 
   describe('Status Transitions', () => {
     it('should validate forward transitions as valid', () => {
-      expect(shipmentStateService.isValidTransition('PAYMENT_CONFIRMED', 'PREPARING')).toBe(true);
-      expect(shipmentStateService.isValidTransition('PREPARING', 'READY_FOR_PICKUP')).toBe(true);
+      expect(shipmentStateService.isValidTransition('PAYMENT_CONFIRMED', 'PROCESSING')).toBe(true);
+      expect(shipmentStateService.isValidTransition('PROCESSING', 'READY_FOR_PICKUP')).toBe(true);
       expect(shipmentStateService.isValidTransition('IN_TRANSIT', 'DELIVERED')).toBe(true);
     });
 
     it('should validate backward transitions as invalid', () => {
-      expect(shipmentStateService.isValidTransition('PREPARING', 'PAYMENT_CONFIRMED')).toBe(false);
+      expect(shipmentStateService.isValidTransition('PROCESSING', 'PAYMENT_CONFIRMED')).toBe(false);
       expect(shipmentStateService.isValidTransition('DELIVERED', 'IN_TRANSIT')).toBe(false);
     });
 
@@ -157,14 +157,14 @@ describe('ShipmentStateService', () => {
     });
 
     it('should not allow transitions from terminal states', () => {
-      expect(shipmentStateService.isValidTransition('DELIVERED', 'PREPARING')).toBe(false);
+      expect(shipmentStateService.isValidTransition('DELIVERED', 'PROCESSING')).toBe(false);
       expect(shipmentStateService.isValidTransition('FAILED_DELIVERY', 'IN_TRANSIT')).toBe(false);
       expect(shipmentStateService.isValidTransition('RETURNED', 'PAYMENT_CONFIRMED')).toBe(false);
     });
 
     it('should get next status correctly', () => {
-      expect(shipmentStateService.getNextStatus('PAYMENT_CONFIRMED')).toBe('PREPARING');
-      expect(shipmentStateService.getNextStatus('PREPARING')).toBe('READY_FOR_PICKUP');
+      expect(shipmentStateService.getNextStatus('PAYMENT_CONFIRMED')).toBe('PROCESSING');
+      expect(shipmentStateService.getNextStatus('PROCESSING')).toBe('READY_FOR_PICKUP');
       expect(shipmentStateService.getNextStatus('OUT_FOR_DELIVERY')).toBe('DELIVERED');
     });
 
@@ -179,10 +179,10 @@ describe('ShipmentStateService', () => {
     it('should update status successfully', () => {
       shipmentStateService.getState('update-test-1', 'PAYMENT_CONFIRMED');
       
-      const updatedState = shipmentStateService.updateStatus('update-test-1', 'PREPARING');
+      const updatedState = shipmentStateService.updateStatus('update-test-1', 'PROCESSING');
       
       expect(updatedState).not.toBeNull();
-      expect(updatedState?.status).toBe('PREPARING');
+      expect(updatedState?.status).toBe('PROCESSING');
       expect(updatedState?.statusHistory).toHaveLength(2);
     });
 
@@ -191,7 +191,7 @@ describe('ShipmentStateService', () => {
       
       const updatedState = shipmentStateService.updateStatus(
         'update-test-2',
-        'PREPARING',
+        'PROCESSING',
         'Preparación iniciada por operador'
       );
       
@@ -201,14 +201,14 @@ describe('ShipmentStateService', () => {
     it('should return null for invalid transitions', () => {
       shipmentStateService.getState('invalid-test', 'DELIVERED');
       
-      const result = shipmentStateService.updateStatus('invalid-test', 'PREPARING');
+      const result = shipmentStateService.updateStatus('invalid-test', 'PROCESSING');
       
       expect(result).toBeNull();
     });
 
     it('should persist state to localStorage after update', () => {
       shipmentStateService.getState('persist-test', 'PAYMENT_CONFIRMED');
-      shipmentStateService.updateStatus('persist-test', 'PREPARING');
+      shipmentStateService.updateStatus('persist-test', 'PROCESSING');
       
       expect(localStorageMock.setItem).toHaveBeenCalled();
     });
@@ -265,12 +265,12 @@ describe('ShipmentStateService', () => {
       shipmentStateService.getState('observer-test-1');
       
       shipmentStateService.subscribe(callback);
-      shipmentStateService.updateStatus('observer-test-1', 'PREPARING');
+      shipmentStateService.updateStatus('observer-test-1', 'PROCESSING');
       
       expect(callback).toHaveBeenCalledTimes(1);
       expect(callback).toHaveBeenCalledWith(
         'observer-test-1',
-        expect.objectContaining({ status: 'PREPARING' })
+        expect.objectContaining({ status: 'PROCESSING' })
       );
     });
 
@@ -291,7 +291,7 @@ describe('ShipmentStateService', () => {
       const unsubscribe = shipmentStateService.subscribe(callback);
       unsubscribe();
       
-      shipmentStateService.updateStatus('observer-test-3', 'PREPARING');
+      shipmentStateService.updateStatus('observer-test-3', 'PROCESSING');
       
       expect(callback).not.toHaveBeenCalled();
     });
@@ -308,7 +308,7 @@ describe('ShipmentStateService', () => {
       
       // Should not throw, and should call other callbacks
       expect(() => {
-        shipmentStateService.updateStatus('observer-test-4', 'PREPARING');
+        shipmentStateService.updateStatus('observer-test-4', 'PROCESSING');
       }).not.toThrow();
       
       expect(normalCallback).toHaveBeenCalled();
@@ -339,7 +339,7 @@ describe('ShipmentStateService', () => {
     it('should have correct STATUS_FLOW order', () => {
       expect(STATUS_FLOW).toEqual([
         'PAYMENT_CONFIRMED',
-        'PREPARING',
+        'PROCESSING',
         'READY_FOR_PICKUP',
         'IN_TRANSIT',
         'OUT_FOR_DELIVERY',
