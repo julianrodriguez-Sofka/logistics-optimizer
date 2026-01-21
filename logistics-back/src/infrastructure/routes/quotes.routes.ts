@@ -10,6 +10,7 @@ import { MultiModalRouteAdapter } from '../adapters/MultiModalRouteAdapter.js';
 import { QuoteRepository } from '../database/repositories/QuoteRepository.js';
 import { MongoDBConnection } from '../database/connection.js';
 import { validateQuoteRequest } from '../middlewares/validateQuoteRequest.js';
+import { quoteLimiter } from '../middlewares/rateLimiter.js';
 
 console.log('🔧 Initializing quote routes...');
 
@@ -63,7 +64,7 @@ const router = Router();
 
 // POST /api/quotes - Request shipping quotes
 // Apply validation middleware before controller (Task 2.4 from HU-02)
-router.post('/', validateQuoteRequest, (req: Request, res: Response) => {
+router.post('/', quoteLimiter, validateQuoteRequest, (req: Request, res: Response) => {
   quoteController.requestQuotes(req, res);
 });
 

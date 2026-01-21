@@ -22,15 +22,17 @@ export default defineConfig({
         '**/*.spec.ts',
         '**/*.spec.tsx',
       ],
-      // Coverage thresholds disabled - SonarCloud handles quality gates
-      // thresholds: {
-      //   global: {
-      //     branches: 40,
-      //     functions: 40,
-      //     lines: 50,
-      //     statements: 50,
-      //   },
-      // },
+      // Coverage thresholds - Progressive improvement targets
+      // Starting with achievable 40-50% to establish baseline
+      // Increase gradually as more tests are added
+      thresholds: {
+        global: {
+          branches: 40,
+          functions: 45,
+          lines: 50,
+          statements: 50,
+        },
+      },
     },
   },
 });

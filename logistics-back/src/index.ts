@@ -1,3 +1,6 @@
+// Load environment variables first
+import 'dotenv/config';
+
 import { createServer } from 'http';
 import app, { initializeRoutes } from './app';
 import { MongoDBConnection } from './infrastructure/database/connection';
@@ -13,6 +16,15 @@ const mongoUri = process.env.MONGODB_URI || 'mongodb://admin:adminpassword@local
 const rabbitmqUri = process.env.RABBITMQ_URI || 'amqp://guest:guest@localhost:5672';
 
 async function startServer() {
+  // Validate critical environment variables
+  const requiredEnvVars = ['OPENROUTESERVICE_API_KEY'];
+  const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+  
+  if (missingVars.length > 0) {
+    console.warn(`⚠️  Missing optional environment variables: ${missingVars.join(', ')}`);
+    console.warn('   Some features may not work correctly without these variables.');
+  }
+
   try {
     // Step 1: Connect to MongoDB
     console.log('🔌 Connecting to MongoDB...');

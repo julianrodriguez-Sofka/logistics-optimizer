@@ -6,12 +6,13 @@
 import { Router } from 'express';
 import { ShipmentController } from '../controllers/ShipmentController';
 import { validateShipmentCreation, validateStatusUpdate } from '../middlewares/validateShipment';
+import { shipmentCreationLimiter } from '../middlewares/rateLimiter.js';
 
 const router = Router();
 const shipmentController = new ShipmentController();
 
-// Create new shipment
-router.post('/', validateShipmentCreation, shipmentController.createShipment);
+// Create new shipment (with strict rate limiting)
+router.post('/', shipmentCreationLimiter, validateShipmentCreation, shipmentController.createShipment);
 
 // Get all shipments (with pagination)
 router.get('/', shipmentController.getAllShipments);

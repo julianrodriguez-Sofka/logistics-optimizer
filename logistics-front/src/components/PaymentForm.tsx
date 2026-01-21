@@ -353,7 +353,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                 error={getFieldError('cvv')}
                 required
                 placeholder="•••"
-                autoComplete="cc-csc"
+                autoComplete="new-password"
               />
             </div>
 

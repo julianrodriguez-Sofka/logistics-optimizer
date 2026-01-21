@@ -7,6 +7,50 @@ import { Request, Response, NextFunction } from 'express';
 import { ShipmentStatusType } from '../../domain/entities/ShipmentStatus';
 
 // ============================================================================
+// TYPE DEFINITIONS - Replace 'any' with specific types
+// ============================================================================
+
+interface AddressValidation {
+  origin?: string;
+  destination?: string;
+}
+
+interface PackageDimensionsValidation {
+  length?: number;
+  width?: number;
+  height?: number;
+}
+
+interface CardDetailsValidation {
+  cardNumber?: string;
+  cardHolderName?: string;
+  expirationDate?: string;
+  cvv?: string;
+}
+
+interface CustomerValidation {
+  name?: string;
+  email?: string;
+  phone?: string;
+  documentType?: string;
+  documentNumber?: string;
+}
+
+interface PackageValidation {
+  weight?: number;
+  dimensions?: PackageDimensionsValidation;
+}
+
+interface PaymentRequestValidation {
+  method?: string;
+  amount?: number;
+  cardNumber?: string;
+  cardHolderName?: string;
+  expirationDate?: string;
+  cvv?: string;
+}
+
+// ============================================================================
 // VALIDATION HELPERS - Extract logic to reduce complexity
 // ============================================================================
 
@@ -50,7 +94,7 @@ const validateDocumentNumber = (documentNumber: string): string | null => {
   return null;
 };
 
-const validateAddress = (address: any): string | null => {
+const validateAddress = (address: AddressValidation): string | null => {
   if (!address || !address.origin || !address.destination) {
     return 'Origin and destination addresses are required';
   }
@@ -64,7 +108,7 @@ const validatePackageWeight = (weight: number): string | null => {
   return null;
 };
 
-const validatePackageDimensions = (dimensions: any): string | null => {
+const validatePackageDimensions = (dimensions: PackageDimensionsValidation): string | null => {
   if (!dimensions || !dimensions.length || !dimensions.width || !dimensions.height) {
     return 'Package dimensions (length, width, height) are required';
   }
@@ -101,7 +145,7 @@ const validatePaymentAmount = (amount: number): string | null => {
   return null;
 };
 
-const validateCardDetails = (paymentRequest: any): { error: string | null; field: string } => {
+const validateCardDetails = (paymentRequest: CardDetailsValidation): { error: string | null; field: string } => {
   if (!paymentRequest.cardNumber || paymentRequest.cardNumber.trim().length < 13) {
     return { error: 'Valid card number is required', field: 'paymentRequest.cardNumber' };
   }
@@ -121,18 +165,18 @@ const validateCardDetails = (paymentRequest: any): { error: string | null; field
   return { error: null, field: '' };
 };
 
-const validateCustomer = (customer: any, res: Response): boolean => {
+const validateCustomer = (customer: CustomerValidation, res: Response): boolean => {
   if (!customer) {
     sendValidationError(res, 'Customer information is required', 'customer');
     return false;
   }
 
   const validations = [
-    { fn: () => validateCustomerName(customer.name), field: 'customer.name' },
-    { fn: () => validateEmail(customer.email), field: 'customer.email' },
-    { fn: () => validatePhone(customer.phone), field: 'customer.phone' },
-    { fn: () => validateDocumentType(customer.documentType), field: 'customer.documentType' },
-    { fn: () => validateDocumentNumber(customer.documentNumber), field: 'customer.documentNumber' },
+    { fn: () => validateCustomerName(customer.name!), field: 'customer.name' },
+    { fn: () => validateEmail(customer.email!), field: 'customer.email' },
+    { fn: () => validatePhone(customer.phone!), field: 'customer.phone' },
+    { fn: () => validateDocumentType(customer.documentType!), field: 'customer.documentType' },
+    { fn: () => validateDocumentNumber(customer.documentNumber!), field: 'customer.documentNumber' },
   ];
 
   for (const validation of validations) {
@@ -146,19 +190,19 @@ const validateCustomer = (customer: any, res: Response): boolean => {
   return true;
 };
 
-const validatePackageInfo = (pkg: any, res: Response): boolean => {
+const validatePackageInfo = (pkg: PackageValidation, res: Response): boolean => {
   if (!pkg) {
     sendValidationError(res, 'Package information is required', 'package');
     return false;
   }
 
-  let error = validatePackageWeight(pkg.weight);
+  let error = validatePackageWeight(pkg.weight!);
   if (error) {
     sendValidationError(res, error, 'package.weight');
     return false;
   }
 
-  error = validatePackageDimensions(pkg.dimensions);
+  error = validatePackageDimensions(pkg.dimensions!);
   if (error) {
     sendValidationError(res, error, 'package.dimensions');
     return false;
@@ -167,19 +211,19 @@ const validatePackageInfo = (pkg: any, res: Response): boolean => {
   return true;
 };
 
-const validatePaymentInfo = (paymentRequest: any, res: Response): boolean => {
+const validatePaymentInfo = (paymentRequest: PaymentRequestValidation, res: Response): boolean => {
   if (!paymentRequest) {
     sendValidationError(res, 'Payment information is required', 'paymentRequest');
     return false;
   }
 
-  let error = validatePaymentMethod(paymentRequest.method);
+  let error = validatePaymentMethod(paymentRequest.method!);
   if (error) {
     sendValidationError(res, error, 'paymentRequest.method');
     return false;
   }
 
-  error = validatePaymentAmount(paymentRequest.amount);
+  error = validatePaymentAmount(paymentRequest.amount!);
   if (error) {
     sendValidationError(res, error, 'paymentRequest.amount');
     return false;

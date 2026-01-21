@@ -1,10 +1,14 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
+import { apiLimiter } from './infrastructure/middlewares/rateLimiter.js';
 
 const app: Application = express();
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Apply rate limiting to all API routes
+app.use('/api', apiLimiter);
 
 // Security: Hide framework fingerprints
 app.disable('x-powered-by');

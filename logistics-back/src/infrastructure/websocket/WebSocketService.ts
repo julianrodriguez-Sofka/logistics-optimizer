@@ -54,7 +54,9 @@ export class WebSocketService {
     this.io = new SocketIOServer(httpServer, {
       cors: {
         origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-        credentials: true,
+        // Credentials disabled to prevent CSRF vulnerabilities
+        // Enable only if you need to send cookies or HTTP authentication
+        credentials: false,
       },
       transports: ['websocket', 'polling'],
     });
