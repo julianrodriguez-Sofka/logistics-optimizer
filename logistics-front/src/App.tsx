@@ -284,24 +284,6 @@ function App() {
             description="Enter details to compare rates across all connected providers via Unified API."
           />
 
-          {/* OpenStreetMap + OpenRouteService Integration Banner */}
-          <div className="mx-6 md:mx-12 mb-6">
-            <div className="bg-gradient-to-r from-primary/10 to-accent-success/10 border-2 border-primary/30 rounded-xl p-4 flex items-center gap-4 shadow-sm">
-              <div className="bg-primary text-white rounded-full p-3 flex-shrink-0">
-                <span className="material-symbols-outlined text-2xl">map</span>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-text-dark font-bold text-base mb-1 flex items-center gap-2">
-                  🗺️ Integración: OpenStreetMap + OpenRouteService
-                  <span className="bg-accent-success text-white text-xs px-2 py-0.5 rounded-full font-bold">GRATIS</span>
-                </h3>
-                <p className="text-text-muted text-sm">
-                  Visualiza rutas reales, calcula distancias precisas y tiempos de entrega. ¡Sin tarjeta de crédito! 100% gratis con OpenStreetMap.
-                </p>
-              </div>
-            </div>
-          </div>
-
           <div className="flex-1 w-full px-6 md:px-12 pb-12">
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
               <div className="xl:col-span-5 flex flex-col gap-6">

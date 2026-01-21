@@ -1,7 +1,8 @@
 # Dependencies
 node_modules/
 package-lock.json
-
+ENGINEERING_CONTEXT.md
+ENGINEERING_PROMPTING.md
 # Build output
 dist/
 dist-ssr/
