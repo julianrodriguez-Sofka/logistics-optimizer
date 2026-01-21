@@ -7,13 +7,15 @@
 import type { FormEvent } from 'react';
 import type { IQuoteRequest } from '../models/QuoteRequest';
 import { useQuoteFormState } from '../hooks/useQuoteFormState';
-import { FormField } from './FormField';import { VALIDATION, BUSINESS_RULES } from '../utils/constants';
+import { FormField } from './FormField';
+import { VALIDATION, BUSINESS_RULES } from '../utils/constants';
 interface QuoteRequestFormProps {
   onSubmit: (data: IQuoteRequest) => void;
   loading?: boolean;
+  disabled?: boolean;
 }
 
-export const QuoteRequestForm = ({ onSubmit, loading = false }: QuoteRequestFormProps) => {
+export const QuoteRequestForm = ({ onSubmit, loading = false, disabled = false }: QuoteRequestFormProps) => {
   const {
     formData,
     errors,
@@ -29,15 +31,16 @@ export const QuoteRequestForm = ({ onSubmit, loading = false }: QuoteRequestForm
     e.preventDefault();
 
     if (validateAll()) {
-      const requestData: IQuoteRequest = {
+      const requestData: IQuoteRequest & { transportMode?: string } = {
         origin: formData.origin,
         destination: formData.destination,
         weight: Number.parseFloat(formData.weight),
         pickupDate: formData.pickupDate,
         fragile: formData.fragile,
+        transportMode: 'driving-car', // Use car profile for routing (pricing is for trucks)
       };
 
-      onSubmit(requestData);
+      onSubmit(requestData as IQuoteRequest);
       resetForm();
     }
   };
@@ -68,10 +71,10 @@ export const QuoteRequestForm = ({ onSubmit, loading = false }: QuoteRequestForm
         {/* Destination */}
         <FormField
           name="destination"
-          label="City"
+          label="Destination Address"
           type="text"
           value={formData.destination}
-          placeholder="Enter city, state, or zip"
+          placeholder="456 Delivery St, Los Angeles, CA"
           icon="pin_drop"
           error={errors.destination}
           touched={touched.destination}
@@ -129,9 +132,9 @@ export const QuoteRequestForm = ({ onSubmit, loading = false }: QuoteRequestForm
         <div className="pt-4">
           <button
             type="submit"
-            disabled={!isFormValid() || loading}
+            disabled={!isFormValid() || loading || disabled}
             className={`w-full ${
-              !isFormValid() || loading
+              !isFormValid() || loading || disabled
                 ? 'bg-border-light text-text-muted cursor-not-allowed'
                 : 'bg-primary hover:bg-green-700 text-white shadow-lg shadow-primary/20'
             } font-bold h-14 rounded-lg transition-all flex items-center justify-center gap-2`}

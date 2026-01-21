@@ -8,15 +8,30 @@ describe('FedExAdapter - Dynamic Pricing (TDD RED Phase)', () => {
     adapter = new FedExAdapter();
   });
 
+  // Current FedEx pricing configuration:
+  // BASE_PRICE = 25000 COP
+  // MIN_DELIVERY_DAYS = 2
+  // MAX_DELIVERY_DAYS = 4
+  // Weight tiers (from WeightPricingCalculator.getFedExTiers()):
+  //   - 0-5kg: 15000 COP/kg
+  //   - 5-20kg: 12000 COP/kg
+  //   - 20-50kg: 10000 COP/kg
+  //   - 50+kg: 8500 COP/kg
+  // Zone multipliers (from ZoneConfig for FedEx):
+  //   - Zone 1: 1.0
+  //   - Zone 2: 1.15
+  //   - Zone 3: 1.25
+  //   - Zone 4: 1.35
+  //   - Zone 5: 1.6
+
   describe('Zone-Based Pricing', () => {
     test('should calculate price for Bogotá (Zone 1) - 4.5kg', async () => {
       const quote = await adapter.calculateShipping(4.5, 'Bogotá');
       
-      // Expected: basePrice + (weightCost × zoneMultiplier)
-      // Weight cost: 4.5kg @ 8000 COP/kg (tier 1: 0-5kg) = 36,000 COP
+      // Weight cost: 4.5kg @ 15000 COP/kg (tier 1: 0-5kg) = 67,500 COP
       // Zone multiplier: Zone 1 = 1.0
-      // Total: 10000 + (36000 × 1.0) = 46,000 COP
-      expect(quote.price).toBe(46000);
+      // Total: 25000 + (67500 × 1.0) = 92,500 COP
+      expect(quote.price).toBe(92500);
       expect(quote.providerName).toBe('FedEx Ground');
       expect(quote.currency).toBe('COP');
     });
@@ -24,76 +39,79 @@ describe('FedExAdapter - Dynamic Pricing (TDD RED Phase)', () => {
     test('should calculate price for Medellín (Zone 2) - 4.5kg', async () => {
       const quote = await adapter.calculateShipping(4.5, 'Medellín');
       
-      // Weight cost: 4.5kg @ 8000 COP/kg = 36,000 COP
+      // Weight cost: 4.5kg @ 15000 COP/kg = 67,500 COP
       // Zone multiplier: Zone 2 = 1.15
-      // Total: 10000 + (36000 × 1.15) = 51,400 COP
-      expect(quote.price).toBe(51400);
+      // Total: 25000 + (67500 × 1.15) = 102,625 COP
+      expect(quote.price).toBe(102625);
     });
 
     test('should calculate price for Cali (Zone 3) - 4.5kg', async () => {
       const quote = await adapter.calculateShipping(4.5, 'Cali');
       
+      // Weight cost: 4.5kg @ 15000 COP/kg = 67,500 COP
       // Zone multiplier: Zone 3 = 1.25
-      // Total: 10000 + (36000 × 1.25) = 55,000 COP
-      expect(quote.price).toBe(55000);
+      // Total: 25000 + (67500 × 1.25) = 109,375 COP
+      expect(quote.price).toBe(109375);
     });
 
     test('should calculate price for Barranquilla (Zone 4) - 4.5kg', async () => {
       const quote = await adapter.calculateShipping(4.5, 'Barranquilla');
       
+      // Weight cost: 4.5kg @ 15000 COP/kg = 67,500 COP
       // Zone multiplier: Zone 4 = 1.35
-      // Total: 10000 + (36000 × 1.35) = 58,600 COP
-      expect(quote.price).toBe(58600);
+      // Total: 25000 + (67500 × 1.35) = 116,125 COP
+      expect(quote.price).toBe(116125);
     });
 
     test('should calculate price for Leticia (Zone 5) - 4.5kg', async () => {
       const quote = await adapter.calculateShipping(4.5, 'Leticia');
       
+      // Weight cost: 4.5kg @ 15000 COP/kg = 67,500 COP
       // Zone multiplier: Zone 5 = 1.6
-      // Total: 10000 + (36000 × 1.6) = 67,600 COP
-      expect(quote.price).toBe(67600);
+      // Total: 25000 + (67500 × 1.6) = 133,000 COP
+      expect(quote.price).toBe(133000);
     });
   });
 
   describe('Weight Tier Pricing', () => {
-    test('should use tier 1 rate (8000 COP/kg) for 3kg to Bogotá', async () => {
+    test('should use tier 1 rate (15000 COP/kg) for 3kg to Bogotá', async () => {
       const quote = await adapter.calculateShipping(3, 'Bogotá');
       
-      // Weight cost: 3kg @ 8000 COP/kg = 24,000 COP
-      // Total: 10000 + (24000 × 1.0) = 34,000 COP
-      expect(quote.price).toBe(34000);
+      // Weight cost: 3kg @ 15000 COP/kg = 45,000 COP
+      // Total: 25000 + (45000 × 1.0) = 70,000 COP
+      expect(quote.price).toBe(70000);
     });
 
-    test('should use tier 2 rate (6500 COP/kg) for 10kg to Bogotá', async () => {
+    test('should use tier 2 rate (12000 COP/kg) for 10kg to Bogotá', async () => {
       const quote = await adapter.calculateShipping(10, 'Bogotá');
       
-      // Weight cost: 10kg @ 6500 COP/kg = 65,000 COP
-      // Total: 10000 + (65000 × 1.0) = 75,000 COP
-      expect(quote.price).toBe(75000);
+      // Weight cost: 10kg @ 12000 COP/kg = 120,000 COP
+      // Total: 25000 + (120000 × 1.0) = 145,000 COP
+      expect(quote.price).toBe(145000);
     });
 
-    test('should use tier 3 rate (5500 COP/kg) for 25kg to Bogotá', async () => {
+    test('should use tier 3 rate (10000 COP/kg) for 25kg to Bogotá', async () => {
       const quote = await adapter.calculateShipping(25, 'Bogotá');
       
-      // Weight cost: 25kg @ 5500 COP/kg = 137,500 COP
-      // Total: 10000 + (137500 × 1.0) = 147,500 COP
-      expect(quote.price).toBe(147500);
+      // Weight cost: 25kg @ 10000 COP/kg = 250,000 COP
+      // Total: 25000 + (250000 × 1.0) = 275,000 COP
+      expect(quote.price).toBe(275000);
     });
 
-    test('should use tier 4 rate (4800 COP/kg) for 60kg to Bogotá', async () => {
+    test('should use tier 4 rate (8500 COP/kg) for 60kg to Bogotá', async () => {
       const quote = await adapter.calculateShipping(60, 'Bogotá');
       
-      // Weight cost: 60kg @ 4800 COP/kg = 288,000 COP
-      // Total: 10000 + (288000 × 1.0) = 298,000 COP
-      expect(quote.price).toBe(298000);
+      // Weight cost: 60kg @ 8500 COP/kg = 510,000 COP
+      // Total: 25000 + (510000 × 1.0) = 535,000 COP
+      expect(quote.price).toBe(535000);
     });
 
     test('should use tier 2 rate for exactly 5kg (boundary)', async () => {
       const quote = await adapter.calculateShipping(5, 'Bogotá');
       
-      // Weight cost: 5kg @ 6500 COP/kg (tier 2 starts at 5kg) = 32,500 COP
-      // Total: 10000 + (32500 × 1.0) = 42,500 COP
-      expect(quote.price).toBe(42500);
+      // Weight cost: 5kg @ 12000 COP/kg (tier 2 starts at 5kg) = 60,000 COP
+      // Total: 25000 + (60000 × 1.0) = 85,000 COP
+      expect(quote.price).toBe(85000);
     });
   });
 
@@ -101,28 +119,28 @@ describe('FedExAdapter - Dynamic Pricing (TDD RED Phase)', () => {
     test('should calculate correct price for Medellín (Zone 2) - 10kg', async () => {
       const quote = await adapter.calculateShipping(10, 'Medellín');
       
-      // Weight cost: 10kg @ 6500 COP/kg (tier 2) = 65,000 COP
+      // Weight cost: 10kg @ 12000 COP/kg (tier 2) = 120,000 COP
       // Zone multiplier: 1.15
-      // Total: 10000 + (65000 × 1.15) = 84,750 COP
-      expect(quote.price).toBe(84750);
+      // Total: 25000 + (120000 × 1.15) = 163,000 COP
+      expect(quote.price).toBe(163000);
     });
 
     test('should calculate correct price for Leticia (Zone 5) - 25kg', async () => {
       const quote = await adapter.calculateShipping(25, 'Leticia');
       
-      // Weight cost: 25kg @ 5500 COP/kg (tier 3) = 137,500 COP
+      // Weight cost: 25kg @ 10000 COP/kg (tier 3) = 250,000 COP
       // Zone multiplier: 1.6
-      // Total: 10000 + (137500 × 1.6) = 230,000 COP
-      expect(quote.price).toBe(230000);
+      // Total: 25000 + (250000 × 1.6) = 425,000 COP
+      expect(quote.price).toBe(425000);
     });
 
     test('should calculate correct price for Cartagena (Zone 4) - 60kg', async () => {
       const quote = await adapter.calculateShipping(60, 'Cartagena');
       
-      // Weight cost: 60kg @ 4800 COP/kg (tier 4) = 288,000 COP
+      // Weight cost: 60kg @ 8500 COP/kg (tier 4) = 510,000 COP
       // Zone multiplier: 1.35
-      // Total: 10000 + (288000 × 1.35) = 398,800 COP
-      expect(quote.price).toBe(398800);
+      // Total: 25000 + (510000 × 1.35) = 713,500 COP
+      expect(quote.price).toBe(713500);
     });
   });
 
@@ -134,7 +152,7 @@ describe('FedExAdapter - Dynamic Pricing (TDD RED Phase)', () => {
       expect(quote.providerName).toBe('FedEx Ground');
       expect(quote.currency).toBe('COP');
       expect(quote.transportMode).toBe('Truck');
-      expect(quote.minDays).toBe(3);
+      expect(quote.minDays).toBe(2);
       expect(quote.maxDays).toBe(4);
     });
 
@@ -151,7 +169,8 @@ describe('FedExAdapter - Dynamic Pricing (TDD RED Phase)', () => {
       const quote = await adapter.calculateShipping(4.5, 'CiudadDesconocida');
       
       // Should use Zone 1 multiplier (1.0)
-      expect(quote.price).toBe(46000);
+      // Total: 25000 + (67500 × 1.0) = 92,500 COP
+      expect(quote.price).toBe(92500);
     });
 
     test('should handle case-insensitive city names', async () => {
@@ -161,14 +180,14 @@ describe('FedExAdapter - Dynamic Pricing (TDD RED Phase)', () => {
       
       expect(quote1.price).toBe(quote2.price);
       expect(quote2.price).toBe(quote3.price);
-      expect(quote1.price).toBe(51400);
+      expect(quote1.price).toBe(102625);
     });
 
     test('should handle city names without accents', async () => {
       const quote = await adapter.calculateShipping(4.5, 'Medellin'); // Sin tilde
       
       // Should still recognize as Medellín (Zone 2)
-      expect(quote.price).toBe(51400);
+      expect(quote.price).toBe(102625);
     });
 
     test('should validate weight and destination', async () => {

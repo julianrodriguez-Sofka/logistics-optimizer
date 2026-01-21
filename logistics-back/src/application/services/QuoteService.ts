@@ -14,6 +14,7 @@ import { IShippingProvider } from '../../domain/interfaces/IShippingProvider';
 import { Quote } from '../../domain/entities/Quote';
 import { QuoteRequest } from '../../domain/entities/QuoteRequest';
 import { IQuoteRepository } from '../../domain/interfaces/IQuoteRepository';
+import { IRouteCalculator } from '../../domain/interfaces/IRouteCalculator';
 import { withTimeout } from '../utils/timeout';
 import { BadgeService } from './BadgeService';
 import { logger } from '../../infrastructure/logging/Logger';
@@ -27,6 +28,25 @@ export interface IProviderMessage {
 export interface IQuoteResponse {
   quotes: Quote[];
   messages: IProviderMessage[];
+  routeInfo?: {
+    origin: { address: string; lat: number; lng: number };
+    destination: { address: string; lat: number; lng: number };
+    distanceKm: number;
+    distanceMeters: number;
+    durationSeconds: number;
+    durationFormatted: string;
+    category: string;
+    routeCoordinates?: Array<[number, number]>;
+    transportMode?: string;
+    segments?: Array<{
+      mode: 'air' | 'ground';
+      transportLabel: string;
+      coordinates: Array<[number, number]>;
+      distanceKm: number;
+      durationMinutes: number;
+      color: string;
+    }>;
+  };
 }
 
 export class QuoteService {
@@ -37,7 +57,9 @@ export class QuoteService {
 
   constructor(
     private readonly providers: IShippingProvider[],
-    private readonly quoteRepository?: IQuoteRepository 
+    private readonly quoteRepository?: IQuoteRepository,
+    private readonly routeCalculator?: IRouteCalculator,
+    private readonly multiModalCalculator?: IRouteCalculator // For air-ground routes
   ) {
     this.badgeService = new BadgeService();
   }
@@ -63,6 +85,28 @@ export class QuoteService {
       return cachedResponse;
     }
 
+    // Calculate route information if route calculator is available
+    let routeInfo = null;
+    // Use 'driving-car' profile to avoid OpenRouteService distance limits
+    // Pricing is still calculated for truck transport (see adapters)
+    const transportMode = 'driving-car';
+    
+    // Use standard route calculator (air-ground mode removed)
+    if (this.routeCalculator) {
+      try {
+        this.logger.info('Calculating standard route with OpenRouteService', { mode: transportMode });
+        routeInfo = await this.routeCalculator.calculateRoute(request.origin, request.destination, transportMode);
+        this.logger.info('Route calculated successfully', {
+          distance: routeInfo.distanceKm,
+          duration: routeInfo.durationFormatted,
+          transportMode: routeInfo.transportMode,
+          routePoints: routeInfo.routeCoordinates.length
+        });
+      } catch (error) {
+        this.logger.warn('Failed to calculate route, continuing without route info', error);
+      }
+    }
+
     // Create timeout wrapper for each provider call with provider metadata
     const providerPromises = this.providers.map((provider, index) =>
       this.callProviderWithTimeout(provider, request)
@@ -86,18 +130,69 @@ export class QuoteService {
     // Extract successful quotes and failed providers
     const { quotes, messages } = this.processProviderResults(results);
 
+    // Add route information to all quotes
+    const quotesWithRoute = quotes.map(quote => {
+      if (routeInfo) {
+        quote.routeInfo = {
+          origin: {
+            address: routeInfo.origin.address,
+            lat: routeInfo.origin.lat,
+            lng: routeInfo.origin.lng,
+          },
+          destination: {
+            address: routeInfo.destination.address,
+            lat: routeInfo.destination.lat,
+            lng: routeInfo.destination.lng,
+          },
+          distanceKm: routeInfo.distanceKm,
+          distanceMeters: routeInfo.distanceMeters,
+          durationSeconds: routeInfo.durationSeconds,
+          durationFormatted: routeInfo.durationFormatted,
+          category: this.categorizeDistance(routeInfo.distanceKm),
+          routeCoordinates: routeInfo.routeCoordinates, // Full route geometry
+          transportMode: routeInfo.transportMode,
+          segments: routeInfo.segments, // Multi-modal segments (air + ground)
+        };
+        quote.pricePerKm = quote.price / routeInfo.distanceKm;
+      }
+      return quote;
+    });
+
     // Assign badges to quotes before returning
-    const quotesWithBadges = this.badgeService.assignBadges(quotes);
+    const quotesWithBadges = this.badgeService.assignBadges(quotesWithRoute);
 
     this.logger.info('Quotes processed successfully', {
       totalQuotes: quotesWithBadges.length,
       failedProviders: messages.length,
+      hasRouteInfo: !!routeInfo,
     });
 
     // Save quotes to database (if repository is available)
     await this.saveQuotesToDatabase(quotesWithBadges, request);
 
-    return { quotes: quotesWithBadges, messages };
+    // Build routeInfo for response (shared route information)
+    const routeInfoResponse = routeInfo ? {
+      origin: {
+        address: routeInfo.origin.address,
+        lat: routeInfo.origin.lat,
+        lng: routeInfo.origin.lng,
+      },
+      destination: {
+        address: routeInfo.destination.address,
+        lat: routeInfo.destination.lat,
+        lng: routeInfo.destination.lng,
+      },
+      distanceKm: routeInfo.distanceKm,
+      distanceMeters: routeInfo.distanceMeters,
+      durationSeconds: routeInfo.durationSeconds,
+      durationFormatted: routeInfo.durationFormatted,
+      category: this.categorizeDistance(routeInfo.distanceKm),
+      routeCoordinates: routeInfo.routeCoordinates, // Full route geometry
+      transportMode: routeInfo.transportMode,
+      segments: routeInfo.segments, // Multi-modal segments (air + ground)
+    } : undefined;
+
+    return { quotes: quotesWithBadges, messages, routeInfo: routeInfoResponse };
   }
 
   /**
@@ -233,5 +328,15 @@ export class QuoteService {
       isCheapest: quote.isCheapest,
       isFastest: quote.isFastest,
     });
+  }
+
+  /**
+   * Categorize distance for display purposes
+   */
+  private categorizeDistance(distanceKm: number): string {
+    if (distanceKm < 100) return 'Local';
+    if (distanceKm < 500) return 'Regional';
+    if (distanceKm < 1000) return 'Nacional';
+    return 'Larga Distancia';
   }
 }

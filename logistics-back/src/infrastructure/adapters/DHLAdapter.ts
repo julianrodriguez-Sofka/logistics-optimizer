@@ -4,9 +4,9 @@ import { ZoneConfig } from '../../domain/entities/ZoneConfig';
 import { WeightPricingCalculator } from '../../application/services/WeightPricingCalculator';
 
 export class DHLAdapter extends BaseShippingAdapter {
-  private readonly BASE_PRICE = 8000; // Base price in COP
-  private readonly MIN_DELIVERY_DAYS = 5;
-  private readonly MAX_DELIVERY_DAYS = 8;
+  private readonly BASE_PRICE = 20000; // Base price in COP for truck transport
+  private readonly MIN_DELIVERY_DAYS = 3;
+  private readonly MAX_DELIVERY_DAYS = 5;
   private readonly CARRIER_NAME = 'DHL';
 
   async calculateShipping(weight: number, destination: string): Promise<Quote> {

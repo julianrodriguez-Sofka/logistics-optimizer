@@ -50,14 +50,14 @@ describe('QuoteService', () => {
 
       const quotes = await quoteService.getAllQuotes(request);
 
-      // FedEx: (10000 + 10*6500*1.0) = 75000 * 1.15 = 86,250 COP
-      expect(quotes[0].price).toBeCloseTo(86250, 0);
+      // FedEx: (25000 + 10*12000*1.0) = 145000 * 1.15 = 166,750 COP
+      expect(quotes[0].price).toBeCloseTo(166750, 0);
       
-      // DHL: (8000 + 10*6000*1.0) = 68000 * 1.15 = 78,200 COP
-      expect(quotes[1].price).toBeCloseTo(78200, 0);
+      // DHL: (20000 + 10*10500*1.0) = 125000 * 1.15 = 143,750 COP
+      expect(quotes[1].price).toBeCloseTo(143750, 0);
       
-      // Local (Zone 1, 1.8x): (5000 + 10*4500*1.8) = 86000 * 1.15 = 98,900 COP
-      expect(quotes[2].price).toBeCloseTo(98900, 0);
+      // Local (Zone 1, 1.8x): (15000 + 10*7500*1.8) = 150000 * 1.15 = 172,500 COP
+      expect(quotes[2].price).toBeCloseTo(172500, 0);
     });
 
     it('should NOT apply fragile surcharge when fragile is false', async () => {
@@ -72,14 +72,14 @@ describe('QuoteService', () => {
 
       const quotes = await quoteService.getAllQuotes(request);
 
-      // FedEx: 10000 + 10*6500*1.0 = 75,000 COP
-      expect(quotes[0].price).toBe(75000);
+      // FedEx: 25000 + 10*12000*1.0 = 145,000 COP
+      expect(quotes[0].price).toBe(145000);
       
-      // DHL: 8000 + 10*6000*1.0 = 68,000 COP
-      expect(quotes[1].price).toBe(68000);
+      // DHL: 20000 + 10*10500*1.0 = 125,000 COP
+      expect(quotes[1].price).toBe(125000);
       
-      // Local (Zone 1, 1.8x): 5000 + 10*4500*1.8 = 86,000 COP
-      expect(quotes[2].price).toBe(86000);
+      // Local (Zone 1, 1.8x): 15000 + 10*7500*1.8 = 150,000 COP
+      expect(quotes[2].price).toBe(150000);
     });
 
     it('should return 2 quotes when one adapter fails', async () => {
@@ -185,14 +185,14 @@ describe('QuoteService', () => {
 
       const quotes = await quoteService.getAllQuotes(request);
 
-      // FedEx: (10000 + 5.5*6500*1.0) = 45,750 * 1.15 = 52,612.50 COP
-      expect(quotes[0].price).toBeCloseTo(52612.5, 0);
+      // FedEx: (25000 + 5.5*12000*1.0) = 91,000 * 1.15 = 104,650 COP
+      expect(quotes[0].price).toBeCloseTo(104650, 0);
       
-      // DHL: (8000 + 5.5*6000*1.0) = 41,000 * 1.15 = 47,150 COP
-      expect(quotes[1].price).toBeCloseTo(47150, 0);
+      // DHL: (20000 + 5.5*10500*1.0) = 77,750 * 1.15 = 89,412.50 COP
+      expect(quotes[1].price).toBeCloseTo(89412.5, 0);
       
-      // Local (Zone 1, 1.8x): (5000 + 5.5*4500*1.8) = 49,550 * 1.15 = 56,982.50 COP
-      expect(quotes[2].price).toBeCloseTo(56982.5, 0);
+      // Local (Zone 1, 1.8x): (15000 + 5.5*7500*1.8) = 89,250 * 1.15 = 102,637.50 COP
+      expect(quotes[2].price).toBeCloseTo(102637.5, 0);
     });
 
     it('should handle adapter timeout gracefully (5 second timeout)', async () => {

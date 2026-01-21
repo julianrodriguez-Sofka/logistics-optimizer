@@ -1,3 +1,34 @@
+/**
+ * Route information for a quote
+ */
+export interface IQuoteRouteInfo {
+  origin: {
+    address: string;
+    lat: number;
+    lng: number;
+  };
+  destination: {
+    address: string;
+    lat: number;
+    lng: number;
+  };
+  distanceKm: number;
+  distanceMeters: number;
+  durationSeconds: number;
+  durationFormatted: string;
+  category: string;
+  routeCoordinates?: Array<[number, number]>;
+  transportMode?: string;
+  segments?: Array<{
+    mode: 'air' | 'ground';
+    transportLabel: string;
+    coordinates: Array<[number, number]>;
+    distanceKm: number;
+    durationMinutes: number;
+    color: string;
+  }>;
+}
+
 export interface IQuoteData {
   providerId: string;
   providerName: string;
@@ -8,6 +39,8 @@ export interface IQuoteData {
   transportMode: string;
   isCheapest?: boolean;
   isFastest?: boolean;
+  routeInfo?: IQuoteRouteInfo;
+  pricePerKm?: number;
 }
 
 export class Quote {
@@ -20,6 +53,8 @@ export class Quote {
   public readonly transportMode: string;
   public isCheapest: boolean;
   public isFastest: boolean;
+  public routeInfo?: IQuoteRouteInfo;
+  public pricePerKm?: number;
 
   constructor(data: IQuoteData) {
     // Validate providerId
@@ -56,6 +91,8 @@ export class Quote {
     this.transportMode = data.transportMode;
     this.isCheapest = data.isCheapest ?? false;
     this.isFastest = data.isFastest ?? false;
+    this.routeInfo = data.routeInfo;
+    this.pricePerKm = data.pricePerKm;
   }
 
   /**

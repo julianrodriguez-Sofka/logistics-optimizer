@@ -1,0 +1,37 @@
+{
+  "name": "@logistics-optimizer/openrouteservice-mcp",
+  "version": "1.0.0",
+  "description": "Model Context Protocol server for OpenRouteService integration (Free alternative)",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "openrouteservice",
+    "openstreetmap",
+    "directions",
+    "geocoding",
+    "free"
+  ],
+  "author": "Logistics Optimizer Team",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "axios": "^1.13.2",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

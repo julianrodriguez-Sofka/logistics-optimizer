@@ -108,34 +108,39 @@ describe('WeightPricingCalculator - RED Phase (Tests First)', () => {
     });
   });
 
+  // Current actual pricing from WeightPricingCalculator:
+  // FedEx: 15000, 12000, 10000, 8500 COP/kg
+  // DHL: 13000, 10500, 9000, 7800 COP/kg
+  // Local: 9000, 7500, 6500, 5800 COP/kg
+
   describe('FedEx Weight Tiers (Colombia)', () => {
     test('should have 4 weight tiers for FedEx', () => {
       const tiers = WeightPricingCalculator.getFedExTiers();
       expect(tiers).toHaveLength(4);
     });
 
-    test('FedEx tier 1: 0-5kg should have rate 8000 COP/kg', () => {
+    test('FedEx tier 1: 0-5kg should have rate 15000 COP/kg', () => {
       const tiers = WeightPricingCalculator.getFedExTiers();
       const tier1 = tiers.find(t => t.minWeight === 0 && t.maxWeight === 5);
-      expect(tier1?.ratePerKg).toBe(8000);
+      expect(tier1?.ratePerKg).toBe(15000);
     });
 
-    test('FedEx tier 2: 5-20kg should have rate 6500 COP/kg', () => {
+    test('FedEx tier 2: 5-20kg should have rate 12000 COP/kg', () => {
       const tiers = WeightPricingCalculator.getFedExTiers();
       const tier2 = tiers.find(t => t.minWeight === 5 && t.maxWeight === 20);
-      expect(tier2?.ratePerKg).toBe(6500);
+      expect(tier2?.ratePerKg).toBe(12000);
     });
 
-    test('FedEx tier 3: 20-50kg should have rate 5500 COP/kg', () => {
+    test('FedEx tier 3: 20-50kg should have rate 10000 COP/kg', () => {
       const tiers = WeightPricingCalculator.getFedExTiers();
       const tier3 = tiers.find(t => t.minWeight === 20 && t.maxWeight === 50);
-      expect(tier3?.ratePerKg).toBe(5500);
+      expect(tier3?.ratePerKg).toBe(10000);
     });
 
-    test('FedEx tier 4: 50kg+ should have rate 4800 COP/kg', () => {
+    test('FedEx tier 4: 50kg+ should have rate 8500 COP/kg', () => {
       const tiers = WeightPricingCalculator.getFedExTiers();
       const tier4 = tiers.find(t => t.minWeight === 50);
-      expect(tier4?.ratePerKg).toBe(4800);
+      expect(tier4?.ratePerKg).toBe(8500);
     });
   });
 
@@ -145,16 +150,16 @@ describe('WeightPricingCalculator - RED Phase (Tests First)', () => {
       expect(tiers).toHaveLength(4);
     });
 
-    test('DHL tier 1: 0-5kg should have rate 7500 COP/kg', () => {
+    test('DHL tier 1: 0-5kg should have rate 13000 COP/kg', () => {
       const tiers = WeightPricingCalculator.getDHLTiers();
       const tier1 = tiers.find(t => t.minWeight === 0 && t.maxWeight === 5);
-      expect(tier1?.ratePerKg).toBe(7500);
+      expect(tier1?.ratePerKg).toBe(13000);
     });
 
-    test('DHL tier 2: 5-20kg should have rate 6000 COP/kg', () => {
+    test('DHL tier 2: 5-20kg should have rate 10500 COP/kg', () => {
       const tiers = WeightPricingCalculator.getDHLTiers();
       const tier2 = tiers.find(t => t.minWeight === 5 && t.maxWeight === 20);
-      expect(tier2?.ratePerKg).toBe(6000);
+      expect(tier2?.ratePerKg).toBe(10500);
     });
   });
 
@@ -164,10 +169,10 @@ describe('WeightPricingCalculator - RED Phase (Tests First)', () => {
       expect(tiers).toHaveLength(4);
     });
 
-    test('Local tier 1: 0-5kg should have rate 5000 COP/kg', () => {
+    test('Local tier 1: 0-5kg should have rate 9000 COP/kg', () => {
       const tiers = WeightPricingCalculator.getLocalTiers();
       const tier1 = tiers.find(t => t.minWeight === 0 && t.maxWeight === 5);
-      expect(tier1?.ratePerKg).toBe(5000);
+      expect(tier1?.ratePerKg).toBe(9000);
     });
 
     test('Local should have cheapest rates overall', () => {

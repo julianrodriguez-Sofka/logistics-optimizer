@@ -6,6 +6,7 @@ export interface IQuoteRequestData {
   weight: number;
   pickupDate: Date;
   fragile?: boolean;
+  transportMode?: string; // Transport mode (driving-car, driving-hgv, etc.)
 }
 
 export class QuoteRequest {
@@ -14,6 +15,7 @@ export class QuoteRequest {
   public readonly weight: number;
   public readonly pickupDate: Date;
   public readonly fragile: boolean;
+  public readonly transportMode: string; // Transport mode
 
   constructor(data: IQuoteRequestData) {
     // Validate origin
@@ -76,5 +78,6 @@ export class QuoteRequest {
     this.weight = data.weight;
     this.pickupDate = data.pickupDate;
     this.fragile = data.fragile ?? false;
+    this.transportMode = data.transportMode || 'driving-car'; // Default to driving-car
   }
 }

@@ -51,11 +51,17 @@ class Logger {
 
   error(message: string, error?: Error | any, data?: any): void {
     const errorData = error instanceof Error 
-      ? { error: error.message, stack: error.stack, ...data }
+      ? { 
+          error: error.message, 
+          // Only include stack traces in non-production environments
+          ...(process.env.NODE_ENV !== 'production' && { stack: error.stack }),
+          ...data 
+        }
       : { error, ...data };
     
     this.log(LogLevel.ERROR, 'ERROR', message, errorData);
   }
 }
 
+export { Logger };
 export const logger = Logger.getInstance();

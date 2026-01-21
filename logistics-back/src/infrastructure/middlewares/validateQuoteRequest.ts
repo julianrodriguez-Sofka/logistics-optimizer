@@ -15,6 +15,7 @@ export function validateQuoteRequest(req: Request, res: Response, next: NextFunc
       weight: req.body.weight,
       pickupDate: new Date(req.body.pickupDate),
       fragile: req.body.fragile,
+      transportMode: req.body.transportMode, // Pass transport mode
     });
 
     // If validation passes, continue to controller

@@ -6,13 +6,21 @@ import quotesRouter from '../../infrastructure/routes/quotes.routes';
  * Integration tests for validation middleware in quotes endpoint
  * Verifies Task 2.4 from HU-02 plan: "Add validation middleware to POST /api/quotes route"
  */
+// Helper function to get future date string
+const getFutureDate = (daysFromNow: number): string => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString().split('T')[0];
+};
+
 describe('POST /api/quotes - Validation Middleware Integration (HU-02)', () => {
   let app: Express;
 
   beforeAll(() => {
     app = express();
     app.use(express.json());
-    app.use('/api', quotesRouter);
+    // Mount router at /api/quotes to match app.ts configuration
+    app.use('/api/quotes', quotesRouter);
   });
 
   describe('Valid requests', () => {
@@ -21,7 +29,7 @@ describe('POST /api/quotes - Validation Middleware Integration (HU-02)', () => {
         origin: 'Bogotá',
         destination: 'Medellín',
         weight: 5.5,
-        pickupDate: '2026-01-15',
+        pickupDate: getFutureDate(5), // 5 days from now
         fragile: false,
       };
 
@@ -43,7 +51,7 @@ describe('POST /api/quotes - Validation Middleware Integration (HU-02)', () => {
         origin: 'Bogotá',
         destination: 'Medellín',
         weight: 0.05, // Below 0.1 kg minimum
-        pickupDate: '2026-01-15',
+        pickupDate: getFutureDate(5),
         fragile: false,
       };
 
@@ -62,7 +70,7 @@ describe('POST /api/quotes - Validation Middleware Integration (HU-02)', () => {
         origin: 'Bogotá',
         destination: 'Medellín',
         weight: 1001, // Above 1000 kg maximum
-        pickupDate: '2026-01-15',
+        pickupDate: getFutureDate(5),
         fragile: false,
       };
 
@@ -129,7 +137,7 @@ describe('POST /api/quotes - Validation Middleware Integration (HU-02)', () => {
         origin: '',
         destination: 'Medellín',
         weight: 5,
-        pickupDate: '2026-01-15',
+        pickupDate: getFutureDate(5),
         fragile: false,
       };
 
@@ -148,7 +156,7 @@ describe('POST /api/quotes - Validation Middleware Integration (HU-02)', () => {
         origin: 'Bogotá',
         destination: '',
         weight: 5,
-        pickupDate: '2026-01-15',
+        pickupDate: getFutureDate(5),
         fragile: false,
       };
 

@@ -319,6 +319,220 @@ class DatabaseService {
 
 ---
 
+## 🗺️ Integración con OpenRouteService
+
+El proyecto utiliza **OpenRouteService** como proveedor de mapas y cálculo de rutas. Es una alternativa **gratuita y open-source** a Google Maps, basada en datos de **OpenStreetMap**.
+
+### ¿Qué es OpenRouteService?
+
+[OpenRouteService](https://openrouteservice.org/) es un servicio de mapas gratuito desarrollado por la Universidad de Heidelberg que proporciona:
+
+- **Geocodificación**: Convertir direcciones en coordenadas geográficas
+- **Cálculo de rutas**: Obtener la ruta óptima entre dos puntos
+- **Múltiples modos de transporte**: Carro, camión (HGV), bicicleta, a pie
+- **Datos abiertos**: Basado en OpenStreetMap, sin costos por solicitud
+
+**Ventajas sobre Google Maps:**
+- ✅ **Gratuito** (2,000 solicitudes/día en tier gratuito)
+- ✅ **Sin tarjeta de crédito** requerida
+- ✅ **Open Source** y basado en datos abiertos
+- ✅ **Sin restricciones de uso comercial** en tier gratuito
+
+### ✨ Características Implementadas
+
+| Característica | Descripción |
+|---------------|-------------|
+| 🗺️ Cálculo de rutas | Rutas reales entre ciudades colombianas |
+| 📍 Geocodificación | Conversión de direcciones a coordenadas |
+| 📏 Distancia y tiempo | Distancia en km y duración estimada |
+| 🚚 Multi-modal | Soporte para camión, avión + camión |
+| 💾 Cache inteligente | TTL de 1 hora para reducir llamadas API |
+| 🇨🇴 Fallback colombiano | Estrategias de geocodificación para direcciones locales |
+
+### 🛠️ Arquitectura de Implementación
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        FRONTEND (React)                         │
+├─────────────────────────────────────────────────────────────────┤
+│  RouteMap.tsx              │  RouteMapModal.tsx                 │
+│  - Leaflet + OpenStreetMap │  - Modal de pantalla completa      │
+│  - Marcadores origen/dest  │  - Información de ruta             │
+│  - Polylines de ruta       │  - Soporte multi-modal             │
+└─────────────────────────────────────────────────────────────────┘
+                              │ HTTP
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        BACKEND (Express)                        │
+├─────────────────────────────────────────────────────────────────┤
+│  QuoteService                                                   │
+│    └── IRouteCalculator (Interface)                             │
+│           ├── OpenRouteServiceAdapter                           │
+│           │     - Geocodificación con fallback                  │
+│           │     - Cache con TTL                                 │
+│           │     - Normalización de direcciones colombianas      │
+│           └── MultiModalRouteAdapter                            │
+│                 - Rutas avión + camión                          │
+└─────────────────────────────────────────────────────────────────┘
+                              │ HTTPS
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    OpenRouteService API                         │
+│              https://api.openrouteservice.org                   │
+├─────────────────────────────────────────────────────────────────┤
+│  /v2/directions/{profile}/geojson  - Cálculo de rutas          │
+│  /geocode/search                    - Geocodificación           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 🔧 Componentes del Backend
+
+#### OpenRouteServiceAdapter (`infrastructure/adapters/OpenRouteServiceAdapter.ts`)
+
+Implementa la interfaz `IRouteCalculator` para el cálculo de rutas:
+
+```typescript
+class OpenRouteServiceAdapter implements IRouteCalculator {
+  private readonly apiKey: string;
+  private readonly cache = new Map<string, { data: RouteInfo; timestamp: number }>();
+  private readonly cacheTTL: number;
+
+  // Calcula ruta entre dos ubicaciones
+  async calculateRoute(origin: string, destination: string, mode: TransportMode): Promise<RouteInfo>;
+  
+  // Geocodifica con estrategia de fallback para Colombia
+  private async geocode(address: string): Promise<{ lat: number; lng: number }>;
+  
+  // Normaliza direcciones colombianas (Calle, Carrera, etc.)
+  private normalizeColombianAddress(address: string): string;
+}
+```
+
+**Estrategia de Geocodificación (Strategy Pattern):**
+
+```typescript
+// 3 estrategias de fallback para direcciones colombianas:
+// 1. Intenta con dirección original
+// 2. Normaliza (quita "Calle", "Carrera", etc.)
+// 3. Extrae solo el nombre de la ciudad
+
+private async geocode(address: string) {
+  // Strategy 1: Original address
+  try { return await this.tryGeocode(address); } catch {}
+  
+  // Strategy 2: Normalized (remove street details)
+  try { return await this.tryGeocode(this.normalizeColombianAddress(address)); } catch {}
+  
+  // Strategy 3: City name only
+  return await this.tryGeocode(this.extractCityName(address));
+}
+```
+
+#### MultiModalRouteAdapter (`infrastructure/adapters/MultiModalRouteAdapter.ts`)
+
+Calcula rutas multi-modales (avión + camión):
+
+```typescript
+class MultiModalRouteAdapter implements IRouteCalculator {
+  // Calcula ruta combinando segmento aéreo + terrestre
+  async calculateAirGroundRoute(origin: string, destination: string): Promise<RouteInfo>;
+}
+```
+
+### 🎨 Componentes del Frontend
+
+#### RouteMap (`components/RouteMap.tsx`)
+
+Visualización interactiva con **Leaflet** y **OpenStreetMap**:
+
+```tsx
+<MapContainer center={center} zoom={7}>
+  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+  
+  {/* Marcadores */}
+  <Marker position={originCoords}><Popup>Origen</Popup></Marker>
+  <Marker position={destCoords}><Popup>Destino</Popup></Marker>
+  
+  {/* Ruta */}
+  {segments.map(segment => (
+    <Polyline 
+      positions={segment.coordinates}
+      color={segment.mode === 'air' ? '#2196F3' : '#FF9800'}
+      dashArray={segment.mode === 'air' ? '15, 15' : undefined}
+    />
+  ))}
+</MapContainer>
+```
+
+**Características visuales:**
+- 📍 Marcadores personalizados para origen y destino
+- 🛤️ Polylines con colores según modo de transporte
+- ✈️ Líneas punteadas para segmentos aéreos
+- 🚛 Líneas sólidas para segmentos terrestres
+- 🔄 Auto-ajuste de zoom para mostrar toda la ruta
+
+### 🔑 Configuración
+
+#### 1. Obtener API Key (Gratuito)
+
+1. Regístrate en [OpenRouteService](https://openrouteservice.org/dev/#/signup)
+2. Crea un nuevo token en el dashboard
+3. Copia tu API Key
+
+#### 2. Variables de Entorno
+
+**Backend** (`logistics-back/.env`):
+```env
+OPENROUTESERVICE_API_KEY=tu_api_key_aqui
+```
+
+**Frontend** (`logistics-front/.env`):
+```env
+VITE_API_BASE_URL=http://localhost:3000/api
+```
+
+### 📊 Patrones de Diseño Aplicados
+
+| Patrón | Ubicación | Propósito |
+|--------|-----------|-----------|
+| **Adapter** | `OpenRouteServiceAdapter` | Adapta API externa a interfaz interna |
+| **Strategy** | Geocodificación | 3 estrategias de fallback |
+| **Cache** | Cache con TTL | Reduce llamadas API |
+| **Interface Segregation** | `IRouteCalculator` | Contrato mínimo |
+| **Dependency Injection** | `QuoteService` | Recibe `routeCalculator` como dependencia |
+
+### 🎯 Uso en la Aplicación
+
+1. **Usuario ingresa origen y destino** en el formulario de cotización
+2. **Backend calcula la ruta** usando OpenRouteService
+3. **Se muestra información de ruta** junto a cada cotización:
+   - Distancia en kilómetros
+   - Tiempo estimado de viaje
+   - Modo de transporte (terrestre/aéreo)
+4. **Usuario puede ver el mapa** con la ruta trazada
+
+### 🔒 Límites y Consideraciones
+
+| Tier | Límite | Costo |
+|------|--------|-------|
+| Gratuito | 2,000 solicitudes/día | $0 |
+| Pro | 50,000 solicitudes/día | Contactar |
+
+**Recomendaciones:**
+- ✅ Usar cache para reducir solicitudes
+- ✅ Validar direcciones antes de geocodificar
+- ✅ Implementar rate limiting si es necesario
+- ✅ Monitorear uso en el dashboard de ORS
+
+### 📚 Referencias
+
+- [OpenRouteService Documentation](https://openrouteservice.org/dev/#/api-docs)
+- [OpenStreetMap](https://www.openstreetmap.org/)
+- [Leaflet Documentation](https://leafletjs.com/reference.html)
+- [React-Leaflet](https://react-leaflet.js.org/)
+
+---
+
 
 ## 🚀 Instalación y Ejecución
 

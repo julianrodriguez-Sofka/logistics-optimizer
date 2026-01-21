@@ -9,11 +9,18 @@
 
 import { IShippingProvider } from '../../domain/interfaces/IShippingProvider';
 import { Quote } from '../../domain/entities/Quote';
+import { IRouteCalculator } from '../../domain/interfaces/IRouteCalculator.js';
 
 
 export abstract class BaseShippingAdapter implements IShippingProvider {
   protected readonly MIN_WEIGHT = 0.1;
   protected readonly MAX_WEIGHT = 1000;
+
+  /**
+   * Optional route calculator for distance-based pricing
+   * If provided, adapters can use real distance calculations
+   */
+  constructor(protected readonly routeCalculator?: IRouteCalculator) {}
 
   protected validateShippingRequest(weight: number, destination: string): void {
 
@@ -27,6 +34,32 @@ export abstract class BaseShippingAdapter implements IShippingProvider {
 
     if (!destination || destination.trim() === '') {
       throw new Error('Destination is required');
+    }
+  }
+
+  /**
+   * Get distance factor based on actual route distance
+   * If routeCalculator is not available, returns default factor of 1.0
+   * 
+   * Distance factors:
+   * - Local (< 100km): 1.0x
+   * - Regional (100-500km): 1.2x
+   * - Nacional (500-1000km): 1.5x
+   * - Larga Distancia (> 1000km): 2.0x
+   */
+  protected async getDistanceFactor(origin: string, destination: string): Promise<number> {
+    if (!this.routeCalculator) {
+      return 1.0; // Default factor if no route calculator
+    }
+
+    try {
+      // Use 'driving-car' profile to avoid OpenRouteService distance limits
+      const routeInfo = await this.routeCalculator.calculateRoute(origin, destination, 'driving-car');
+      return routeInfo.getDistanceFactor();
+    } catch (error) {
+      // If route calculation fails, use default factor
+      console.warn(`Failed to calculate distance factor: ${error}`);
+      return 1.0;
     }
   }
 

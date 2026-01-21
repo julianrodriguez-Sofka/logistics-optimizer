@@ -7,6 +7,16 @@ describe('DHLAdapter', () => {
     adapter = new DHLAdapter();
   });
 
+  // Current DHL pricing configuration:
+  // BASE_PRICE = 20000 COP
+  // MIN_DELIVERY_DAYS = 3
+  // MAX_DELIVERY_DAYS = 5
+  // Weight tiers (from WeightPricingCalculator.getDHLTiers()):
+  //   - 0-5kg: 13000 COP/kg
+  //   - 5-20kg: 10500 COP/kg
+  //   - 20-50kg: 9000 COP/kg
+  //   - 50+kg: 7800 COP/kg
+
   describe('calculateShipping', () => {
     it('should return a Quote with correct structure', async () => {
       const weight = 10;
@@ -20,16 +30,16 @@ describe('DHLAdapter', () => {
       expect(quote.currency).toBe('COP');
       expect(quote.transportMode).toBe('Air');
       expect(quote.price).toBeGreaterThan(0);
-      expect(quote.minDays).toBe(5);
-      expect(quote.maxDays).toBe(8);
+      expect(quote.minDays).toBe(3);
+      expect(quote.maxDays).toBe(5);
     });
 
-    it('should calculate price using dynamic formula: basePrice(8000) + (weightCost × zoneMultiplier)', async () => {
+    it('should calculate price using dynamic formula: basePrice(20000) + (weightCost × zoneMultiplier)', async () => {
       const weight = 10;
       const destination = 'Bogotá'; // Zone 1, multiplier = 1.0
-      // Weight: 10kg @ tier 2 (6000 COP/kg) = 60,000 COP
-      // Price: 8000 + (60000 × 1.0) = 68,000 COP
-      const expectedPrice = 68000;
+      // Weight: 10kg @ tier 2 (10500 COP/kg) = 105,000 COP
+      // Price: 20000 + (105000 × 1.0) = 125,000 COP
+      const expectedPrice = 125000;
 
       const quote = await adapter.calculateShipping(weight, destination);
 
@@ -39,10 +49,10 @@ describe('DHLAdapter', () => {
     it('should calculate correct price for different weights', async () => {
       // All in Zone 1 (multiplier 1.0)
       const testCases = [
-        { weight: 1, expectedPrice: 8000 + (1 * 7500) },     // tier 1: 15,500
-        { weight: 5, expectedPrice: 8000 + (5 * 6000) },     // tier 2: 38,000
-        { weight: 20, expectedPrice: 8000 + (20 * 5000) },   // tier 3: 108,000
-        { weight: 100, expectedPrice: 8000 + (100 * 4500) }, // tier 4: 458,000
+        { weight: 1, expectedPrice: 20000 + (1 * 13000) },     // tier 1: 33,000
+        { weight: 5, expectedPrice: 20000 + (5 * 10500) },     // tier 2: 72,500
+        { weight: 20, expectedPrice: 20000 + (20 * 9000) },    // tier 3: 200,000
+        { weight: 100, expectedPrice: 20000 + (100 * 7800) },  // tier 4: 800,000
       ];
 
       for (const testCase of testCases) {
@@ -51,13 +61,14 @@ describe('DHLAdapter', () => {
       }
     });
 
-    it('should calculate estimatedDays as average of minDays (5) and maxDays (8)', async () => {
+    it('should calculate estimatedDays as average of minDays (3) and maxDays (5)', async () => {
       const weight = 10;
       const destination = 'Bogotá';
 
       const quote = await adapter.calculateShipping(weight, destination);
 
-      expect(quote.estimatedDays).toBe(Math.round((5 + 8) / 2));
+      // (3 + 5) / 2 = 4
+      expect(quote.estimatedDays).toBe(4);
     });
 
     it('should set isCheapest and isFastest to false by default', async () => {
@@ -73,9 +84,9 @@ describe('DHLAdapter', () => {
     it('should handle decimal weights correctly', async () => {
       const weight = 5.5;
       const destination = 'Bogotá'; // Zone 1, multiplier 1.0
-      // 5.5kg @ tier 2 (6000 COP/kg) = 33,000 COP
-      // Price: 8000 + (33000 × 1.0) = 41,000 COP
-      const expectedPrice = 41000;
+      // 5.5kg @ tier 2 (10500 COP/kg) = 57,750 COP
+      // Price: 20000 + (57750 × 1.0) = 77,750 COP
+      const expectedPrice = 77750;
 
       const quote = await adapter.calculateShipping(weight, destination);
 
@@ -112,8 +123,8 @@ describe('DHLAdapter', () => {
     it('should accept weight at minimum boundary (0.1 kg)', async () => {
       const weight = 0.1;
       const destination = 'Bogotá';
-      // 0.1kg @ tier 1 (7500 COP/kg) in Zone 1 (multiplier 1.0)
-      const expectedPrice = 8000 + (weight * 7500 * 1.0); // 8000 + 750 = 8750
+      // 0.1kg @ tier 1 (13000 COP/kg) in Zone 1 (multiplier 1.0)
+      const expectedPrice = 20000 + (weight * 13000 * 1.0); // 20000 + 1300 = 21,300
 
       const quote = await adapter.calculateShipping(weight, destination);
 
@@ -123,8 +134,8 @@ describe('DHLAdapter', () => {
     it('should accept weight at maximum boundary (1000 kg)', async () => {
       const weight = 1000;
       const destination = 'Bogotá';
-      // 1000kg @ tier 4 (4500 COP/kg) in Zone 1 (multiplier 1.0)
-      const expectedPrice = 8000 + (weight * 4500 * 1.0); // 8000 + 4500000 = 4508000
+      // 1000kg @ tier 4 (7800 COP/kg) in Zone 1 (multiplier 1.0)
+      const expectedPrice = 20000 + (weight * 7800 * 1.0); // 20000 + 7800000 = 7,820,000
 
       const quote = await adapter.calculateShipping(weight, destination);
 
