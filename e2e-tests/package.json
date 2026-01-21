@@ -1,0 +1,34 @@
+{
+  "name": "logistics-e2e-tests",
+  "version": "1.0.0",
+  "description": "BDD E2E tests for Logistics Optimizer using Playwright",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:report": "playwright show-report",
+    "test:bdd": "playwright test tests/bdd/",
+    "test:bdd:headed": "playwright test tests/bdd/ --headed",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:regression": "playwright test --grep @regression"
+  },
+  "keywords": [
+    "playwright",
+    "e2e",
+    "bdd",
+    "testing",
+    "logistics"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.41.1",
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.1"
+  }
+}
