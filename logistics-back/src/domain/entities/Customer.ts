@@ -93,7 +93,7 @@ export class Customer {
    */
   private isValidPhone(phone: string): boolean {
     // Remove spaces first
-    const cleanPhone = phone.replace(/\s/g, '');
+    const cleanPhone = phone.replaceAll(/\s/g, '');
     
     // Length check prevents ReDoS (Colombian phone is exactly 10 or 13 digits)
     if (cleanPhone.length < 10 || cleanPhone.length > 13) {
@@ -101,7 +101,7 @@ export class Customer {
     }
     
     // Safe regex: Colombian phone +57XXXXXXXXXX or XXXXXXXXXX
-    const phoneRegex = /^\+?57[0-9]{10}$|^[0-9]{10}$/;
+    const phoneRegex = /^\+?57\d{10}$|^\d{10}$/;
     return phoneRegex.test(cleanPhone);
   }
 

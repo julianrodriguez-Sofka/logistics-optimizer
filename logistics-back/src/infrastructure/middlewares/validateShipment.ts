@@ -73,7 +73,7 @@ const validateEmail = (email: string): string | null => {
 };
 
 const validatePhone = (phone: string): string | null => {
-  if (!phone || !/^(\+57)?[0-9]{10}$/.test(phone.replace(/\s/g, ''))) {
+  if (!phone || !/^(\+57)?\d{10}$/.test(phone.replaceAll(/\s/g, ''))) {
     return 'Valid Colombian phone number is required';
   }
   return null;

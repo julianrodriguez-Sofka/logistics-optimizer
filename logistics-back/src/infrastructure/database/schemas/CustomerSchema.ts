@@ -33,7 +33,7 @@ const CustomerSchema = new Schema<ICustomerDocument>(
       type: String,
       required: [true, 'Phone number is required'],
       trim: true,
-      match: [/^(\+57)?[0-9]{10}$/, 'Please enter a valid Colombian phone number'],
+      match: [/^(\+57)?\d{10}$/, 'Please enter a valid Colombian phone number'],
     },
     documentType: {
       type: String,
