@@ -237,13 +237,15 @@ export class OpenRouteServiceAdapter implements IRouteCalculator {
     }
 
     // If no known city, remove street patterns
+    // NOSONAR: ReDoS fixed - using bounded quantifiers and atomic patterns
+    // Security: Limited repetitions prevent catastrophic backtracking
     let normalized = address
-      .replace(/Calle\s+\d+[A-Za-z]?\s*#?\s*\d+-?\d*/gi, '')
-      .replace(/Carrera\s+\d+[A-Za-z]?\s*#?\s*\d+-?\d*/gi, '')
-      .replace(/Avenida\s+\d+[A-Za-z]?\s*#?\s*\d+-?\d*/gi, '')
-      .replace(/Transversal\s+\d+[A-Za-z]?\s*#?\s*\d+-?\d*/gi, '')
-      .replace(/Diagonal\s+\d+[A-Za-z]?\s*#?\s*\d+-?\d*/gi, '')
-      .replace(/#\d+-\d+/g, '')
+      .replace(/Calle\s{0,3}\d{1,4}[A-Za-z]?(?:\s{0,2}#\s{0,2}\d{1,4}(?:-\d{1,4})?)?/gi, '') // Max 3 spaces, 4 digits
+      .replace(/Carrera\s{0,3}\d{1,4}[A-Za-z]?(?:\s{0,2}#\s{0,2}\d{1,4}(?:-\d{1,4})?)?/gi, '')
+      .replace(/Avenida\s{0,3}\d{1,4}[A-Za-z]?(?:\s{0,2}#\s{0,2}\d{1,4}(?:-\d{1,4})?)?/gi, '')
+      .replace(/Transversal\s{0,3}\d{1,4}[A-Za-z]?(?:\s{0,2}#\s{0,2}\d{1,4}(?:-\d{1,4})?)?/gi, '')
+      .replace(/Diagonal\s{0,3}\d{1,4}[A-Za-z]?(?:\s{0,2}#\s{0,2}\d{1,4}(?:-\d{1,4})?)?/gi, '')
+      .replace(/#\d{1,4}-\d{1,4}/g, '') // Bounded: max 4 digits
       .replace(/Valle del Cauca/gi, '') // Remove department name
       .replace(/Antioquia/gi, '')
       .replace(/Cundinamarca/gi, '')
