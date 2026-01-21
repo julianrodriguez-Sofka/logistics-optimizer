@@ -220,13 +220,19 @@ export class PaymentService {
   /**
    * Generate transaction ID
    */
+  /**
+   * Generate transaction ID
+   * NOSONAR: Math.random() is safe here - transaction IDs are tracked by payment provider (Wompi)
+   * Security: Payment validation happens server-side via Wompi API, NOT based on this ID
+   * This is just a human-readable reference for our internal tracking
+   */
   private generateTransactionId(): string {
     const date = new Date();
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const time = Date.now();
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase(); // NOSONAR
     
     return `TXN-${year}${month}${day}-${time}-${random}`;
   }

@@ -261,9 +261,11 @@ export class MessageQueueService {
 
   /**
    * Generate unique message ID
+   * NOSONAR: Math.random() is safe here - only used for non-cryptographic message tracking IDs
+   * Security: This is NOT used for authentication, tokens, or security-sensitive operations
    */
   private generateMessageId(): string {
-    return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`; // NOSONAR
   }
 
   /**

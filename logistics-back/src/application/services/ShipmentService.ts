@@ -361,8 +361,10 @@ export class ShipmentService {
 
   /**
    * Generate event ID
+   * NOSONAR: Math.random() is safe here - only used for non-cryptographic event tracking IDs
+   * Security: Event IDs are for logging/tracking only, NOT used for authorization
    */
   private generateEventId(): string {
-    return `evt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `evt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`; // NOSONAR
   }
 }
