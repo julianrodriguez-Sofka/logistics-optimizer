@@ -33,16 +33,17 @@ export class WarehousePage extends BasePage {
   constructor(page: Page) {
     super(page);
     
-    // Navigation
-    this.warehouseButton = page.locator('button:has-text("Warehouse"), button:has-text("Almacén")').first();
+    // Navigation - Sidebar.tsx has "Almacén" as the label for warehouse navigation
+    this.warehouseButton = page.locator('button:has-text("Almacén")');
     
     // Search & filters
     this.searchInput = page.locator('input[placeholder*="Buscar" i], input[type="search"]');
     this.statusFilter = page.locator('.status-filter, aside');
     this.allStatusFilter = page.locator('button:has-text("Todos"), button:has-text("ALL")');
     
-    // Shipment cards
-    this.shipmentCards = page.locator('.bg-white.rounded-xl.shadow-lg.border.border-gray-100');
+    // Shipment cards - WarehouseView.tsx ShipmentCard component
+    // class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden..."
+    this.shipmentCards = page.locator('.bg-white.rounded-xl.shadow-lg');
     
     // Actions inside cards
     this.advanceStatusButton = page.locator('button:has-text("Avanzar")');
@@ -69,10 +70,31 @@ export class WarehousePage extends BasePage {
 
   /**
    * Wait for shipment cards to load
+   * Returns true if shipments were found, false if warehouse is empty
    */
-  async waitForShipments(timeout: number = 10000): Promise<void> {
-    await this.shipmentCards.first().waitFor({ state: 'visible', timeout });
-    await this.takeScreenshot('15_shipments_loaded');
+  async waitForShipments(timeout: number = 10000): Promise<boolean> {
+    try {
+      // First wait for the page to load
+      await this.page.waitForLoadState('networkidle', { timeout: timeout });
+      
+      // Check if there are shipments or if we see "No hay envíos"
+      const noShipmentsMessage = this.page.locator('text="No hay envíos"');
+      const hasNoShipments = await noShipmentsMessage.isVisible({ timeout: 2000 }).catch(() => false);
+      
+      if (hasNoShipments) {
+        await this.takeScreenshot('15_warehouse_empty');
+        return false;
+      }
+      
+      // Wait for shipment cards
+      await this.shipmentCards.first().waitFor({ state: 'visible', timeout });
+      await this.takeScreenshot('15_shipments_loaded');
+      return true;
+    } catch {
+      // Could be empty warehouse or slow loading
+      await this.takeScreenshot('15_shipments_timeout');
+      return false;
+    }
   }
 
   /**
@@ -86,7 +108,8 @@ export class WarehousePage extends BasePage {
    * Find shipment card by tracking number
    */
   getShipmentCard(trackingNumber: string): Locator {
-    return this.page.locator(`.bg-white.rounded-xl.shadow-lg:has-text("${trackingNumber}")`).first();
+    // ShipmentCard contains tracking number in p.font-bold.text-gray-800.text-sm
+    return this.page.locator(`div.bg-white.rounded-xl.shadow-lg:has-text("${trackingNumber}")`).first();
   }
 
   /**
@@ -203,7 +226,8 @@ export class WarehousePage extends BasePage {
    */
   async getShipmentStatus(trackingNumber: string): Promise<string> {
     const card = this.getShipmentCard(trackingNumber);
-    const statusBadge = card.locator('.text-xs.px-2.py-1.rounded-full').first();
+    // StatusBadge in WarehouseView.tsx uses "px-3 py-1 rounded-full text-xs font-semibold"
+    const statusBadge = card.locator('span.rounded-full.text-xs.font-semibold').first();
     return await this.getText(statusBadge);
   }
 

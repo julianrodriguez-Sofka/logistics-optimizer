@@ -6,27 +6,39 @@ import { BasePage } from './BasePage';
  * Maneja los 5 pasos del wizard: Direcciones, Cotización, Cliente, Pago, Confirmación
  * 
  * Selectores basados en logistics-front/src/components/ShipmentWizard.tsx
+ * 
+ * NOTA: El formulario ShipmentDetailsForm usa un sistema de tabs/secciones:
+ * - Sección "Remitente" (visible por defecto)
+ * - Sección "Destinatario" (visible después de completar remitente y hacer clic en Continuar)
+ * - Sección "Paquete" (visible después de completar destinatario)
+ * Los campos de cada sección se ocultan al navegar a otra sección.
  */
 export class ShipmentWizardPage extends BasePage {
   // Step indicators
   readonly stepIndicator: Locator;
   
-  // Step 3: Customer/Shipment Details (sender/receiver)
-  readonly senderNameInput: Locator;
-  readonly senderEmailInput: Locator;
-  readonly senderPhoneInput: Locator;
-  readonly senderAddressInput: Locator;
-  readonly senderDocumentTypeSelect: Locator;
-  readonly senderDocumentNumberInput: Locator;
+  // Section tab buttons (for navigating within ShipmentDetailsForm)
+  readonly senderTabButton: Locator;
+  readonly receiverTabButton: Locator;
+  readonly packageTabButton: Locator;
   
-  readonly receiverNameInput: Locator;
-  readonly receiverPhoneInput: Locator;
-  readonly receiverAddressInput: Locator;
+  // Step 3: Customer/Shipment Details - Fields are the same for sender/receiver
+  // but only visible one section at a time
+  readonly nameInput: Locator;
+  readonly emailInput: Locator;
+  readonly phoneInput: Locator;
+  readonly addressInput: Locator;
+  readonly documentTypeSelect: Locator;
+  readonly documentNumberInput: Locator;
   
   readonly packageDescriptionTextarea: Locator;
   
-  readonly continueButton: Locator;
-  readonly backButton: Locator;
+  // Section continue buttons (inside each section)
+  readonly sectionContinueButton: Locator;
+  readonly sectionBackButton: Locator;
+  
+  // Main form submit button
+  readonly submitFormButton: Locator;
   
   // Step 4: Payment
   readonly cardPaymentButton: Locator;
@@ -50,45 +62,51 @@ export class ShipmentWizardPage extends BasePage {
     // Step indicator
     this.stepIndicator = page.locator('.step-indicator, [class*="step"]');
     
-    // Step 3: Customer Details - Sender fields
-    this.senderNameInput = page.locator('input[name="name"], input[placeholder*="Nombre completo"]').first();
-    this.senderEmailInput = page.locator('input[name="email"], input[type="email"]').first();
-    this.senderPhoneInput = page.locator('input[name="phone"], input[type="tel"]').first();
-    this.senderAddressInput = page.locator('input[name="address"], textarea[name="address"]').first();
-    this.senderDocumentTypeSelect = page.locator('select[name="documentType"]').first();
-    this.senderDocumentNumberInput = page.locator('input[name="documentNumber"]').first();
+    // Section tabs in ShipmentDetailsForm
+    this.senderTabButton = page.locator('button:has-text("Remitente")');
+    this.receiverTabButton = page.locator('button:has-text("Destinatario")');
+    this.packageTabButton = page.locator('button:has-text("Paquete")');
     
-    // Receiver fields
-    this.receiverNameInput = page.locator('input[name="name"], input[placeholder*="Nombre"]').nth(1);
-    this.receiverPhoneInput = page.locator('input[name="phone"], input[type="tel"]').nth(1);
-    this.receiverAddressInput = page.locator('input[name="address"], textarea[name="address"]').nth(1);
+    // Form fields - These are used for the currently visible section
+    // Only one section's fields are visible at a time
+    this.nameInput = page.locator('input[name="name"]:visible');
+    this.emailInput = page.locator('input[name="email"]:visible');
+    this.phoneInput = page.locator('input[name="phone"]:visible');
+    this.addressInput = page.locator('input[name="address"]:visible');
+    this.documentTypeSelect = page.locator('select[name="documentType"]:visible');
+    this.documentNumberInput = page.locator('input[name="documentNumber"]:visible');
     
-    // Package description
-    this.packageDescriptionTextarea = page.locator('textarea[name="packageDescription"], textarea[placeholder*="Descripción"]');
+    // Package description (only in package section)
+    this.packageDescriptionTextarea = page.locator('textarea[name="packageDescription"]');
     
-    // Navigation buttons
-    this.continueButton = page.locator('button:has-text("Continuar"), button:has-text("Continue"), button[type="submit"]');
-    this.backButton = page.locator('button:has-text("Atrás"), button:has-text("Back")');
+    // Section navigation buttons
+    this.sectionContinueButton = page.locator('button:has-text("Continuar"):visible').first();
+    this.sectionBackButton = page.locator('button:has-text("Volver"):visible').first();
     
-    // Step 4: Payment
-    this.cardPaymentButton = page.locator('button:has-text("Tarjeta"), label:has-text("Tarjeta")');
-    this.cashPaymentButton = page.locator('button:has-text("Efectivo"), label:has-text("Efectivo")');
+    // Main submit button at bottom
+    this.submitFormButton = page.locator('button:has-text("Continuar al Pago")');
     
-    this.cardNumberInput = page.locator('input[name="cardNumber"], input[placeholder*="número de tarjeta"]');
-    this.cardHolderInput = page.locator('input[name="cardHolderName"], input[placeholder*="titular"]');
-    this.expiryDateInput = page.locator('input[name="expirationDate"], input[placeholder*="MM/AA"]');
-    this.cvvInput = page.locator('input[name="cvv"], input[placeholder*="CVV"]');
+    // Step 4: Payment - PaymentForm.tsx uses these exact texts and names
+    this.cardPaymentButton = page.locator('button:has-text("💳 Tarjeta")');
+    this.cashPaymentButton = page.locator('button:has-text("💵 Efectivo")');
     
-    this.submitPaymentButton = page.locator('button:has-text("Confirmar"), button:has-text("Pagar"), button[type="submit"]');
+    this.cardNumberInput = page.locator('input[name="cardNumber"]');
+    this.cardHolderInput = page.locator('input[name="cardHolderName"]');
+    this.expiryDateInput = page.locator('input[name="expirationDate"]');
+    this.cvvInput = page.locator('input[name="cvv"]');
     
-    // Step 5: Confirmation
-    this.trackingNumber = page.locator('p:has-text("#"), .tracking-number, [class*="tracking"]');
-    this.downloadInvoiceButton = page.locator('button:has-text("Descargar"), button:has-text("Factura")');
-    this.goToWarehouseButton = page.locator('button:has-text("Almacén"), button:has-text("Warehouse")');
+    this.submitPaymentButton = page.locator('button:has-text("Confirmar Pago")');
+    
+    // Step 5: Confirmation - ShipmentWizard.tsx shows tracking number in a blue text
+    // The tracking number is displayed as: <p className="text-4xl font-bold text-blue-600 mb-4">{createdShipment.trackingNumber}</p>
+    this.trackingNumber = page.locator('p.text-4xl.font-bold.text-blue-600, p:has-text("LOG-")');
+    this.downloadInvoiceButton = page.locator('button:has-text("Imprimir Comprobante")');
+    this.goToWarehouseButton = page.locator('button:has-text("Crear Otro Envío")');
   }
 
   /**
    * Fill customer details (Step 3: Sender information)
+   * This fills the sender section which is visible by default
    */
   async fillSenderDetails(data: {
     name: string;
@@ -98,42 +116,75 @@ export class ShipmentWizardPage extends BasePage {
     documentType?: string;
     documentNumber: string;
   }): Promise<void> {
-    await this.fill(this.senderNameInput, data.name);
+    // Ensure we're on the sender section
+    await this.page.waitForTimeout(500);
+    
+    // Fill visible fields in sender section
+    await this.fill(this.nameInput, data.name);
     await this.takeScreenshot('wizard_01_sender_name_filled');
     
-    await this.fill(this.senderEmailInput, data.email);
+    await this.fill(this.emailInput, data.email);
     await this.takeScreenshot('wizard_02_sender_email_filled');
     
-    await this.fill(this.senderPhoneInput, data.phone);
+    await this.fill(this.phoneInput, data.phone);
     await this.takeScreenshot('wizard_03_sender_phone_filled');
     
-    await this.fill(this.senderAddressInput, data.address);
+    await this.fill(this.addressInput, data.address);
     await this.takeScreenshot('wizard_04_sender_address_filled');
     
     if (data.documentType) {
-      await this.senderDocumentTypeSelect.selectOption(data.documentType);
+      await this.documentTypeSelect.selectOption(data.documentType);
     }
     
-    await this.fill(this.senderDocumentNumberInput, data.documentNumber);
+    await this.fill(this.documentNumberInput, data.documentNumber);
     await this.takeScreenshot('wizard_05_sender_document_filled');
   }
 
   /**
+   * Navigate from sender to receiver section by clicking on Destinatario tab
+   */
+  async navigateToReceiverSection(): Promise<void> {
+    // Click the "Destinatario" tab button to switch to receiver section
+    await this.receiverTabButton.click();
+    await this.page.waitForTimeout(1000);
+    await this.takeScreenshot('wizard_05b_navigated_to_receiver');
+  }
+
+  /**
    * Fill receiver details (Step 3: Receiver information)
+   * Must be called after navigating to receiver section
    */
   async fillReceiverDetails(data: {
     name: string;
     phone: string;
     address: string;
   }): Promise<void> {
-    await this.fill(this.receiverNameInput, data.name);
+    // Wait for receiver section to be active
+    await this.page.waitForTimeout(500);
+    
+    // Get the receiver section's visible input fields
+    const receiverNameInput = this.page.locator('input[name="name"]').last();
+    const receiverPhoneInput = this.page.locator('input[name="phone"]').last();
+    const receiverAddressInput = this.page.locator('input[name="address"]').last();
+    
+    await receiverNameInput.fill(data.name);
     await this.takeScreenshot('wizard_06_receiver_name_filled');
     
-    await this.fill(this.receiverPhoneInput, data.phone);
+    await receiverPhoneInput.fill(data.phone);
     await this.takeScreenshot('wizard_07_receiver_phone_filled');
     
-    await this.fill(this.receiverAddressInput, data.address);
+    await receiverAddressInput.fill(data.address);
     await this.takeScreenshot('wizard_08_receiver_address_filled');
+  }
+
+  /**
+   * Navigate from receiver to package section by clicking on Paquete tab
+   */
+  async navigateToPackageSection(): Promise<void> {
+    // Click the "Paquete" tab button to switch to package section
+    await this.packageTabButton.click();
+    await this.page.waitForTimeout(1000);
+    await this.takeScreenshot('wizard_08b_navigated_to_package');
   }
 
   /**
@@ -146,6 +197,7 @@ export class ShipmentWizardPage extends BasePage {
 
   /**
    * Complete customer details step (Step 3)
+   * This navigates through all three sections: Sender → Receiver → Package
    */
   async completeCustomerDetails(data: {
     sender: {
@@ -162,14 +214,25 @@ export class ShipmentWizardPage extends BasePage {
     };
     packageDescription?: string;
   }): Promise<void> {
+    // Step 3a: Fill sender details (sender section is visible by default)
     await this.fillSenderDetails(data.sender);
+    
+    // Navigate to receiver section
+    await this.navigateToReceiverSection();
+    
+    // Step 3b: Fill receiver details
     await this.fillReceiverDetails(data.receiver);
     
+    // Navigate to package section
+    await this.navigateToPackageSection();
+    
+    // Step 3c: Fill package description (optional)
     if (data.packageDescription) {
       await this.fillPackageDescription(data.packageDescription);
     }
     
-    await this.click(this.continueButton.first());
+    // Submit the form to continue to payment
+    await this.click(this.submitFormButton);
     await this.page.waitForTimeout(1000);
     await this.takeScreenshot('wizard_10_customer_details_submitted');
   }
@@ -183,27 +246,34 @@ export class ShipmentWizardPage extends BasePage {
     expiryDate: string;
     cvv: string;
   }): Promise<void> {
+    // Wait for payment form to be visible
+    await this.page.waitForTimeout(500);
+    
     if (method === 'CARD') {
-      // Select card payment
-      await this.click(this.cardPaymentButton.first());
+      // Card is selected by default, but click to ensure
+      await this.cardPaymentButton.click();
       await this.takeScreenshot('wizard_11_card_payment_selected');
       
       if (cardData) {
-        await this.fill(this.cardNumberInput, cardData.cardNumber);
-        await this.fill(this.cardHolderInput, cardData.cardHolder);
-        await this.fill(this.expiryDateInput, cardData.expiryDate);
-        await this.fill(this.cvvInput, cardData.cvv);
+        // Fill card details - PaymentForm formats the card number with spaces
+        await this.cardNumberInput.fill(cardData.cardNumber);
+        await this.cardHolderInput.fill(cardData.cardHolder);
+        await this.expiryDateInput.fill(cardData.expiryDate);
+        await this.cvvInput.fill(cardData.cvv);
         await this.takeScreenshot('wizard_12_card_details_filled');
       }
     } else {
       // Select cash payment
-      await this.click(this.cashPaymentButton.first());
+      await this.cashPaymentButton.click();
       await this.takeScreenshot('wizard_11_cash_payment_selected');
     }
     
+    // Wait a bit for validation
+    await this.page.waitForTimeout(500);
+    
     // Submit payment
-    await this.click(this.submitPaymentButton.first());
-    await this.page.waitForTimeout(3000); // Wait for payment processing animation
+    await this.submitPaymentButton.click();
+    await this.page.waitForTimeout(5000); // Wait for payment processing animation
     await this.takeScreenshot('wizard_13_payment_submitted');
   }
 
@@ -211,10 +281,17 @@ export class ShipmentWizardPage extends BasePage {
    * Get tracking number from confirmation page (Step 5)
    */
   async getTrackingNumber(): Promise<string> {
-    await this.page.waitForTimeout(2000); // Wait for confirmation page
-    const trackingText = await this.getText(this.trackingNumber.first());
+    // Wait for confirmation page to show the tracking number
+    await this.page.waitForTimeout(3000);
+    
+    // Try to find the tracking number element
+    const trackingElement = this.page.locator('p.text-4xl.font-bold.text-blue-600').first();
+    await trackingElement.waitFor({ state: 'visible', timeout: 10000 });
+    
+    const trackingText = await trackingElement.textContent();
     await this.takeScreenshot('wizard_14_confirmation_tracking_number');
-    return trackingText.replace('#', '').trim();
+    
+    return (trackingText || '').trim();
   }
 
   /**
