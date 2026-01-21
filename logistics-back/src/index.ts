@@ -9,42 +9,50 @@ import { MessageQueueService } from './infrastructure/messaging/MessageQueueServ
 import { WebSocketService } from './infrastructure/websocket/WebSocketService';
 
 const PORT = process.env.PORT || 3000;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
-// Wait for MongoDB connection before starting server
-// Use admin:adminpassword for local development with authentication
-const mongoUri = process.env.MONGODB_URI || 'mongodb://admin:adminpassword@localhost:27017/logistics-optimizer?authSource=admin';
-const rabbitmqUri = process.env.RABBITMQ_URI || 'amqp://guest:guest@localhost:5672';
+// Environment variables validation
+if (!process.env.MONGODB_URI) {
+  throw new Error('MONGODB_URI environment variable is required');
+}
+if (!process.env.RABBITMQ_URI) {
+  throw new Error('RABBITMQ_URI environment variable is required');
+}
+
+const mongoUri = process.env.MONGODB_URI;
+const rabbitmqUri = process.env.RABBITMQ_URI;
 
 async function startServer() {
-  // Validate critical environment variables
-  const requiredEnvVars = ['OPENROUTESERVICE_API_KEY'];
-  const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+  // Validate optional environment variables
+  const optionalEnvVars = ['OPENROUTESERVICE_API_KEY'];
+  const missingVars = optionalEnvVars.filter(varName => !process.env[varName]);
   
-  if (missingVars.length > 0) {
+  if (missingVars.length > 0 && !IS_PRODUCTION) {
     console.warn(`⚠️  Missing optional environment variables: ${missingVars.join(', ')}`);
     console.warn('   Some features may not work correctly without these variables.');
   }
 
   try {
     // Step 1: Connect to MongoDB
-    console.log('🔌 Connecting to MongoDB...');
+    if (!IS_PRODUCTION) console.log('🔌 Connecting to MongoDB...');
     await MongoDBConnection.getInstance().connect(mongoUri);
-    console.log(' MongoDB connected - quotes will be cached');
+    if (!IS_PRODUCTION) console.log(' MongoDB connected - quotes will be cached');
   } catch (error) {
-    console.warn('⚠️  MongoDB connection failed - running without caching');
+    console.error('MongoDB connection failed:', IS_PRODUCTION ? 'Check configuration' : error);
+    throw error; // Don't continue without database
   }
 
   // Step 2: Connect to RabbitMQ (optional, won't block startup)
   try {
-    console.log('🐰 Connecting to RabbitMQ...');
+    if (!IS_PRODUCTION) console.log('🐰 Connecting to RabbitMQ...');
     const rabbitMQ = RabbitMQConnection.getInstance();
     await rabbitMQ.connect(rabbitmqUri);
     
     const messageQueue = MessageQueueService.getInstance();
     await messageQueue.initialize();
-    console.log(' RabbitMQ connected - message queuing enabled');
+    if (!IS_PRODUCTION) console.log(' RabbitMQ connected - message queuing enabled');
   } catch (error) {
-    console.warn('⚠️  RabbitMQ connection failed - running without message queuing');
+    console.warn('RabbitMQ connection failed - message queuing disabled');
   }
 
   // Step 3: Initialize routes
@@ -56,19 +64,23 @@ async function startServer() {
   try {
     const webSocketService = WebSocketService.getInstance();
     webSocketService.initialize(httpServer);
-    console.log(' WebSocket service initialized - real-time updates enabled');
+    if (!IS_PRODUCTION) console.log(' WebSocket service initialized - real-time updates enabled');
   } catch (error) {
-    console.warn('⚠️  WebSocket initialization failed - running without real-time updates');
+    console.warn('WebSocket initialization failed - real-time updates disabled');
   }
 
   // Step 5: Start server
   httpServer.listen(PORT, () => {
-    console.log(`🚀 Logistics Backend running on http://localhost:${PORT}`);
-    console.log(`📦 API endpoint: http://localhost:${PORT}/api/quotes`);
-    console.log(`📮 Shipments API: http://localhost:${PORT}/api/shipments`);
-    console.log(`👤 Customers API: http://localhost:${PORT}/api/customers`);
-    console.log(`❤️  Health check: http://localhost:${PORT}/health`);
-    console.log(`🔧 Adapter status: http://localhost:${PORT}/api/adapters/status`);
+    if (!IS_PRODUCTION) {
+      console.log(`🚀 Logistics Backend running on http://localhost:${PORT}`);
+      console.log(`📦 API endpoint: http://localhost:${PORT}/api/quotes`);
+      console.log(`📮 Shipments API: http://localhost:${PORT}/api/shipments`);
+      console.log(`👤 Customers API: http://localhost:${PORT}/api/customers`);
+      console.log(`❤️  Health check: http://localhost:${PORT}/health`);
+      console.log(`🔧 Adapter status: http://localhost:${PORT}/api/adapters/status`);
+    } else {
+      console.log(`Server started on port ${PORT}`);
+    }
   });
 
   // Graceful shutdown

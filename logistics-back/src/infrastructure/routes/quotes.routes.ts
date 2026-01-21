@@ -12,7 +12,8 @@ import { MongoDBConnection } from '../database/connection.js';
 import { validateQuoteRequest } from '../middlewares/validateQuoteRequest.js';
 import { quoteLimiter } from '../middlewares/rateLimiter.js';
 
-console.log('🔧 Initializing quote routes...');
+const IS_DEV = process.env.NODE_ENV !== 'production';
+if (IS_DEV) console.log('🔧 Initializing quote routes...');
 
 // Initialize adapters
 const fedexAdapter = new FedExAdapter();
@@ -22,13 +23,13 @@ const localAdapter = new LocalAdapter();
 // Initialize repository only if MongoDB is connected
 let quoteRepository;
 const isConnected = MongoDBConnection.getInstance().isMongoConnected();
-console.log('📊 MongoDB connection status at route init:', isConnected);
+if (IS_DEV) console.log('📊 MongoDB connection status at route init:', isConnected);
 
 if (isConnected) {
   quoteRepository = new QuoteRepository();
-  console.log(' Quote repository initialized with MongoDB');
+  if (IS_DEV) console.log(' Quote repository initialized with MongoDB');
 } else {
-  console.warn('⚠️  Running without quote repository (MongoDB not connected)');
+  if (IS_DEV) console.warn('⚠️  Running without quote repository (MongoDB not connected)');
 }
 
 // Initialize OpenRouteService adapter (Free alternative to Google Maps)
@@ -38,12 +39,16 @@ const openRouteServiceKey = process.env.OPENROUTESERVICE_API_KEY;
 if (openRouteServiceKey && openRouteServiceKey !== 'your_openrouteservice_api_key_here') {
   routeCalculator = new OpenRouteServiceAdapter(openRouteServiceKey);
   multiModalCalculator = new MultiModalRouteAdapter(openRouteServiceKey);
-  console.log('🗺️  OpenRouteService adapter initialized (Free - 2000 requests/day)');
-  console.log('✈️  Multi-Modal adapter initialized (Air + Ground routes)');
+  if (IS_DEV) {
+    console.log('🗺️  OpenRouteService adapter initialized (Free - 2000 requests/day)');
+    console.log('✈️  Multi-Modal adapter initialized (Air + Ground routes)');
+  }
 } else {
-  console.warn('⚠️  Running without route calculation (API key not configured)');
-  console.warn('   Set OPENROUTESERVICE_API_KEY in .env to enable route calculation');
-  console.warn('   Get free API key at: https://openrouteservice.org/dev/#/signup');
+  if (IS_DEV) {
+    console.warn('⚠️  Running without route calculation (API key not configured)');
+    console.warn('   Set OPENROUTESERVICE_API_KEY in .env to enable route calculation');
+    console.warn('   Get free API key at: https://openrouteservice.org/dev/#/signup');
+  }
 }
 
 const quoteService = new QuoteService(
