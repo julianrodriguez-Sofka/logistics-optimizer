@@ -9,6 +9,7 @@
     "test:ui": "playwright test --ui",
     "test:debug": "playwright test --debug",
     "test:report": "playwright show-report",
+    "test:report-open": "start playwright-report/index.html",
     "test:bdd": "playwright test tests/bdd/",
     "test:bdd:headed": "playwright test tests/bdd/ --headed",
     "test:smoke": "playwright test --grep @smoke",
