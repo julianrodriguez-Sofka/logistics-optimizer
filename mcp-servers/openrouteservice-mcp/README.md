@@ -245,7 +245,7 @@ Luego envía (stdin):
 
 El backend usa `GoogleMapsAdapter` que consume directamente la API de Google Maps:
 
-- **Ubicación**: `logistics-back/src/infrastructure/adapters/GoogleMapsAdapter.ts`
+- **Ubicación**: [logistics-back/src/infrastructure/adapters/GoogleMapsAdapter.ts](../../logistics-back/src/infrastructure/adapters/GoogleMapsAdapter.ts)
 - **Servicio**: Integrado en `QuoteService`
 - **Configuración**: `.env` en `logistics-back/`
 

@@ -241,10 +241,10 @@ El ejercicio sugiere *Adapter* porque en un contexto real con APIs externas de F
 -  **Mantenimiento:** Cambios en validaciones en un solo lugar
 -  **Extensibilidad:** Fácil agregar nuevos providers
 
-**Ubicación:**
-- Clase template base: `infrastructure/adapters/BaseShippingAdapter.ts`
-- Interfaz: `domain/interfaces/IShippingProvider.ts`
-- Implementaciones concretas: `infrastructure/adapters/{FedEx,DHL,Local}Adapter.ts`
+- **Ubicación:**
+- Clase template base: [logistics-back/src/infrastructure/adapters/BaseShippingAdapter.ts](logistics-back/src/infrastructure/adapters/BaseShippingAdapter.ts)
+- Interfaz: [logistics-back/src/domain/interfaces/IShippingProvider.ts](logistics-back/src/domain/interfaces/IShippingProvider.ts)
+- Implementaciones concretas: [logistics-back/src/infrastructure/adapters/FedExAdapter.ts](logistics-back/src/infrastructure/adapters/FedExAdapter.ts), [logistics-back/src/infrastructure/adapters/DHLAdapter.ts](logistics-back/src/infrastructure/adapters/DHLAdapter.ts), [logistics-back/src/infrastructure/adapters/LocalAdapter.ts](logistics-back/src/infrastructure/adapters/LocalAdapter.ts)
 
 ---
 
@@ -265,8 +265,8 @@ interface IQuoteRepository {
 -  Cache transparente con TTL
 
 **Ubicación:** 
-- Interfaz: `domain/interfaces/IQuoteRepository.ts`
-- Implementación: `infrastructure/database/repositories/`
+- Interfaz: [logistics-back/src/domain/interfaces/IQuoteRepository.ts](logistics-back/src/domain/interfaces/IQuoteRepository.ts)
+- Implementación: [logistics-back/src/infrastructure/database/repositories/](logistics-back/src/infrastructure/database/repositories/)
 
 ---
 
@@ -315,7 +315,7 @@ class DatabaseService {
 -  Ahorro de recursos
 -  Estado centralizado
 
-**Ubicación:** `logistics-back/src/infrastructure/database/DatabaseService.ts`
+**Ubicación:** [logistics-back/src/infrastructure/database/DatabaseService.ts](logistics-back/src/infrastructure/database/DatabaseService.ts)
 
 ---
 
@@ -387,7 +387,7 @@ El proyecto utiliza **OpenRouteService** como proveedor de mapas y cálculo de r
 
 ### 🔧 Componentes del Backend
 
-#### OpenRouteServiceAdapter (`infrastructure/adapters/OpenRouteServiceAdapter.ts`)
+#### OpenRouteServiceAdapter ([logistics-back/src/infrastructure/adapters/OpenRouteServiceAdapter.ts](logistics-back/src/infrastructure/adapters/OpenRouteServiceAdapter.ts))
 
 Implementa la interfaz `IRouteCalculator` para el cálculo de rutas:
 
@@ -428,7 +428,7 @@ private async geocode(address: string) {
 }
 ```
 
-#### MultiModalRouteAdapter (`infrastructure/adapters/MultiModalRouteAdapter.ts`)
+#### MultiModalRouteAdapter ([logistics-back/src/infrastructure/adapters/MultiModalRouteAdapter.ts](logistics-back/src/infrastructure/adapters/MultiModalRouteAdapter.ts))
 
 Calcula rutas multi-modales (avión + camión):
 

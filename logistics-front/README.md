@@ -83,13 +83,13 @@ logistics-front/
 
 | Patrón | Implementación | Archivo |
 |--------|----------------|---------|
-| **Singleton** | ShipmentStateService - única instancia gestiona todo el estado | `ShipmentStateService.ts` |
-| **Observer** | Suscripción a cambios de estado de envíos | `ShipmentStateService.ts` |
-| **Repository** | Abstracción de persistencia en localStorage | `ShipmentStateService.ts` |
-| **State Machine** | Flujo de estados del procesamiento de pago | `PaymentProcessingModal.tsx` |
-| **Container/Presentational** | Separación de lógica y UI en WarehouseView | `WarehouseView.tsx` |
-| **Strategy** | Diferentes estrategias de transición de estado | `ShipmentStateService.ts` |
-| **Adapter** | Transformación de datos API a modelo interno | `shipmentService.ts` |
+| **Singleton** | ShipmentStateService - única instancia gestiona todo el estado | [logistics-front/src/services/ShipmentStateService.ts](logistics-front/src/services/ShipmentStateService.ts) |
+| **Observer** | Suscripción a cambios de estado de envíos | [logistics-front/src/services/ShipmentStateService.ts](logistics-front/src/services/ShipmentStateService.ts) |
+| **Repository** | Abstracción de persistencia en localStorage | [logistics-front/src/services/ShipmentStateService.ts](logistics-front/src/services/ShipmentStateService.ts) |
+| **State Machine** | Flujo de estados del procesamiento de pago | [logistics-front/src/components/PaymentProcessingModal.tsx](logistics-front/src/components/PaymentProcessingModal.tsx) |
+| **Container/Presentational** | Separación de lógica y UI en WarehouseView | [logistics-front/src/components/WarehouseView.tsx](logistics-front/src/components/WarehouseView.tsx) |
+| **Strategy** | Diferentes estrategias de transición de estado | [logistics-front/src/services/ShipmentStateService.ts](logistics-front/src/services/ShipmentStateService.ts) |
+| **Adapter** | Transformación de datos API a modelo interno | [logistics-front/src/services/shipmentService.ts](logistics-front/src/services/shipmentService.ts) |
 
 ---
 
@@ -165,8 +165,8 @@ npm run test:coverage
 ```
 
 ### Tests Implementados:
-- `ShipmentStateService.test.ts` - 33 tests (Singleton, Observer, Status Flow)
-- `shipmentService.test.ts` - 18 tests (API integration, data transformation)
+- [logistics-front/src/__tests__/ShipmentStateService.test.ts](logistics-front/src/__tests__/ShipmentStateService.test.ts) - 33 tests (Singleton, Observer, Status Flow)
+- [logistics-front/src/__tests__/shipmentService.test.ts](logistics-front/src/__tests__/shipmentService.test.ts) - 18 tests (API integration, data transformation)
 - `PaymentProcessingModal.test.tsx` - Tests de UI y animaciones
 - `WarehouseView.test.tsx` - Tests de integración
 
