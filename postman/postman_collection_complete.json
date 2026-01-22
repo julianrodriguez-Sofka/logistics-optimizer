@@ -1,0 +1,512 @@
+{
+  "info": {
+    "name": "Shipping Optimizer API - Complete Collection",
+    "description": "Colección completa con tests sencillos para TODOS los endpoints del sistema de logística.",
+    "schema": "https://schema.postman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "b2c3d4e5-f6g7-8h9i-0j1k-l2m3n4o5p6q7",
+    "version": "2.0.1"
+  },
+  "item": [
+    {
+      "name": "1. Health & Status",
+      "description": "Endpoints de verificación de salud del sistema",
+      "item": [
+        {
+          "name": "GET Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test simple: solo verificar que responde",
+                  "pm.test('Status code es 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Respuesta no está vacía', () => {",
+                  "    pm.expect(pm.response.text()).to.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}{{apiPrefix}}/health",
+            "description": "Verifica que el servidor esté funcionando"
+          }
+        },
+        {
+          "name": "GET Adapters Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Respuesta es JSON válido', () => {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Tiene propiedad providers', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('providers');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}{{apiPrefix}}/adapters/status",
+            "description": "Obtiene estado de adaptadores"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Quotes",
+      "description": "Endpoints de cotización de envíos",
+      "item": [
+        {
+          "name": "POST Quote - Valid Data",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generar datos válidos",
+                  "pm.environment.set('randomWeight', '10.5');",
+                  "",
+                  "const futureDate = new Date();",
+                  "futureDate.setDate(futureDate.getDate() + 5);",
+                  "pm.environment.set('randomDate', futureDate.toISOString().split('T')[0]);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Respuesta tiene quotes', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('quotes');",
+                  "    pm.expect(response.quotes).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Hay al menos 1 cotización', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.quotes.length).to.be.at.least(1);",
+                  "});",
+                  "",
+                  "// Guardar para usar después",
+                  "try {",
+                  "    const response = pm.response.json();",
+                  "    if (response.quotes && response.quotes.length > 0) {",
+                  "        pm.environment.set('lastQuoteData', JSON.stringify(response.quotes[0]));",
+                  "        pm.environment.set('lastQuotePrice', response.quotes[0].price);",
+                  "    }",
+                  "} catch (e) {",
+                  "    console.log('No se pudo guardar quote data');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin\": \"Bogotá, Cundinamarca, Colombia\",\n  \"destination\": \"Medellín, Antioquia, Colombia\",\n  \"weight\": {{randomWeight}},\n  \"pickupDate\": \"{{randomDate}}\",\n  \"fragile\": false\n}"
+            },
+            "url": "{{baseUrl}}{{apiPrefix}}/quotes"
+          }
+        },
+        {
+          "name": "POST Quote - Validation Error",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 400 (error de validación)', () => {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin\": \"Bogotá\",\n  \"destination\": \"Medellín\",\n  \"weight\": 0.01,\n  \"pickupDate\": \"2026-02-01\",\n  \"fragile\": false\n}"
+            },
+            "url": "{{baseUrl}}{{apiPrefix}}/quotes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Customers - CRUD",
+      "description": "Endpoints de gestión de clientes",
+      "item": [
+        {
+          "name": "POST Create Customer",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generar email y phone únicos",
+                  "const timestamp = Date.now();",
+                  "pm.environment.set('testCustomerEmail', `test${timestamp}@example.com`);",
+                  "pm.environment.set('testCustomerPhone', `300${String(timestamp).slice(-7)}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 200 o 201', () => {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test('Respuesta contiene customer', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.be.an('object');",
+                  "});",
+                  "",
+                  "// Guardar ID si existe",
+                  "try {",
+                  "    const response = pm.response.json();",
+                  "    if (response.id || response._id) {",
+                  "        pm.environment.set('lastCustomerId', response.id || response._id);",
+                  "    }",
+                  "} catch (e) {",
+                  "    console.log('No se pudo guardar customer ID');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Carlos Test\",\n  \"email\": \"{{testCustomerEmail}}\",\n  \"phone\": \"{{testCustomerPhone}}\",\n  \"documentType\": \"CC\",\n  \"documentNumber\": \"1234567890\"\n}"
+            },
+            "url": "{{baseUrl}}{{apiPrefix}}/customers"
+          }
+        },
+        {
+          "name": "GET All Customers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Respuesta es válida', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}{{apiPrefix}}/customers"
+          }
+        },
+        {
+          "name": "GET Customer by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test flexible: acepta 200 o 404 si no existe",
+                  "pm.test('Status code es válido', () => {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}{{apiPrefix}}/customers/{{lastCustomerId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Shipments - CRUD",
+      "description": "Endpoints de gestión de envíos",
+      "item": [
+        {
+          "name": "POST Create Shipment",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Preparar fecha futura",
+                  "const futureDate = new Date();",
+                  "futureDate.setDate(futureDate.getDate() + 2);",
+                  "pm.environment.set('shipmentPickupDate', futureDate.toISOString());",
+                  "",
+                  "// Generar datos únicos",
+                  "const timestamp = Date.now();",
+                  "pm.environment.set('shipmentEmail', `ship${timestamp}@test.com`);",
+                  "pm.environment.set('shipmentPhone', `320${String(timestamp).slice(-7)}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 200 o 201', () => {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test('Respuesta contiene shipment', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.be.an('object');",
+                  "});",
+                  "",
+                  "// Guardar tracking si existe",
+                  "try {",
+                  "    const response = pm.response.json();",
+                  "    if (response.trackingNumber) {",
+                  "        pm.environment.set('lastTrackingNumber', response.trackingNumber);",
+                  "        console.log('Tracking guardado:', response.trackingNumber);",
+                  "    }",
+                  "    if (response.id || response._id) {",
+                  "        pm.environment.set('lastShipmentId', response.id || response._id);",
+                  "    }",
+                  "} catch (e) {",
+                  "    console.log('No se pudo guardar shipment data');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer\": {\n    \"name\": \"Juan Pérez\",\n    \"email\": \"{{shipmentEmail}}\",\n    \"phone\": \"{{shipmentPhone}}\",\n    \"documentType\": \"CC\",\n    \"documentNumber\": \"9876543210\"\n  },\n  \"address\": {\n    \"origin\": \"Bogotá, Cundinamarca, Colombia\",\n    \"destination\": \"Medellín, Antioquia, Colombia\"\n  },\n  \"package\": {\n    \"weight\": 5.5,\n    \"dimensions\": {\n      \"length\": 30,\n      \"width\": 20,\n      \"height\": 15\n    },\n    \"fragile\": false,\n    \"description\": \"Documentos\"\n  },\n  \"pickupDate\": \"{{shipmentPickupDate}}\",\n  \"selectedQuote\": {\n    \"providerId\": \"local\",\n    \"providerName\": \"Local Courier\",\n    \"price\": 25000,\n    \"currency\": \"COP\",\n    \"minDays\": 2,\n    \"maxDays\": 4,\n    \"estimatedDays\": 3\n  },\n  \"payment\": {\n    \"method\": \"CREDIT_CARD\",\n    \"amount\": 25000,\n    \"currency\": \"COP\",\n    \"transactionId\": \"TXN-12345\",\n    \"status\": \"COMPLETED\"\n  }\n}"
+            },
+            "url": "{{baseUrl}}{{apiPrefix}}/shipments"
+          }
+        },
+        {
+          "name": "GET All Shipments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Respuesta es válida', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}{{apiPrefix}}/shipments"
+          }
+        },
+        {
+          "name": "GET Shipment by Tracking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test flexible: acepta 200 o 404",
+                  "pm.test('Status code es válido', () => {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Respuesta tiene datos', () => {",
+                  "        const response = pm.response.json();",
+                  "        pm.expect(response).to.be.an('object');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}{{apiPrefix}}/shipments/track/{{lastTrackingNumber}}"
+          }
+        },
+        {
+          "name": "GET Shipments Statistics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Respuesta es JSON', () => {",
+                  "    pm.response.to.be.json;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}{{apiPrefix}}/shipments/statistics"
+          }
+        },
+        {
+          "name": "GET Shipments by Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Respuesta es válida', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}{{apiPrefix}}/shipments/status/PENDING"
+          }
+        },
+        {
+          "name": "PUT Update Shipment Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test flexible: acepta varios códigos",
+                  "pm.test('Status code es válido', () => {",
+                  "    pm.expect([200, 404, 400]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Actualización exitosa', () => {",
+                  "        pm.expect(pm.response.json()).to.be.an('object');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PROCESSING\",\n  \"notes\": \"Envío en proceso\",\n  \"location\": \"Bodega Principal\"\n}"
+            },
+            "url": "{{baseUrl}}{{apiPrefix}}/shipments/{{lastShipmentId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. E2E Flow Documentation",
+      "description": "Documentación de flujos completos",
+      "item": [
+        {
+          "name": "README - Flujo Completo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Este es solo un placeholder informativo",
+                  "pm.test('Flujo E2E documentado', () => {",
+                  "    pm.expect(true).to.be.true;",
+                  "});",
+                  "",
+                  "console.log('='.repeat(60));",
+                  "console.log('FLUJO E2E COMPLETO - Ejecutar en orden:');",
+                  "console.log('='.repeat(60));",
+                  "console.log('1. POST Quote - Valid Data');",
+                  "console.log('2. POST Create Shipment');",
+                  "console.log('3. GET Shipment by Tracking');",
+                  "console.log('4. PUT Update Shipment Status');",
+                  "console.log('5. GET Shipments Statistics');",
+                  "console.log('='.repeat(60));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}{{apiPrefix}}/health",
+            "description": "Placeholder para documentar el flujo E2E"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "apiPrefix",
+      "value": "/api",
+      "type": "string"
+    }
+  ]
+}

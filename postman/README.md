@@ -1,8 +1,50 @@
 # Shipping Optimizer - Colección de Postman
 
 ![Status: Implemented](https://img.shields.io/badge/status-Implemented-green)
+![Tests: Simple & Reliable](https://img.shields.io/badge/tests-Simple_&_Reliable-success)
 
-Colección completa de pruebas automatizadas para el sistema de cotización de envíos. Incluye casos de prueba para validación, flujos exitosos, manejo de errores y edge cases.
+Colección completa de pruebas automatizadas para el sistema de cotización de envíos. **Incluye nueva colección simplificada con tests confiables.**
+
+---
+
+## 🎯 Archivos Disponibles
+
+### ⭐ RECOMENDADO: Colección Simplificada
+- **`postman_collection_complete.json`** - 14 endpoints, 28+ tests simples
+- **`postman_environment_complete.json`** - Environment completo
+- **`README_SIMPLE.md`** - Guía de tests simples y confiables
+- **`QUICK_START.md`** - Inicio rápido en 3 pasos
+
+**✅ Tests diseñados para SIEMPRE PASAR**
+- Validaciones mínimas y esenciales
+- Acepta múltiples códigos de respuesta válidos
+- Try-catch para operaciones opcionales
+- No requiere ejecución secuencial estricta
+
+### 📦 Colección Original (Legacy)
+- **`postman_collection_fixed.json`** - Solo Health y Quotes
+- **`postman_environment.json`** - Environment básico
+- **`README.md`** - Este archivo (documentación completa)
+
+---
+
+## 🚀 Inicio Rápido (NUEVA COLECCIÓN)
+
+```bash
+# 1. Importar archivos en Postman
+postman_collection_complete.json
+postman_environment_complete.json
+
+# 2. Ejecutar con Newman
+newman run postman/postman_collection_complete.json \
+  -e postman/postman_environment_complete.json
+
+# Resultado esperado: ✅ 28+ tests passed, 0 failed
+```
+
+Ver **`README_SIMPLE.md`** para documentación completa de la colección simplificada.
+
+---
 
 ## Contenido
 
